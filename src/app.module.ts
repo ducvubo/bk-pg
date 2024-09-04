@@ -7,6 +7,7 @@ import { MongooseModule } from '@nestjs/mongoose'
 import { AmenitiesModule } from './amenities/amenities.module'
 import { CategoryModule } from './category/category.module';
 import { RestaurantTypeModule } from './restaurant-type/restaurant-type.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -24,7 +25,8 @@ import { RestaurantTypeModule } from './restaurant-type/restaurant-type.module';
     RestaurantsModule,
     AmenitiesModule,
     CategoryModule,
-    RestaurantTypeModule
+    RestaurantTypeModule,
+    UploadModule
   ],
   controllers: [AppController],
   providers: [AppService]

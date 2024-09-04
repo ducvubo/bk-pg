@@ -8,7 +8,7 @@ import { RESPONSE_MESSAGE } from 'src/decorator/customize'
 export interface Response<T> {
   statusCode: number
   message?: string
-  metaData: any
+  data: any
   tacgia: string
 }
 
@@ -30,7 +30,7 @@ export class TransformIntercaptor<T> implements NestInterceptor<T, Response<T>> 
         // statusCode: context.switchToHttp().getResponse().statusCode,
         statusCode: codeResponseMessage ? codeResponseMessage : codeHeader,
         message,
-        metaData: data,
+        data: data,
         tacgia: 'Vu Duc Bo'
       }))
     )

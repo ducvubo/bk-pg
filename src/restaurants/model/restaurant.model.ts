@@ -4,16 +4,38 @@ import { Amenity } from 'src/amenities/model/amenities.model'
 import { Category } from 'src/category/model/category.model'
 import { RestaurantType } from 'src/restaurant-type/model/restauran-type.model'
 import { SampleSchema } from 'src/utils/sample.schema'
+import { validDaysOfWeek } from '../dto/create-restaurant.dto'
 // import { Role } from 'src/roles/schemas/role.schema'
 
 export type RestaurantDocument = HydratedDocument<Restaurant>
 
-export class MarkDown {
+class Address {
   @Prop({ type: String, required: true })
-  markdown_text: string
+  value: string
 
   @Prop({ type: String, required: true })
-  markdown_html: string
+  label: string
+}
+
+class RestaurantAddress {
+  @Prop({ type: Object, required: true })
+  address_province: Address
+  @Prop({ type: Object, required: true })
+  address_district: Address
+
+  @Prop({ type: Object, required: true })
+  address_ward: Address
+
+  @Prop({ type: String, required: true })
+  address_specific: string
+}
+
+export class MarkDown {
+  @Prop({ type: String, required: true })
+  text: string
+
+  @Prop({ type: String, required: true })
+  html: string
 }
 
 class RestaurantPrice {
@@ -32,85 +54,48 @@ class RestaurantPrice {
 
 export class ImageUrl {
   @Prop({ type: String, required: true })
+  image_local: string
+
+  @Prop({ type: String, required: true })
   image_cloud: string
 
   @Prop({ type: String, required: true })
   image_custom: string
 }
 
-class RestaurantHours {
-  @Prop({ type: Date, required: true })
-  day_of_week: Date
-
-  @Prop({ type: Date, required: true })
-  open: Date
-
-  @Prop({ type: Date, required: true })
-  close: Date
-}
-
-class RestaurantPropose {
-  //Tư vấn-giữ chỗ
-  @Prop({ type: Object, required: true })
-  propose_consultation_reservation: MarkDown
-
-  //Ưu đãi tặng kèm
-  @Prop({ type: Object, required: true })
-  propose_bundled_offer: MarkDown
-
-  //Lưu ý
-  @Prop({ type: Object, required: true })
-  propose_note: MarkDown
-}
-
-class RestaurantOverview {
-  //Phù hợp
-  @Prop({ type: Array, required: true })
-  overview_suitable: string[]
-
-  //Món đặc sắc
-  @Prop({ type: Array, required: true })
-  overview_specialty_dish: string[]
-
-  //Không gian
-  @Prop({ type: Array, required: true })
-  overview_space: string
-
-  //Để xe
-  @Prop({ type: Array, required: true })
-  overview_parking_area: string[]
-
-  //Đặc trưng
-  @Prop({ type: Array, required: true })
-  overview_characteristic: string[]
-}
-
-class RestaurantPriceMenu {
-  // Tên món ăn
+class Hour {
   @Prop({ type: String, required: true })
-  price_menu_name: string
+  label: string
 
-  // Đi kèm
-  @Prop({ type: String, required: true })
-  price_menu_detail: string
-
-  //giá
   @Prop({ type: Number, required: true })
-  price_menu_amount: number
+  value: number
 }
 
-// class RestaurantAmenity {
-//   //Tên tiện ích
-//   @Prop({ type: String, required: true })
-//   amenity_name: string
+class RestaurantHours {
+  @Prop({ type: String, enum: validDaysOfWeek, required: true })
+  day_of_week: string
 
-//   //id
-//   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Amenity.name, required: true })
-//   amenity_id: mongoose.Schema.Types.ObjectId
-// }
+  @Prop({ type: Object, required: true })
+  open: Hour
+
+  @Prop({ type: Date, required: true })
+  close: Hour
+}
 
 @Schema({ timestamps: true })
 export class Restaurant extends SampleSchema {
+  //email
+  @Prop({ type: String, required: true })
+  restaurant_email: string
+
+  //số điện thoại
+  @Prop({ type: String, required: true })
+  restaurant_phone: string
+
+  //mật khẩu
+  @Prop({ type: String, required: true })
+  restaurant_password: string
+
   // Danh mục
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Category.name, required: true })
   restaurant_category: mongoose.Schema.Types.ObjectId
@@ -119,12 +104,16 @@ export class Restaurant extends SampleSchema {
   @Prop({ type: String, required: true })
   restaurant_name: string
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: Object, required: true })
   restaurant_banner: ImageUrl
 
   //Địa chỉ
-  @Prop({ type: String, required: true })
-  restaurant_address: string
+  @Prop({ type: Object, required: true })
+  restaurant_address: RestaurantAddress
+
+  //Khoảng giá
+  @Prop({ type: Object, required: true })
+  restaurant_price: RestaurantPrice
 
   //Loại hình
   @Prop({
@@ -134,37 +123,9 @@ export class Restaurant extends SampleSchema {
   })
   restaurant_type: mongoose.Schema.Types.ObjectId[]
 
-  //Khoảng giá
-  @Prop({ type: Object, required: true })
-  restaurant_price: RestaurantPrice
-
-  //Giờ hoạt động
-  @Prop({ type: Array, required: true })
-  restaurant_hours: RestaurantHours[]
-
-  //Đề xuất
-  @Prop({ type: Object, required: true })
-  restaurant_propose: RestaurantPropose
-
-  //Tóm tắt
-  @Prop({ type: Object, required: true })
-  restaurant_overview: RestaurantOverview
-
-  //Bảng giá
-  @Prop({ type: Array, required: true })
-  restaurant_price_menu: RestaurantPriceMenu
-
-  //Quy định
-  @Prop({ type: Object, required: true })
-  restaurant_regulation: MarkDown
-
-  //Chỗ để xe
-  @Prop({ type: Object, required: true })
-  restaurant_parking_area: MarkDown
-
   // Tiện ích
   @Prop({
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: RestaurantType.name }],
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: Amenity.name }],
     ref: Amenity.name,
     required: true
   })
@@ -174,9 +135,33 @@ export class Restaurant extends SampleSchema {
   @Prop({ type: Array, required: true })
   restaurant_image: ImageUrl[]
 
+  //Giờ hoạt động
+  @Prop({ type: Array, required: true })
+  restaurant_hours: RestaurantHours[]
+
+  //Đề xuất
+  @Prop({ type: String, required: true })
+  restaurant_propose: string
+
+  //Tóm tắt
+  @Prop({ type: String, required: true })
+  restaurant_overview: string
+
+  // //Bảng giá
+  // @Prop({ type: Array, required: true })
+  // restaurant_price_menu: RestaurantPriceMenu
+
+  //Quy định
+  @Prop({ type: String, required: true })
+  restaurant_regulation: string
+
+  //Chỗ để xe
+  @Prop({ type: String, required: true })
+  restaurant_parking_area: string
+
   //Mô tả nhà hàng
-  @Prop({ type: Object, required: true })
-  restaurant_description: MarkDown
+  @Prop({ type: String, required: true })
+  restaurant_description: string
 
   //Trạng thái verify
   @Prop({ type: Boolean, required: true })
@@ -185,6 +170,9 @@ export class Restaurant extends SampleSchema {
   //Trạng thái hoạt động   chưa hoạt đông | đang họat động | cấm hoạt động
   @Prop({ type: String, required: true, enum: ['active', 'inactive', 'banned'] })
   restaurant_status: string
+
+  @Prop({ type: Boolean, required: true, default: true })
+  restaurant_state: boolean
 }
 
 export const RestaurantSchema = SchemaFactory.createForClass(Restaurant)

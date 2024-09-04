@@ -2,6 +2,10 @@
 // import { v4 as uuidv4 } from 'uuid'
 // import slugify from 'slugify'
 
+import { RestaurantHours } from 'src/restaurants/dto/create-restaurant.dto'
+import { ConflictError } from './errorResponse'
+import { compareSync, genSaltSync, hashSync } from 'bcryptjs'
+
 // export const getInfoData = ({ fileds = [], object = {} }) => {
 //   return _.pick(object, fileds)
 // }
@@ -21,3 +25,27 @@
 
 //   return `${slug}-${uuid}.html`
 // }
+
+export const getHassPassword = (password: string) => {
+  const salt = genSaltSync(10)
+  const hash = hashSync(password, salt)
+  return hash
+}
+export const isValidPassword = (password: string, hash: string) => {
+  return compareSync(password, hash)
+}
+
+export const checkDuplicateDays = (openingTimes: RestaurantHours[]): string | null => {
+  const dayCount: Record<string, number> = {}
+
+  for (const time of openingTimes) {
+    const day = time.day_of_week
+    dayCount[day] = (dayCount[day] || 0) + 1
+
+    if (dayCount[day] > 1) {
+      throw new ConflictError(`Không thể có ${dayCount[day]} ngày mở cửa giống nhau: ${day}`)
+    }
+  }
+
+  return null // Không có lỗi
+}
