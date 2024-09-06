@@ -23,3 +23,22 @@ export class NotFoundError extends HttpException {
     super(message, HttpStatus.NOT_FOUND)
   }
 }
+
+export class UnauthorizedError extends HttpException {
+  constructor(message: string) {
+    super(message, HttpStatus.UNAUTHORIZED)
+  }
+}
+
+export class UnauthorizedCodeError extends HttpException {
+  private readonly customCode: number
+
+  constructor(message: string, customCode: number) {
+    super(message, HttpStatus.UNAUTHORIZED)
+    this.customCode = customCode
+  }
+
+  getCustomCode(): number {
+    return this.customCode
+  }
+}

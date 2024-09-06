@@ -5,7 +5,7 @@ import { BadRequestError, ConflictError, NotFoundError } from 'src/utils/errorRe
 import { faker } from '@faker-js/faker'
 import aqp from 'api-query-params'
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto'
-import { checkDuplicateDays, getHassPassword } from 'src/utils'
+import { checkDuplicateDays, getHashPassword } from 'src/utils'
 import mongoose from 'mongoose'
 import { UpdateVerify } from './dto/update-verify.dto'
 import { UpdateState } from './dto/update-state.dto'
@@ -25,7 +25,7 @@ export class RestaurantsService {
     if (isEmailExist) throw new ConflictError('Email này đã được đăng ký')
     if (isPhoneExist) throw new ConflictError('Số điện thoại này đã được đăng ký')
 
-    createRestaurantDto.restaurant_password = getHassPassword(restaurant_password)
+    createRestaurantDto.restaurant_password = getHashPassword(restaurant_password)
     const newRestaurant = await this.restaurantRepository.create({
       restaurant_email,
       restaurant_phone,

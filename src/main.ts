@@ -5,6 +5,7 @@ import { ValidationPipe, VersioningType } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { TransformIntercaptor } from './decorator/transform.interceptor'
 import { join } from 'path'
+import { initRedis } from './config/redis.config'
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule)
@@ -21,6 +22,7 @@ async function bootstrap() {
   app.setViewEngine('ejs')
 
   app.enableCors()
+  initRedis()
 
   app.setGlobalPrefix('api')
   app.enableVersioning({

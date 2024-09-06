@@ -26,7 +26,7 @@ import { compareSync, genSaltSync, hashSync } from 'bcryptjs'
 //   return `${slug}-${uuid}.html`
 // }
 
-export const getHassPassword = (password: string) => {
+export const getHashPassword = (password: string) => {
   const salt = genSaltSync(10)
   const hash = hashSync(password, salt)
   return hash
@@ -48,4 +48,78 @@ export const checkDuplicateDays = (openingTimes: RestaurantHours[]): string | nu
   }
 
   return null // Không có lỗi
+}
+
+export const generateOtp = (): string => {
+  const otp = Math.floor(100000 + Math.random() * 900000)
+  return otp.toString()
+}
+
+export const generateStrongPassword = (length: number = 12): string => {
+  // Các ký tự để tạo mật khẩu
+  const upperCaseLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const lowerCaseLetters = 'abcdefghijklmnopqrstuvwxyz'
+  const numbers = '0123456789'
+  const specialCharacters = '!@#$%^&*()_+~`|}{[]:;?><,./-='
+
+  // Gộp tất cả các ký tự lại
+  const allCharacters = upperCaseLetters + lowerCaseLetters + numbers + specialCharacters
+
+  // Hàm tạo một ký tự ngẫu nhiên từ một chuỗi
+  const getRandomCharacter = (chars: string): string => {
+    return chars[Math.floor(Math.random() * chars.length)]
+  }
+
+  // Bắt đầu với ít nhất một ký tự của mỗi loại
+  let password = [
+    getRandomCharacter(upperCaseLetters),
+    getRandomCharacter(lowerCaseLetters),
+    getRandomCharacter(numbers),
+    getRandomCharacter(specialCharacters)
+  ]
+
+  // Thêm các ký tự ngẫu nhiên để đạt độ dài mong muốn
+  for (let i = password.length; i < length; i++) {
+    password.push(getRandomCharacter(allCharacters))
+  }
+
+  // Xáo trộn các ký tự để tăng tính ngẫu nhiên
+  password = password.sort(() => Math.random() - 0.5)
+
+  // Chuyển mảng thành chuỗi và trả về
+  return password.join('')
+}
+
+export const generateNumberString = (length: number = 10): string => {
+  const numbers = '0123456789'
+
+  // Hàm tạo một ký tự số ngẫu nhiên
+  const getRandomNumber = (): string => {
+    return numbers[Math.floor(Math.random() * numbers.length)]
+  }
+
+  // Tạo chuỗi số bằng cách lặp lại để thêm các ký tự ngẫu nhiên
+  let result = ''
+  for (let i = 0; i < length; i++) {
+    result += getRandomNumber()
+  }
+
+  return result
+}
+
+export const decodeJwt = (token: string) => {
+  // Split the JWT into its components
+  const parts = token.split('.')
+
+  // Check if the token has three parts
+  if (parts.length !== 3) {
+    throw new Error('Invalid JWT token')
+  }
+
+  // Decode the payload (the second part) from Base64Url
+  const payload = parts[1]
+  const decodedPayload = Buffer.from(payload, 'base64').toString('utf-8')
+
+  // Parse the decoded payload as JSON
+  return JSON.parse(decodedPayload)
 }

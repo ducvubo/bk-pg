@@ -5,9 +5,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
 import { RestaurantsModule } from './restaurants/restaurants.module'
 import { MongooseModule } from '@nestjs/mongoose'
 import { AmenitiesModule } from './amenities/amenities.module'
-import { CategoryModule } from './category/category.module';
-import { RestaurantTypeModule } from './restaurant-type/restaurant-type.module';
-import { UploadModule } from './upload/upload.module';
+import { CategoryModule } from './category/category.module'
+import { RestaurantTypeModule } from './restaurant-type/restaurant-type.module'
+import { UploadModule } from './upload/upload.module'
+import { UsersModule } from './users/users.module'
+import { MailModule } from './mail/mail.module'
 
 @Module({
   imports: [
@@ -26,7 +28,9 @@ import { UploadModule } from './upload/upload.module';
     AmenitiesModule,
     CategoryModule,
     RestaurantTypeModule,
-    UploadModule
+    UploadModule,
+    UsersModule,
+    MailModule
   ],
   controllers: [AppController],
   providers: [AppService]

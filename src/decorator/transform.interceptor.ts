@@ -28,10 +28,11 @@ export class TransformIntercaptor<T> implements NestInterceptor<T, Response<T>> 
     return next.handle().pipe(
       map((data) => ({
         // statusCode: context.switchToHttp().getResponse().statusCode,
-        statusCode: codeResponseMessage ? codeResponseMessage : codeHeader,
+        statusCode: codeHeader,
         message,
         data: data,
-        tacgia: 'Vu Duc Bo'
+        tacgia: 'Vu Duc Bo',
+        code: codeResponseMessage
       }))
     )
   }
