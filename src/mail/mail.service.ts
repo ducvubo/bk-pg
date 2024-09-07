@@ -29,4 +29,16 @@ export class MailService {
       }
     })
   }
+
+  async sendResetPassword(email: string, otp) {
+    await this.mailerService.sendMail({
+      to: email,
+      from: 'PASSGO',
+      subject: 'Đặt lại mật khẩu',
+      template: 'forgot-password',
+      context: {
+        otp: otp
+      }
+    })
+  }
 }

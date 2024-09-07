@@ -23,11 +23,19 @@ export class UserRepository {
       us_name: generateNumberString(20),
       us_address: generateNumberString(20),
       us_phone: generateNumberString(20),
-      us_verify: true
+      us_verify: false
     })
   }
 
   async findOneById({ _id }) {
     return await this.userModel.findById(_id).lean().select('us_email us_name us_address us_phone us_role')
+  }
+
+  async verifyAccount({ us_email }) {
+    return await this.userModel.findOneAndUpdate({ us_email }, { us_verify: true }, { new: true })
+  }
+
+  async changePassword({ us_email, us_password }) {
+    return await this.userModel.findOneAndUpdate({ us_email }, { us_password }, { new: true })
   }
 }

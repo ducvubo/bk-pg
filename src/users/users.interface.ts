@@ -3,6 +3,7 @@ export interface IUser {
   us_name: string
   us_email: string
   us_address: string
+  us_phone: string
 }
 
 export interface IRefreshToken {

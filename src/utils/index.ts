@@ -31,6 +31,7 @@ export const getHashPassword = (password: string) => {
   const hash = hashSync(password, salt)
   return hash
 }
+
 export const isValidPassword = (password: string, hash: string) => {
   return compareSync(password, hash)
 }

@@ -7,6 +7,7 @@ import { generateStrongPassword } from 'src/utils'
 import { UserAuthGuard } from 'src/guard/users.guard'
 import { IUser } from './users.interface'
 import { LoginUserDto } from './dto/login-user.dto'
+import { ChangePasswordDto, ForgotPasswordDto } from './dto/change-password.dto'
 
 @Controller('users')
 export class UsersController {
@@ -24,7 +25,7 @@ export class UsersController {
     return await this.usersService.login(loginUserDto)
   }
 
-  @Post('/comfirm')
+  @Post('/verify')
   @ResponseMessage('Xác nhận tài khoản thành công')
   async comfirmEmail(@Body() comfirmUserDto: ComfirmUserDto) {
     return await this.usersService.confirmEmail(comfirmUserDto)
@@ -42,6 +43,18 @@ export class UsersController {
   async refreshToken(@Req() req: Request) {
     const refresh_token = req.headers['authorization']?.split(' ')[1]
     return await this.usersService.refreshToken({ refresh_token })
+  }
+
+  @Post('/change-password')
+  @ResponseMessage('Đ��i mật khẩu thành công')
+  async changePassword(@Body() changePasswordDto: ChangePasswordDto) {
+    return await this.usersService.changePassword(changePasswordDto)
+  }
+
+  @Post('/forgot-password')
+  @ResponseMessage('Quên mật khẩu thành công, vui lòng kiểm tra email')
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return await this.usersService.forgotPassword({ us_email: forgotPasswordDto.us_email })
   }
 
   @Get()

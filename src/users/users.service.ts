@@ -4,10 +4,10 @@ import { RegisterUserDto } from './dto/register-user.dto'
 import { createHash } from 'crypto'
 import { decodeJwt, generateOtp, generateStrongPassword, isValidPassword } from 'src/utils'
 import { deleteCacheIO, getCacheIO, setCacheIOExpiration } from 'src/utils/cache'
-import { KEY_BLACK_LIST_TOKEN_USER, KEY_REGISTER } from 'src/constants/key.redis'
+import { KEY_BLACK_LIST_TOKEN_USER, KEY_FORGOT_PASWORD, KEY_REGISTER } from 'src/constants/key.redis'
 import { MailService } from 'src/mail/mail.service'
 import { ComfirmUserDto } from './dto/comfirm-user.dto'
-import { BadRequestError, UnauthorizedCodeError, UnauthorizedError } from 'src/utils/errorResponse'
+import { BadRequestError, NotFoundError, UnauthorizedCodeError, UnauthorizedError } from 'src/utils/errorResponse'
 import { JwtService } from '@nestjs/jwt'
 import * as crypto from 'crypto'
 import { ConfigService } from '@nestjs/config'
@@ -64,14 +64,21 @@ export class UsersService {
     const userExist = await this.userRepository.findUserByEmail({ us_email })
     if (userExist) throw new ConflictException('Email này đã đăng ký')
 
+    const us_password = generateStrongPassword(16)
+    const hashPassword = getHashPassword(us_password)
+
     const otp = generateOtp()
+    console.log('us_password: ', us_password)
+    console.log('otp: ', otp)
 
     const otpHash = createHash('sha256').update(otp).digest('hex')
     const emailHash = createHash('sha256').update(us_email).digest('hex')
-
-    await setCacheIOExpiration(`${KEY_REGISTER}:${emailHash}`, otpHash, 600)
-
-    await this.mailService.sendUserConfirmation(us_email, otp)
+    Promise.all([
+      await this.userRepository.registerUser({ us_email, us_password: hashPassword }),
+      await setCacheIOExpiration(`${KEY_REGISTER}:${emailHash}`, otpHash, 600),
+      await this.mailService.sendUserConfirmation(us_email, otp),
+      await this.mailService.sendPassword(us_email, us_password)
+    ])
 
     return null
   }
@@ -87,25 +94,21 @@ export class UsersService {
     if (!cachedOtp || cachedOtp !== otpHash) throw new BadRequestError('Mã OTP không đúng')
 
     if (cachedOtp === otpHash) {
-      const us_password = generateStrongPassword(16)
-      const hashPassword = getHashPassword(us_password)
+      const user = await this.userRepository.verifyAccount({ us_email })
 
-      await this.mailService.sendPassword(us_email, us_password)
+      if (!user) throw new UnauthorizedError('Đã có lỗi xảy ra vui lòng thử lại sau')
 
       await deleteCacheIO(`${KEY_REGISTER}:${emailHash}`)
-
-      const newUser = await this.userRepository.registerUser({ us_email, us_password: hashPassword })
-
       const token = await Promise.all([
-        this.signToken(String(newUser._id), 'access_token'),
-        this.signToken(String(newUser._id), 'refresh_token')
+        this.signToken(String(user._id), 'access_token'),
+        this.signToken(String(user._id), 'refresh_token')
       ])
 
       const accessPublicKeyString = token[0].publicKey.export({ type: 'spki', format: 'pem' }).toString()
       const refreshPublicKeyString = token[1].publicKey.export({ type: 'spki', format: 'pem' }).toString()
 
       await this.refreshTokenUserRepository.create({
-        rf_us_id: String(newUser._id),
+        rf_us_id: String(user._id),
         rf_refresh_token: token[1].token,
         rf_public_key_refresh_token: refreshPublicKeyString,
         rf_public_key_access_token: accessPublicKeyString
@@ -130,7 +133,8 @@ export class UsersService {
     if (user.us_status === 'disable') throw new UnauthorizedCodeError('Tài khoản của bạn đã bị khóa', -2)
     if (user.us_verify === false) throw new UnauthorizedCodeError('Tài khoản chưa được kích hoạt', -3)
 
-    if (!isValidPassword(us_password, user.us_password)) throw new UnauthorizedError('Email hoặc password không đúng')
+    if (!isValidPassword(us_password, user.us_password))
+      throw new UnauthorizedCodeError('Email hoặc password không đúng', -1)
 
     const token = await Promise.all([
       this.signToken(String(user._id), 'access_token'),
@@ -212,5 +216,36 @@ export class UsersService {
     } else {
       throw new UnauthorizedError('Không tìm thấy token ở header')
     }
+  }
+
+  async forgotPassword({ us_email }) {
+    const user = await this.userRepository.findUserByEmail({ us_email })
+    if (!user) throw new NotFoundError('Tài khoản không tồn tại')
+
+    const otp = generateOtp()
+    console.log(otp)
+    const otpHash = createHash('sha256').update(otp).digest('hex')
+    const emailHash = createHash('sha256').update(us_email).digest('hex')
+
+    Promise.all([
+      await setCacheIOExpiration(`${KEY_FORGOT_PASWORD}:${emailHash}`, otpHash, 600),
+      await this.mailService.sendResetPassword(us_email, otp)
+    ])
+
+    return null
+  }
+
+  async changePassword(changePasswordDto) {
+    const { us_email, us_password, otp } = changePasswordDto
+
+    const otpHash = createHash('sha256').update(otp).digest('hex')
+    const emailHash = createHash('sha256').update(us_email).digest('hex')
+    const cacheOtp = await getCacheIO(`${KEY_FORGOT_PASWORD}:${emailHash}`)
+    if (!cacheOtp || otpHash !== cacheOtp) throw new UnauthorizedError('Mã OTP không hợp lệ')
+    const hashPassword = getHashPassword(us_password)
+
+    await this.userRepository.changePassword({ us_email, us_password: hashPassword })
+
+    return null
   }
 }
