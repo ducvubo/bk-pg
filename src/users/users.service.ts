@@ -167,14 +167,14 @@ export class UsersService {
       if (isBlackList) {
         const decodedJWT = decodeJwt(refresh_token)
         await this.refreshTokenUserRepository.logoutAll({ rf_us_id: decodedJWT._id })
-        throw new UnauthorizedError('Token đã lỗi vui lòng đăng nhập lại để tiếp tục sử dụng dịch vụ 1')
+        throw new UnauthorizedCodeError('Token đã lỗi vui lòng đăng nhập lại để tiếp tục sử dụng dịch vụ 1', -10)
       } else {
         try {
           const key = await this.refreshTokenUserRepository.findOneByRefreshToken({
             rf_refresh_token: refresh_token
           })
 
-          if (!key) throw new UnauthorizedError('Token không hợp lệ 1')
+          if (!key) throw new UnauthorizedCodeError('Token không hợp lệ 1', -10)
           if (key) {
             const data_refresh_token = this.verifyToken(refresh_token, key.rf_public_key_refresh_token)
             const token = await Promise.all([
@@ -210,11 +210,11 @@ export class UsersService {
           }
         } catch (error) {
           console.log(error)
-          throw new UnauthorizedError('Token lỗi vui lòng đăng nhập lại để tiếp tục sử dụng dịch vụ 2')
+          throw new UnauthorizedCodeError('Token lỗi vui lòng đăng nhập lại để tiếp tục sử dụng dịch vụ 2', -10)
         }
       }
     } else {
-      throw new UnauthorizedError('Không tìm thấy token ở header')
+      throw new UnauthorizedCodeError('Không tìm thấy token ở header', -10)
     }
   }
 

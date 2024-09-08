@@ -29,6 +29,7 @@ import { APP_FILTER } from '@nestjs/core'
       provide: APP_FILTER,
       useClass: UnauthorizedExceptionFilter
     }
-  ]
+  ],
+  exports: [UsersService]
 })
 export class UsersModule {}

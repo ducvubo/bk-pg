@@ -42,3 +42,9 @@ export class UnauthorizedCodeError extends HttpException {
     return this.customCode
   }
 }
+
+export class ForbiddenError extends HttpException {
+  constructor(message: string) {
+    super(message, HttpStatus.FORBIDDEN)
+  }
+}
