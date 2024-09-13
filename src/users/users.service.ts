@@ -13,6 +13,11 @@ import * as crypto from 'crypto'
 import { ConfigService } from '@nestjs/config'
 import { getHashPassword } from 'src/utils/index'
 import { RefreshTokenUserRepository } from './model/refresh-token.repo'
+import aqp from 'api-query-params'
+import { UpdateUserDto } from './dto/update-user.dto'
+import { IUser } from './users.interface'
+import mongoose from 'mongoose'
+import { UpdateStatusUser } from './dto/update-status.dto'
 
 @Injectable()
 export class UsersService {
@@ -132,6 +137,8 @@ export class UsersService {
     if (!user) throw new UnauthorizedCodeError('Email hoặc password không đúng', -1)
     if (user.us_status === 'disable') throw new UnauthorizedCodeError('Tài khoản của bạn đã bị khóa', -2)
     if (user.us_verify === false) throw new UnauthorizedCodeError('Tài khoản chưa được kích hoạt', -3)
+    if (user.isDeleted === true)
+      throw new UnauthorizedCodeError('Tài khoản của bạn đã bị xóa, vui lòng liên hệ quản trị viên để được hỗ trợ', -4)
 
     if (!isValidPassword(us_password, user.us_password))
       throw new UnauthorizedCodeError('Email hoặc password không đúng', -1)
@@ -247,5 +254,169 @@ export class UsersService {
     await this.userRepository.changePassword({ us_email, us_password: hashPassword })
 
     return null
+  }
+
+  async create(createUserDto, user) {
+    const { us_email, us_password } = createUserDto
+
+    const userExist = await this.userRepository.findUserByEmail({ us_email })
+    if (userExist) throw new ConflictException('Email này đã đăng ký')
+
+    const hashPassword = getHashPassword(us_password)
+    const newUser = await this.userRepository.create({ ...createUserDto, us_password: hashPassword }, user)
+
+    return {
+      us_id: newUser._id,
+      us_email: newUser.us_email
+    }
+  }
+
+  async findAllUser({ currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string }) {
+    if (currentPage <= 0 || limit <= 0) {
+      throw new BadRequestError('Trang hiện tại và số record phải lớn hơn 0')
+    }
+    currentPage = isNaN(currentPage) ? 1 : currentPage
+    limit = isNaN(limit) ? 8 : limit
+
+    const { filter, sort } = aqp(qs)
+
+    delete filter.current
+    delete filter.pageSize
+
+    const offset = (+currentPage - 1) * +limit
+    const defaultLimit = +limit ? +limit : 10
+
+    const totalItems = await this.userRepository.totalItems(false)
+    const totalPages = Math.ceil(totalItems / defaultLimit)
+
+    const population = ''
+
+    const result = await this.userRepository.findAllPagination(
+      {
+        offset,
+        defaultLimit,
+        sort,
+        population
+      },
+      false
+    )
+
+    return {
+      meta: {
+        current: currentPage,
+        pageSize: limit,
+        totalPage: totalPages,
+        totalItem: totalItems
+      },
+      result
+    }
+  }
+
+  async findAllUserRecycle({ currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string }) {
+    if (currentPage <= 0 || limit <= 0) {
+      throw new BadRequestError('Trang hiện tại và số record phải lớn hơn 0')
+    }
+    currentPage = isNaN(currentPage) ? 1 : currentPage
+    limit = isNaN(limit) ? 8 : limit
+
+    const { filter, sort } = aqp(qs)
+
+    delete filter.current
+    delete filter.pageSize
+
+    const offset = (+currentPage - 1) * +limit
+    const defaultLimit = +limit ? +limit : 10
+
+    const totalItems = await this.userRepository.totalItems(true)
+    const totalPages = Math.ceil(totalItems / defaultLimit)
+
+    const population = ''
+
+    const result = await this.userRepository.findAllPagination(
+      {
+        offset,
+        defaultLimit,
+        sort,
+        population
+      },
+      true
+    )
+
+    return {
+      meta: {
+        current: currentPage,
+        pageSize: limit,
+        totalPage: totalPages,
+        totalItem: totalItems
+      },
+      result
+    }
+  }
+
+  async findOneUser({ _id }: { _id: string }) {
+    if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Người dùng không tồn tại')
+    const user = await this.userRepository.findOne({ _id })
+    if (!user) throw new NotFoundError('Tài khoản không tồn tại')
+    return user
+  }
+
+  async updateUser(updateUserDto: UpdateUserDto, user: IUser) {
+    const { _id } = updateUserDto
+    const restaurantExist = await this.userRepository.findOne({ _id })
+
+    if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Người dùng không tồn tại')
+    if (!restaurantExist) throw new NotFoundError('Người dùng không tồn tại')
+    const updated = await this.userRepository.updateUser(updateUserDto, user)
+
+    return {
+      _id: updated._id,
+      us_name: updated.us_name,
+      us_email: updated.us_email,
+      us_phone: updated.us_phone
+    }
+  }
+
+  async removeUser({ _id }: { _id: string }, user: IUser) {
+    if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Người dùng không tồn tại')
+
+    const userExist = await this.userRepository.findOne({ _id })
+    if (!userExist) throw new NotFoundError('Người dùng không tồn tại')
+
+    const removed = await this.userRepository.removeUser({ _id }, user)
+    return {
+      _id: removed._id,
+      us_name: removed.us_name,
+      us_email: removed.us_email,
+      us_phone: removed.us_phone
+    }
+  }
+
+  async restore({ _id }, user: IUser) {
+    if (!_id) throw new NotFoundError('Người dùng không tồn tại')
+    if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Người dùng không tồn tại')
+    const userExist = await this.userRepository.findOne({ _id })
+    if (!userExist) throw new NotFoundError('Người dùng không tồn tại')
+    const restore = await this.userRepository.restore({ _id }, user)
+    return {
+      _id: restore._id,
+      us_name: restore.us_name,
+      us_email: restore.us_email,
+      us_phone: restore.us_phone
+    }
+  }
+
+  async updateStatus(updateStatusUser: UpdateStatusUser, user: IUser) {
+    const { _id } = updateStatusUser
+    if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Người dùng không tồn tại')
+    const userExist = await this.userRepository.findOne({ _id })
+    if (!userExist) throw new NotFoundError('Người dùng không tồn tại')
+    const updated = await this.userRepository.updateStatus(updateStatusUser, user)
+    return {
+      _id: updated._id,
+      us_name: updated.us_name,
+      us_email: updated.us_email,
+      us_phone: updated.us_phone,
+      us_status: updated.us_status
+    }
   }
 }

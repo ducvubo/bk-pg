@@ -1,6 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common'
 import { UsersService } from 'src/users/users.service'
-import { ForbiddenError, UnauthorizedCodeError, UnauthorizedError } from 'src/utils/errorResponse'
+import { ForbiddenError, UnauthorizedCodeError } from 'src/utils/errorResponse'
 
 @Injectable()
 export class UserAuthGuard implements CanActivate {

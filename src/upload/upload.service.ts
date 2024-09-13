@@ -13,7 +13,35 @@ export class UploadService {
       })
       return {
         image_cloud: result.secure_url,
-        image_local: `${this.configService.get<string>('SERVER')}/${folderName}/${image_name}`,
+        image_custom: await cloudinary.url(result.public_id, {
+          height: 100,
+          width: 100,
+          fetch_format: 'jpg'
+        })
+      }
+    } catch (error) {
+      console.log('upload error: ' + JSON.stringify(error))
+      throw new ServerError('Error uploading image')
+    }
+  }
+
+  async uploadImageToCloudinay(file: Express.Multer.File, folderName: string) {
+    try {
+      // const stream = new Readable()
+      // stream.push(file.buffer)
+      // stream.push(null) // end the stream
+
+      const result = await new Promise<any>((resolve, reject) => {
+        cloudinary.uploader
+          .upload_stream({ folder: folderName }, (error, result) => {
+            if (error) reject(error)
+            resolve(result)
+          })
+          .end(file.buffer)
+      })
+
+      return {
+        image_cloud: result.secure_url,
         image_custom: await cloudinary.url(result.public_id, {
           height: 100,
           width: 100,

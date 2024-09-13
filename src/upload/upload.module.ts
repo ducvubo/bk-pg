@@ -10,6 +10,7 @@ import { MulterConfigService } from 'src/config/multer.config'
     MulterModule.registerAsync({
       useClass: MulterConfigService
     }),
+    // MulterModule.registerAsync({}),
     ConfigModule
   ],
   controllers: [UploadController],

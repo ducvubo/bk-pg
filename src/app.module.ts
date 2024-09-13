@@ -10,6 +10,7 @@ import { RestaurantTypeModule } from './restaurant-type/restaurant-type.module'
 import { UploadModule } from './upload/upload.module'
 import { UsersModule } from './users/users.module'
 import { MailModule } from './mail/mail.module'
+import { RoleModule } from './role/role.module';
 
 @Module({
   imports: [
@@ -30,7 +31,8 @@ import { MailModule } from './mail/mail.module'
     RestaurantTypeModule,
     UploadModule,
     UsersModule,
-    MailModule
+    MailModule,
+    RoleModule
   ],
   controllers: [AppController],
   providers: [AppService]

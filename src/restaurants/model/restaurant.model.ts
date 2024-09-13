@@ -54,9 +54,6 @@ class RestaurantPrice {
 
 export class ImageUrl {
   @Prop({ type: String, required: true })
-  image_local: string
-
-  @Prop({ type: String, required: true })
   image_cloud: string
 
   @Prop({ type: String, required: true })
@@ -103,6 +100,10 @@ export class Restaurant extends SampleSchema {
   // Tên nhà hàng
   @Prop({ type: String, required: true })
   restaurant_name: string
+
+  //slug
+  @Prop({ type: String, required: true })
+  restaurant_slug: string
 
   @Prop({ type: Object, required: true })
   restaurant_banner: ImageUrl

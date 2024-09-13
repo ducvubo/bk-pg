@@ -3,9 +3,10 @@ import { AppModule } from './app.module'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import { ValidationPipe, VersioningType } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { TransformIntercaptor } from './decorator/transform.interceptor'
+import { TransformIntercaptor } from './interceptor/transform.interceptor'
 import { join } from 'path'
 import { initRedis } from './config/redis.config'
+import { IdUserGuestInterceptor } from './interceptor/guestId.interceptor'
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule)
@@ -13,7 +14,9 @@ async function bootstrap() {
   const configService = app.get(ConfigService)
 
   const reflector = app.get(Reflector)
+
   app.useGlobalInterceptors(new TransformIntercaptor(reflector))
+  app.useGlobalInterceptors(new IdUserGuestInterceptor())
 
   app.useGlobalPipes(new ValidationPipe())
 

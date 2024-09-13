@@ -7,12 +7,14 @@ import { UpdateRestaurantDto } from '../dto/update-restaurant.dto'
 import { UpdateVerify } from '../dto/update-verify.dto'
 import { UpdateState } from '../dto/update-state.dto'
 import { UpdateStatus } from '../dto/update-status.dt'
+import { IUser } from 'src/users/users.interface'
+import { generateSlug } from 'src/utils'
 
 @Injectable()
 export class RestaurantRepository {
   constructor(@InjectModel(Restaurant.name) private restaurantModel: Model<RestaurantDocument>) {}
 
-  async create(createRestaurantDto: CreateRestaurantDto) {
+  async create(createRestaurantDto: CreateRestaurantDto, user: IUser) {
     const {
       restaurant_email,
       restaurant_password,
@@ -33,12 +35,16 @@ export class RestaurantRepository {
       restaurant_image,
       restaurant_description
     } = createRestaurantDto
+
+    const { us_email, _id } = user
+    const restaurant_slug = generateSlug(restaurant_name)
     return await this.restaurantModel.create({
       restaurant_email,
       restaurant_password,
       restaurant_phone,
       restaurant_category,
       restaurant_name,
+      restaurant_slug,
       restaurant_banner,
       restaurant_address,
       restaurant_type,
@@ -53,7 +59,11 @@ export class RestaurantRepository {
       restaurant_image,
       restaurant_description,
       restaurant_verify: true,
-      restaurant_status: 'active'
+      restaurant_status: 'active',
+      createdBy: {
+        email: us_email,
+        _id
+      }
     })
   }
 
@@ -78,6 +88,7 @@ export class RestaurantRepository {
       .find({
         isDeleted: false
       })
+      .select('-updatedAt -createdAt -__v -createdBy -updatedBy -restaurant_password')
       .skip(offset)
       .limit(defaultLimit)
       .sort(sort as any) //ep kieu du lieu
@@ -94,7 +105,7 @@ export class RestaurantRepository {
       .populate('restaurant_type') // Populate restaurant types
   }
 
-  async update(updateRestaurantDto: UpdateRestaurantDto) {
+  async update(updateRestaurantDto: UpdateRestaurantDto, user: IUser) {
     const {
       _id,
       restaurant_phone,
@@ -134,23 +145,45 @@ export class RestaurantRepository {
           restaurant_parking_area,
           restaurant_amenity,
           restaurant_image,
-          restaurant_description
+          restaurant_description,
+          updatedBy: {
+            email: user.us_email,
+            _id: user._id
+          }
         },
         { new: true }
       )
       .lean()
   }
 
-  async remove({ _id }) {
-    return await this.restaurantModel.findByIdAndUpdate(_id, { isDeleted: true }, { new: true }).lean()
+  async remove({ _id }, user: IUser) {
+    return await this.restaurantModel
+      .findByIdAndUpdate(
+        _id,
+        {
+          isDeleted: true,
+          deletedBy: {
+            email: user.us_email,
+            _id: user._id
+          }
+        },
+        { new: true }
+      )
+      .lean()
   }
 
-  async updateVerify(updatevVerify: UpdateVerify) {
+  async updateVerify(updatevVerify: UpdateVerify, user: IUser) {
     const { _id, status } = updatevVerify
     return await this.restaurantModel
       .findByIdAndUpdate(
         _id,
-        { restaurant_verify: status },
+        {
+          restaurant_verify: status,
+          updatedBy: {
+            email: user.us_email,
+            _id: user._id
+          }
+        },
         {
           new: true
         }
@@ -158,12 +191,12 @@ export class RestaurantRepository {
       .lean()
   }
 
-  async updateState(updateState: UpdateState) {
+  async updateState(updateState: UpdateState, user: IUser) {
     const { _id, status } = updateState
     return await this.restaurantModel
       .findByIdAndUpdate(
         _id,
-        { restaurant_state: status },
+        { restaurant_state: status, updatedBy: { email: user.us_email, _id: user._id } },
         {
           new: true
         }
@@ -171,12 +204,12 @@ export class RestaurantRepository {
       .lean()
   }
 
-  async updateStatus(updateStatus: UpdateStatus) {
+  async updateStatus(updateStatus: UpdateStatus, user: IUser) {
     const { _id, status } = updateStatus
     return await this.restaurantModel
       .findByIdAndUpdate(
         _id,
-        { restaurant_status: status },
+        { restaurant_status: status, updatedBy: { email: user.us_email, _id: user._id } },
         {
           new: true
         }
@@ -197,6 +230,7 @@ export class RestaurantRepository {
       .find({
         isDeleted: true
       })
+      .select('-updatedAt -createdAt -__v -createdBy -updatedBy -restaurant_password')
       .skip(offset)
       .limit(defaultLimit)
       .sort(sort as any) //ep kieu du lieu
@@ -204,7 +238,54 @@ export class RestaurantRepository {
       .exec()
   }
 
-  async restore({ _id }) {
-    return await this.restaurantModel.findByIdAndUpdate(_id, { isDeleted: false }, { new: true }).lean()
+  async restore({ _id }, user: IUser) {
+    return await this.restaurantModel
+      .findByIdAndUpdate(
+        _id,
+        {
+          isDeleted: false,
+          updatedBy: {
+            email: user.us_email,
+            _id: user._id
+          }
+        },
+        { new: true }
+      )
+      .lean()
+  }
+
+  async findRestaurantsHome() {
+    return await this.restaurantModel
+      .find({
+        isDeleted: false,
+        restaurant_status: 'active',
+        restaurant_state: true
+      })
+      .select('restaurant_name restaurant_banner restaurant_price restaurant_slug')
+      .limit(10)
+      .exec()
+  }
+
+  async findOneBySlug({ restaurant_slug }) {
+    return await this.restaurantModel
+      .findOne({
+        restaurant_slug,
+        isDeleted: false,
+        restaurant_status: 'active',
+        restaurant_state: true
+      })
+      .select(
+        '-updatedAt -createdAt -__v -createdBy -updatedBy -isDeleted -deletedBy -deletedAt -restaurant_password -restaurant_status -restaurant_state'
+      )
+      .populate({
+        path: 'restaurant_type', // Tên trường cần populate
+        select: 'restaurant_type_name _id'
+      })
+      .populate({
+        path: 'restaurant_amenity', // Tên trường cần populate
+        select: 'amenity_name _id'
+      })
+      .lean()
+      .exec()
   }
 }

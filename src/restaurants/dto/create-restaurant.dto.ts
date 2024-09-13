@@ -172,10 +172,6 @@ class RestaurantPrice {
 }
 
 export class ImageUrl {
-  @IsNotEmpty({ message: 'Link ảnh local không được để trống' })
-  @IsString({ message: 'Link ảnh local phải là chuỗi' })
-  image_local: string
-
   @IsNotEmpty({ message: 'Link ảnh cloud không được để trống' })
   @IsString({ message: 'Link ảnh cloud phải là chuỗi' })
   image_cloud: string
