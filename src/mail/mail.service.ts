@@ -41,4 +41,36 @@ export class MailService {
       }
     })
   }
+
+  async sendMailComfirmBookTable(
+    email: string,
+    phone: string,
+    name_user: string,
+    name_restaurant: string,
+    hour: string,
+    date: string,
+    url: string,
+    number_adults: number,
+    number_children: number,
+    note?: string
+  ) {
+    await this.mailerService.sendMail({
+      to: email,
+      from: 'PASSGO',
+      subject: 'Xác nhận đặt bàn',
+      template: 'confirm-book-table',
+      context: {
+        number_adults,
+        number_children,
+        url,
+        email,
+        phone,
+        name_user,
+        name_restaurant,
+        hour,
+        date,
+        note: note || ''
+      }
+    })
+  }
 }

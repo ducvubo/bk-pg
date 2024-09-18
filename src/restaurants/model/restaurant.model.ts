@@ -60,23 +60,15 @@ export class ImageUrl {
   image_custom: string
 }
 
-class Hour {
-  @Prop({ type: String, required: true })
-  label: string
-
-  @Prop({ type: Number, required: true })
-  value: number
-}
-
 class RestaurantHours {
   @Prop({ type: String, enum: validDaysOfWeek, required: true })
   day_of_week: string
 
-  @Prop({ type: Object, required: true })
-  open: Hour
+  @Prop({ type: Number, required: true })
+  open: number
 
-  @Prop({ type: Date, required: true })
-  close: Hour
+  @Prop({ type: Number, required: true })
+  close: number
 }
 
 @Schema({ timestamps: true })
@@ -90,8 +82,8 @@ export class Restaurant extends SampleSchema {
   restaurant_phone: string
 
   //mật khẩu
-  @Prop({ type: String, required: true })
-  restaurant_password: string
+  // @Prop({ type: String, required: true })
+  // restaurant_password: string
 
   // Danh mục
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Category.name, required: true })
@@ -170,7 +162,7 @@ export class Restaurant extends SampleSchema {
 
   //Trạng thái hoạt động   chưa hoạt đông | đang họat động | cấm hoạt động
   @Prop({ type: String, required: true, enum: ['active', 'inactive', 'banned'] })
-  restaurant_status: string
+  restaurant_status: 'active' | 'inactive' | 'banned'
 
   @Prop({ type: Boolean, required: true, default: true })
   restaurant_state: boolean

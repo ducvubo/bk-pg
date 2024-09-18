@@ -10,14 +10,21 @@ import { RestaurantTypeModule } from './restaurant-type/restaurant-type.module'
 import { UploadModule } from './upload/upload.module'
 import { UsersModule } from './users/users.module'
 import { MailModule } from './mail/mail.module'
-import { RoleModule } from './role/role.module';
+import { RoleModule } from './role/role.module'
+import { BookTableModule } from './book-table/book-table.module'
+import { ScheduleModule } from '@nestjs/schedule'
+import { CronModule } from './cron/cron.module'
+import { EmployeesModule } from './employees/employees.module'
+import { RefreshTokenModule } from './refresh-token/refresh-token.module'
+import { Throttle } from '@nestjs/throttler'
+import { AccountsModule } from './accounts/accounts.module';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true
     }),
-
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -32,7 +39,12 @@ import { RoleModule } from './role/role.module';
     UploadModule,
     UsersModule,
     MailModule,
-    RoleModule
+    RoleModule,
+    BookTableModule,
+    CronModule,
+    EmployeesModule,
+    RefreshTokenModule,
+    AccountsModule
   ],
   controllers: [AppController],
   providers: [AppService]

@@ -18,6 +18,7 @@ import { UpdateUserDto } from './dto/update-user.dto'
 import { IUser } from './users.interface'
 import mongoose from 'mongoose'
 import { UpdateStatusUser } from './dto/update-status.dto'
+import { BookTableRepository } from 'src/book-table/model/book-table.repo'
 
 @Injectable()
 export class UsersService {
@@ -26,7 +27,8 @@ export class UsersService {
     private readonly mailService: MailService,
     private jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly refreshTokenUserRepository: RefreshTokenUserRepository
+    private readonly refreshTokenUserRepository: RefreshTokenUserRepository,
+    private readonly bookTableRepository: BookTableRepository
   ) {}
 
   signToken = (_id: string, type: string) => {
@@ -130,19 +132,23 @@ export class UsersService {
     return await this.userRepository.findOneById({ _id })
   }
 
-  async login(loginUserDto) {
+  async login(loginUserDto, id_user_guest_header) {
     const { us_email, us_password } = loginUserDto
 
     const user = await this.userRepository.findUserLoginByEmail({ us_email })
     if (!user) throw new UnauthorizedCodeError('Email hoặc password không đúng', -1)
+    if (!isValidPassword(us_password, user.us_password))
+      throw new UnauthorizedCodeError('Email hoặc password không đúng', -1)
     if (user.us_status === 'disable') throw new UnauthorizedCodeError('Tài khoản của bạn đã bị khóa', -2)
     if (user.us_verify === false) throw new UnauthorizedCodeError('Tài khoản chưa được kích hoạt', -3)
     if (user.isDeleted === true)
       throw new UnauthorizedCodeError('Tài khoản của bạn đã bị xóa, vui lòng liên hệ quản trị viên để được hỗ trợ', -4)
 
-    if (!isValidPassword(us_password, user.us_password))
-      throw new UnauthorizedCodeError('Email hoặc password không đúng', -1)
+    const listBookTable = await this.bookTableRepository.findBookTableWithGuest(id_user_guest_header)
 
+    listBookTable?.map(async (item) => {
+      await this.bookTableRepository.updateBookTableGuestOfUser({ _id: item._id, book_tb_user_id: user._id })
+    })
     const token = await Promise.all([
       this.signToken(String(user._id), 'access_token'),
       this.signToken(String(user._id), 'refresh_token')

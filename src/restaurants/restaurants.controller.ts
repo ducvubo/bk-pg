@@ -1,13 +1,16 @@
-import { Controller, Post, Body, Get, Query, Param, Patch, Delete, UseGuards } from '@nestjs/common'
+import { Controller, Post, Body, Get, Query, Param, Patch, Delete, UseGuards, Req } from '@nestjs/common'
 import { RestaurantsService } from './restaurants.service'
 import { CreateRestaurantDto } from './dto/create-restaurant.dto'
-import { ResponseMessage, User } from 'src/decorator/customize'
+import { ResponseMessage, RestaurantOrEmployee, User } from 'src/decorator/customize'
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto'
 import { UpdateVerify } from './dto/update-verify.dto'
 import { UpdateState } from './dto/update-state.dto'
 import { UpdateStatus } from './dto/update-status.dt'
 import { UserAuthGuard } from 'src/guard/users.guard'
 import { IUser } from 'src/users/users.interface'
+import { LoginRestaurantDto } from './dto/login-restaurant.dto'
+import { RestaurantOrEmployeeAuthGuard } from 'src/guard/restaurant.guard'
+import { IRestaurant } from './restaurant.interface'
 
 @Controller('restaurants')
 export class RestaurantsController {
@@ -32,6 +35,26 @@ export class RestaurantsController {
   @ResponseMessage('Cập nhật thông tin nhà hàng thành công')
   async update(@Body() updateRestaurantDto: UpdateRestaurantDto, @User() user: IUser) {
     return await this.restaurantsService.update(updateRestaurantDto, user)
+  }
+
+  @Post('/login')
+  @ResponseMessage('Đăng nhập nhà hàng thành công')
+  async loginRestaurant(@Body() loginRestaurantDto: LoginRestaurantDto) {
+    return await this.restaurantsService.loginRestaurant(loginRestaurantDto)
+  }
+
+  @Get('/infor')
+  @UseGuards(RestaurantOrEmployeeAuthGuard)
+  @ResponseMessage('Lấy thông tin nhà hàng thành công')
+  async getInforRestaurant(@RestaurantOrEmployee() restaurant: IRestaurant) {
+    return restaurant
+  }
+
+  @Post('/refresh-token')
+  @ResponseMessage('Làm mới token thành công')
+  async refreshToken(@Req() req: Request) {
+    const refresh_token = req.headers['authorization']?.split(' ')[1]
+    return await this.restaurantsService.refreshToken({ refresh_token })
   }
 
   @Get('/home')

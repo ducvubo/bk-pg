@@ -17,7 +17,6 @@ export class RestaurantRepository {
   async create(createRestaurantDto: CreateRestaurantDto, user: IUser) {
     const {
       restaurant_email,
-      restaurant_password,
       restaurant_phone,
       restaurant_category,
       restaurant_name,
@@ -40,7 +39,6 @@ export class RestaurantRepository {
     const restaurant_slug = generateSlug(restaurant_name)
     return await this.restaurantModel.create({
       restaurant_email,
-      restaurant_password,
       restaurant_phone,
       restaurant_category,
       restaurant_name,
@@ -88,7 +86,7 @@ export class RestaurantRepository {
       .find({
         isDeleted: false
       })
-      .select('-updatedAt -createdAt -__v -createdBy -updatedBy -restaurant_password')
+      .select('-updatedAt -createdAt -__v -createdBy -updatedBy')
       .skip(offset)
       .limit(defaultLimit)
       .sort(sort as any) //ep kieu du lieu
@@ -100,7 +98,6 @@ export class RestaurantRepository {
     return await this.restaurantModel
       .findById(_id)
       .lean()
-      .select('-restaurant_password')
       .populate('restaurant_amenity') // Populate amenities
       .populate('restaurant_type') // Populate restaurant types
   }
@@ -230,7 +227,7 @@ export class RestaurantRepository {
       .find({
         isDeleted: true
       })
-      .select('-updatedAt -createdAt -__v -createdBy -updatedBy -restaurant_password')
+      .select('-updatedAt -createdAt -__v -createdBy -updatedBy')
       .skip(offset)
       .limit(defaultLimit)
       .sort(sort as any) //ep kieu du lieu
@@ -275,7 +272,7 @@ export class RestaurantRepository {
         restaurant_state: true
       })
       .select(
-        '-updatedAt -createdAt -__v -createdBy -updatedBy -isDeleted -deletedBy -deletedAt -restaurant_password -restaurant_status -restaurant_state'
+        '-updatedAt -createdAt -__v -createdBy -updatedBy -isDeleted -deletedBy -deletedAt -restaurant_status -restaurant_state'
       )
       .populate({
         path: 'restaurant_type', // Tên trường cần populate
@@ -287,5 +284,35 @@ export class RestaurantRepository {
       })
       .lean()
       .exec()
+  }
+
+  async findOneByIdOfBook({ id }: { id: string }) {
+    return await this.restaurantModel
+      .findOne({
+        _id: id,
+        isDeleted: false,
+        restaurant_status: 'inactive',
+        restaurant_state: true
+      })
+      .lean()
+  }
+
+  async findOneByIdOfToken({ _id }: { _id: string }) {
+    return await this.restaurantModel
+      .findOne({
+        _id,
+        isDeleted: false,
+        restaurant_status: 'inactive'
+      })
+      .select(' -restaurant_status -__v -updatedBy -updatedAt -createdAt -isDeleted -deletedBy -deletedAt')
+      .lean()
+  }
+
+  async findOneByEmailWithLogin({ restaurant_email }) {
+    return await this.restaurantModel
+      .findOne({
+        restaurant_email
+      })
+      .lean()
   }
 }

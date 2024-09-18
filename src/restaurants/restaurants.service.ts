@@ -1,40 +1,53 @@
 import { Injectable } from '@nestjs/common'
 import { CreateRestaurantDto } from './dto/create-restaurant.dto'
 import { RestaurantRepository } from './model/restaurant.repo'
-import { BadRequestError, ConflictError, NotFoundError } from 'src/utils/errorResponse'
+import { BadRequestError, ConflictError, NotFoundError, UnauthorizedCodeError } from 'src/utils/errorResponse'
 import { faker } from '@faker-js/faker'
 import aqp from 'api-query-params'
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto'
-import { checkDuplicateDays, getHashPassword } from 'src/utils'
+import { checkDuplicateDays, decodeJwt, getHashPassword, isValidPassword } from 'src/utils'
 import mongoose from 'mongoose'
 import { UpdateVerify } from './dto/update-verify.dto'
 import { UpdateState } from './dto/update-state.dto'
 import { UpdateStatus } from './dto/update-status.dt'
 import { IUser } from 'src/users/users.interface'
+import { LoginRestaurantDto } from './dto/login-restaurant.dto'
+import { KEY_BLACK_LIST_TOKEN_RESTAURANT } from 'src/constants/key.redis'
+import { getCacheIO, setCacheIOExpiration } from 'src/utils/cache'
+import { ConfigService } from '@nestjs/config'
+import { AccountsService } from 'src/accounts/accounts.service'
 
 @Injectable()
 export class RestaurantsService {
-  constructor(private readonly restaurantRepository: RestaurantRepository) {}
+  constructor(
+    private readonly restaurantRepository: RestaurantRepository,
+    private readonly configService: ConfigService,
+    private readonly accountsService: AccountsService
+  ) {}
 
   async create(createRestaurantDto: CreateRestaurantDto, user: IUser) {
     checkDuplicateDays(createRestaurantDto.restaurant_hours)
-    const restaurant_email = faker.internet.email(),
-      restaurant_phone = faker.phone.number()
+    createRestaurantDto.restaurant_email = faker.internet.email()
+    createRestaurantDto.restaurant_phone = faker.phone.number()
     const { restaurant_password } = createRestaurantDto
-    const isEmailExist = await this.restaurantRepository.findRestaurantByEmail({ restaurant_email })
-    const isPhoneExist = await this.restaurantRepository.findRestaurantByPhone({ restaurant_phone })
+    const isEmailExist = await this.restaurantRepository.findRestaurantByEmail({
+      restaurant_email: createRestaurantDto.restaurant_email
+    })
+    const isPhoneExist = await this.restaurantRepository.findRestaurantByPhone({
+      restaurant_phone: createRestaurantDto.restaurant_phone
+    })
     if (isEmailExist) throw new ConflictError('Email này đã được đăng ký')
     if (isPhoneExist) throw new ConflictError('Số điện thoại này đã được đăng ký')
 
-    createRestaurantDto.restaurant_password = getHashPassword(restaurant_password)
-    const newRestaurant = await this.restaurantRepository.create(
-      {
-        restaurant_email,
-        restaurant_phone,
-        ...createRestaurantDto
-      },
-      user
-    )
+    const newRestaurant = await this.restaurantRepository.create(createRestaurantDto, user)
+
+    await this.accountsService.createAccount({
+      account_email: newRestaurant.restaurant_email,
+      account_password: getHashPassword(restaurant_password),
+      account_type: 'restaurant',
+      account_restaurant_id: String(newRestaurant._id)
+    })
+
     if (newRestaurant) {
       return {
         _id: newRestaurant._id,
@@ -228,5 +241,88 @@ export class RestaurantsService {
   async findOneBySlug({ restaurant_slug }) {
     if (!restaurant_slug) throw new BadRequestError(`Slug ${restaurant_slug} không hợp lệ`)
     return await this.restaurantRepository.findOneBySlug({ restaurant_slug })
+  }
+
+  async loginRestaurant(loginRestaurantDto: LoginRestaurantDto) {
+    const { restaurant_email, restaurant_password } = loginRestaurantDto
+
+    const restaurant = await this.restaurantRepository.findOneByEmailWithLogin({ restaurant_email })
+    if (!restaurant) throw new UnauthorizedCodeError('Email hoặc mật khẩu không đúng', -1)
+
+    const account = await this.accountsService.findAccountByIdRestaurant({
+      account_restaurant_id: String(restaurant._id)
+    })
+
+    if (!isValidPassword(restaurant_password, account.account_password))
+      throw new UnauthorizedCodeError('Email hoặc mật khẩu không đúng', -1)
+
+    if (restaurant.restaurant_verify === false)
+      throw new UnauthorizedCodeError('Nhà hàng chưa được xác thực, vui lòng xác thực trước khi đăng nhập', -2)
+
+    if (restaurant.restaurant_status === 'active' || restaurant.restaurant_status === 'banned')
+      throw new UnauthorizedCodeError(
+        'Nhà hàng chưa được hoạt động hoặc bị cấm hoạt động, vui lòng liên hệ quản trị viên để biết thêm chi tiết',
+        -3
+      )
+
+    const token: { access_token_rtr: string; refresh_token_rtr: string } =
+      await this.accountsService.generateRefreshTokenCP({ _id: String(restaurant._id), rf_type: 'restaurant' })
+    return token
+  }
+
+  async findOneByIdOfToken({ _id }: { _id: string }) {
+    return await this.restaurantRepository.findOneByIdOfToken({ _id })
+  }
+
+  async findRefreshToken({ rf_refresh_token }: { rf_refresh_token: string }) {
+    return await this.accountsService.findRefreshToken({ rf_refresh_token })
+  }
+
+  async refreshToken({ refresh_token }: { refresh_token: string }) {
+    if (refresh_token) {
+      const isBlackList = await getCacheIO(`${KEY_BLACK_LIST_TOKEN_RESTAURANT}:${refresh_token}`)
+      console.log('isBlackList', isBlackList)
+      if (isBlackList) {
+        const decodedJWT = decodeJwt(refresh_token)
+        await this.accountsService.logoutAll({ rf_cp_epl_id: decodedJWT._id, type: 'restaurant' })
+        throw new UnauthorizedCodeError('Token đã lỗi vui lòng đăng nhập lại để tiếp tục sử dụng dịch vụ 1', -10)
+      } else {
+        try {
+          const key = await this.findRefreshToken({
+            rf_refresh_token: refresh_token
+          })
+
+          if (!key) throw new UnauthorizedCodeError('Token không hợp lệ 1', -10)
+          if (key) {
+            const data_refresh_token = this.accountsService.verifyToken(refresh_token, key.rf_public_key_refresh_token)
+            const result = await Promise.all([
+              await this.accountsService.generateRefreshTokenCP({
+                _id: String(data_refresh_token._id),
+                rf_type: 'restaurant'
+              }),
+              await setCacheIOExpiration(
+                `${KEY_BLACK_LIST_TOKEN_RESTAURANT}:${refresh_token}`,
+                'hehehehehehehe',
+                this.configService.get<string>('JWT_REFRESH_EXPIRE_REDIS')
+              ),
+              await this.accountsService.deleteToken({
+                rf_refresh_token: refresh_token,
+                rf_cp_epl_id: data_refresh_token._id
+              })
+            ])
+
+            return {
+              access_token_rtr: result[0].access_token_rtr,
+              refresh_token_rtr: result[0].refresh_token_rtr
+            }
+          }
+        } catch (error) {
+          console.log(error)
+          throw new UnauthorizedCodeError('Token lỗi vui lòng đăng nhập lại để tiếp tục sử dụng dịch vụ 2', -10)
+        }
+      }
+    } else {
+      throw new UnauthorizedCodeError('Không tìm thấy token ở header', -10)
+    }
   }
 }

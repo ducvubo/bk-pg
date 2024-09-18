@@ -9,10 +9,11 @@ export class IdUserGuestInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest()
     const response = context.switchToHttp().getResponse()
     const id_user_guest = request.headers['id_user_guest']
-    if (id_user_guest) {
+    if (id_user_guest && id_user_guest !== 'undefined') {
       response.setHeader('id_user_guest', id_user_guest)
-    } else {
+    } else if (!id_user_guest || id_user_guest === 'undefined') {
       const id_user_guest_new = `Guest-${uuidv4()}`
+      request.headers['id_user_guest'] = id_user_guest_new
       response.setHeader('id_user_guest', id_user_guest_new)
     }
     return next.handle().pipe(tap())

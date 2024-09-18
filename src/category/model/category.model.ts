@@ -6,7 +6,6 @@ export type CategoryDocument = HydratedDocument<Category>
 
 @Schema({ timestamps: true })
 export class Category extends SampleSchema {
-  // Tên tiện ích
   @Prop({ type: String, required: true })
   category_name: string
 }

@@ -3,7 +3,6 @@ import { UsersService } from './users.service'
 import { ResponseMessage, User } from 'src/decorator/customize'
 import { RegisterUserDto } from './dto/register-user.dto'
 import { ComfirmUserDto } from './dto/comfirm-user.dto'
-import { generateStrongPassword } from 'src/utils'
 import { UserAuthGuard } from 'src/guard/users.guard'
 import { IUser } from './users.interface'
 import { LoginUserDto } from './dto/login-user.dto'
@@ -11,17 +10,19 @@ import { ChangePasswordDto, ForgotPasswordDto } from './dto/change-password.dto'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { UpdateStatusUser } from './dto/update-status.dto'
+// import { generateStrongPassword } from 'src/utils'
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
-  @Get()
-  @ResponseMessage('Lấy tất cả tài khoản thành công')
-  async test() {
-    return {
-      password: generateStrongPassword(16)
-    }
-  }
+  // @Get()
+  // @ResponseMessage('Lấy tất cả tài khoản thành công')
+  // async test(@Req() req: Request) {
+  //   console.log(req.headers['id_user_guest'])
+  //   return {
+  //     password: generateStrongPassword(16)
+  //   }
+  // }
   @Post()
   @ResponseMessage('Tạo người dùng mới thành công')
   @UseGuards(UserAuthGuard)
@@ -58,8 +59,9 @@ export class UsersController {
 
   @Post('/login')
   @ResponseMessage('Đăng nhập thành công')
-  async login(@Body() loginUserDto: LoginUserDto) {
-    return await this.usersService.login(loginUserDto)
+  async login(@Body() loginUserDto: LoginUserDto, @Req() req: Request) {
+    const id_user_guest_header = req.headers['id_user_guest']
+    return await this.usersService.login(loginUserDto, id_user_guest_header)
   }
 
   @Post('/verify')

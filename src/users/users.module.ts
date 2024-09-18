@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 import { UsersService } from './users.service'
 import { UsersController } from './users.controller'
 import { MongooseModule } from '@nestjs/mongoose'
@@ -10,6 +10,7 @@ import { RefreshTokenUserRepository } from './model/refresh-token.repo'
 import { RefreshTokenUser, RefreshTokenUserSchema } from './model/refresh-token.model'
 import { UnauthorizedExceptionFilter } from 'src/filter'
 import { APP_FILTER } from '@nestjs/core'
+import { BookTableModule } from 'src/book-table/book-table.module'
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { APP_FILTER } from '@nestjs/core'
       { name: RefreshTokenUser.name, schema: RefreshTokenUserSchema }
     ]),
     JwtModule.register({}),
-    MailModule
+    MailModule,
+    forwardRef(() => BookTableModule)
   ],
   controllers: [UsersController],
   providers: [

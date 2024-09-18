@@ -25,7 +25,7 @@ export class UserRepository {
       us_email,
       us_password,
       us_name: generateNumberString(20),
-      us_phone: generateNumberString(20),
+      us_phone: generateNumberString(10),
       us_verify: false
     })
   }
