@@ -10,9 +10,6 @@ export class RefreshTokenAccount extends SampleSchema {
   @Prop({ type: mongoose.Schema.Types.ObjectId, required: true })
   rf_cp_epl_id: mongoose.Schema.Types.ObjectId
 
-  @Prop({ type: String, required: true, enum: ['restaurant', 'employee'] })
-  rf_type: 'restaurant' | 'employee'
-
   @Prop({ type: String, required: true })
   rf_refresh_token: string
 

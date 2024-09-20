@@ -15,9 +15,7 @@ import { BookTableModule } from './book-table/book-table.module'
 import { ScheduleModule } from '@nestjs/schedule'
 import { CronModule } from './cron/cron.module'
 import { EmployeesModule } from './employees/employees.module'
-import { RefreshTokenModule } from './refresh-token/refresh-token.module'
-import { Throttle } from '@nestjs/throttler'
-import { AccountsModule } from './accounts/accounts.module';
+import { AccountsModule } from './accounts/accounts.module'
 
 @Module({
   imports: [
@@ -43,7 +41,6 @@ import { AccountsModule } from './accounts/accounts.module';
     BookTableModule,
     CronModule,
     EmployeesModule,
-    RefreshTokenModule,
     AccountsModule
   ],
   controllers: [AppController],

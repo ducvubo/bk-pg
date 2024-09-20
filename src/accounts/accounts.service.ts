@@ -5,6 +5,7 @@ import { RefreshTokenAccountRepository } from './model/refresh-token.repo'
 import { ConfigService } from '@nestjs/config'
 import { UnauthorizedError } from 'src/utils/errorResponse'
 import * as crypto from 'crypto'
+import { getHashPassword } from 'src/utils'
 
 @Injectable()
 export class AccountsService {
@@ -64,7 +65,7 @@ export class AccountsService {
   }) {
     return await this.accountRepository.createAccount({
       account_email,
-      account_password,
+      account_password: getHashPassword(account_password),
       account_type,
       account_restaurant_id,
       account_employee_id
@@ -75,7 +76,7 @@ export class AccountsService {
     return await this.accountRepository.findAccountByIdRestaurant({ account_restaurant_id })
   }
 
-  async generateRefreshTokenCP({ _id, rf_type }: { _id: string; rf_type: 'restaurant' | 'employee' }) {
+  async generateRefreshTokenCP({ _id }: { _id: string }) {
     const token = await Promise.all([
       this.signToken(String(_id), 'access_token'),
       this.signToken(String(_id), 'refresh_token')
@@ -86,7 +87,6 @@ export class AccountsService {
 
     await this.refreshTokenAccountRepository.createToken({
       rf_cp_epl_id: _id,
-      rf_type: rf_type,
       rf_refresh_token: token[1].token,
       rf_public_key_refresh_token: refreshPublicKeyString,
       rf_public_key_access_token: accessPublicKeyString
@@ -98,12 +98,16 @@ export class AccountsService {
     }
   }
 
+  async findAccoutById({ _id }: { _id: string }) {
+    return await this.accountRepository.findAccoutById({ _id })
+  }
+
   async findRefreshToken({ rf_refresh_token }: { rf_refresh_token: string }) {
     return await this.refreshTokenAccountRepository.findRefreshToken({ rf_refresh_token })
   }
 
-  async logoutAll({ rf_cp_epl_id, type }: { rf_cp_epl_id: string; type: 'restaurant' | 'employee' }) {
-    return await this.refreshTokenAccountRepository.logoutAll({ rf_cp_epl_id, type })
+  async logoutAll({ rf_cp_epl_id }: { rf_cp_epl_id: string }) {
+    return await this.refreshTokenAccountRepository.logoutAll({ rf_cp_epl_id })
   }
 
   async deleteToken({ rf_refresh_token, rf_cp_epl_id }: { rf_refresh_token: string; rf_cp_epl_id: string }) {

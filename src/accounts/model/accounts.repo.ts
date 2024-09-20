@@ -31,4 +31,8 @@ export class AccountRepository {
   async findAccountByIdRestaurant({ account_restaurant_id }: { account_restaurant_id: string }) {
     return await this.accountModel.findOne({ account_restaurant_id, account_type: 'restaurant' }).lean()
   }
+
+  async findAccoutById({ _id }: { _id: string }) {
+    return await this.accountModel.findOne({ _id })
+  }
 }

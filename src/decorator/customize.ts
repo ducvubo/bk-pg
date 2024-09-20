@@ -9,7 +9,7 @@ export const User = createParamDecorator((data: unknown, ctx: ExecutionContext) 
   return request.user
 })
 
-export const RestaurantOrEmployee = createParamDecorator((data: unknown, ctx: ExecutionContext) => {
+export const Acccount = createParamDecorator((data: unknown, ctx: ExecutionContext) => {
   const request = ctx.switchToHttp().getRequest()
-  return request.restaurant
+  return request.account
 })

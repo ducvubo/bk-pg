@@ -5,7 +5,7 @@ import { BadRequestError, ConflictError, NotFoundError, UnauthorizedCodeError } 
 import { faker } from '@faker-js/faker'
 import aqp from 'api-query-params'
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto'
-import { checkDuplicateDays, decodeJwt, getHashPassword, isValidPassword } from 'src/utils'
+import { checkDuplicateDays, decodeJwt, isValidPassword } from 'src/utils'
 import mongoose from 'mongoose'
 import { UpdateVerify } from './dto/update-verify.dto'
 import { UpdateState } from './dto/update-state.dto'
@@ -16,6 +16,7 @@ import { KEY_BLACK_LIST_TOKEN_RESTAURANT } from 'src/constants/key.redis'
 import { getCacheIO, setCacheIOExpiration } from 'src/utils/cache'
 import { ConfigService } from '@nestjs/config'
 import { AccountsService } from 'src/accounts/accounts.service'
+import { IAccount } from 'src/accounts/accounts.interface'
 
 @Injectable()
 export class RestaurantsService {
@@ -43,7 +44,7 @@ export class RestaurantsService {
 
     await this.accountsService.createAccount({
       account_email: newRestaurant.restaurant_email,
-      account_password: getHashPassword(restaurant_password),
+      account_password: restaurant_password,
       account_type: 'restaurant',
       account_restaurant_id: String(newRestaurant._id)
     })
@@ -266,7 +267,7 @@ export class RestaurantsService {
       )
 
     const token: { access_token_rtr: string; refresh_token_rtr: string } =
-      await this.accountsService.generateRefreshTokenCP({ _id: String(restaurant._id), rf_type: 'restaurant' })
+      await this.accountsService.generateRefreshTokenCP({ _id: String(account._id) })
     return token
   }
 
@@ -281,10 +282,9 @@ export class RestaurantsService {
   async refreshToken({ refresh_token }: { refresh_token: string }) {
     if (refresh_token) {
       const isBlackList = await getCacheIO(`${KEY_BLACK_LIST_TOKEN_RESTAURANT}:${refresh_token}`)
-      console.log('isBlackList', isBlackList)
       if (isBlackList) {
         const decodedJWT = decodeJwt(refresh_token)
-        await this.accountsService.logoutAll({ rf_cp_epl_id: decodedJWT._id, type: 'restaurant' })
+        await this.accountsService.logoutAll({ rf_cp_epl_id: decodedJWT._id })
         throw new UnauthorizedCodeError('Token đã lỗi vui lòng đăng nhập lại để tiếp tục sử dụng dịch vụ 1', -10)
       } else {
         try {
@@ -297,8 +297,7 @@ export class RestaurantsService {
             const data_refresh_token = this.accountsService.verifyToken(refresh_token, key.rf_public_key_refresh_token)
             const result = await Promise.all([
               await this.accountsService.generateRefreshTokenCP({
-                _id: String(data_refresh_token._id),
-                rf_type: 'restaurant'
+                _id: String(data_refresh_token._id)
               }),
               await setCacheIOExpiration(
                 `${KEY_BLACK_LIST_TOKEN_RESTAURANT}:${refresh_token}`,
@@ -324,5 +323,9 @@ export class RestaurantsService {
     } else {
       throw new UnauthorizedCodeError('Không tìm thấy token ở header', -10)
     }
+  }
+
+  async getInforRestaurant(account: IAccount) {
+    return this.restaurantRepository.findOneByIdOfToken({ _id: account.account_restaurant_id })
   }
 }

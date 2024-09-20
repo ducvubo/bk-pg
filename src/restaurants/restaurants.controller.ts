@@ -1,7 +1,7 @@
 import { Controller, Post, Body, Get, Query, Param, Patch, Delete, UseGuards, Req } from '@nestjs/common'
 import { RestaurantsService } from './restaurants.service'
 import { CreateRestaurantDto } from './dto/create-restaurant.dto'
-import { ResponseMessage, RestaurantOrEmployee, User } from 'src/decorator/customize'
+import { Acccount, ResponseMessage, User } from 'src/decorator/customize'
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto'
 import { UpdateVerify } from './dto/update-verify.dto'
 import { UpdateState } from './dto/update-state.dto'
@@ -9,8 +9,8 @@ import { UpdateStatus } from './dto/update-status.dt'
 import { UserAuthGuard } from 'src/guard/users.guard'
 import { IUser } from 'src/users/users.interface'
 import { LoginRestaurantDto } from './dto/login-restaurant.dto'
-import { RestaurantOrEmployeeAuthGuard } from 'src/guard/restaurant.guard'
-import { IRestaurant } from './restaurant.interface'
+import { IAccount } from 'src/accounts/accounts.interface'
+import { AccountAuthGuard } from 'src/guard/accounts.guard'
 
 @Controller('restaurants')
 export class RestaurantsController {
@@ -44,10 +44,10 @@ export class RestaurantsController {
   }
 
   @Get('/infor')
-  @UseGuards(RestaurantOrEmployeeAuthGuard)
+  @UseGuards(AccountAuthGuard)
   @ResponseMessage('Lấy thông tin nhà hàng thành công')
-  async getInforRestaurant(@RestaurantOrEmployee() restaurant: IRestaurant) {
-    return restaurant
+  async getInforRestaurant(@Acccount() account: IAccount) {
+    return this.restaurantsService.getInforRestaurant(account)
   }
 
   @Post('/refresh-token')

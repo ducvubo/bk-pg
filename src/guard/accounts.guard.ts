@@ -4,7 +4,7 @@ import { RestaurantsService } from 'src/restaurants/restaurants.service'
 import { UnauthorizedCodeError } from 'src/utils/errorResponse'
 
 @Injectable()
-export class RestaurantOrEmployeeAuthGuard implements CanActivate {
+export class AccountAuthGuard implements CanActivate {
   constructor(
     private accountsService: AccountsService,
     private readonly restaurantsService: RestaurantsService
@@ -32,12 +32,22 @@ export class RestaurantOrEmployeeAuthGuard implements CanActivate {
 
       if (!dataToken[0] || !dataToken[1]) throw new UnauthorizedCodeError('Token không hợp lệ2', -10)
 
-      const restaurant: any = await this.restaurantsService.findOneByIdOfToken({ _id: dataToken[0]._id })
-      if (!restaurant) throw new UnauthorizedCodeError('Token không hợp lệ 5', -10)
+      const account: any = await this.accountsService.findAccoutById({ _id: dataToken[0]._id })
+      if (!account) throw new UnauthorizedCodeError('Token không hợp lệ 5', -10)
 
-      delete restaurant.restaurant_password
-      restaurant.email = restaurant.restaurant_email
-      request.restaurant = restaurant
+      if (account.account_type === 'restaurant') {
+        const restaurant = await this.restaurantsService.findOneByIdOfToken({ _id: account.account_restaurant_id })
+        if (!restaurant) throw new UnauthorizedCodeError('Token không hợp lệ 5', -10)
+
+        delete account.account_password
+        request.account = account
+        return true
+      }
+      // if (!restaurant) throw new UnauthorizedCodeError('Token không hợp lệ 5', -10)
+
+      // delete restaurant.restaurant_password
+      // restaurant.email = restaurant.restaurant_email
+      // request.restaurant = restaurant
       return true
     } catch (error) {
       console.log(error)

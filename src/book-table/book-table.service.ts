@@ -98,7 +98,6 @@ export class BookTableService {
   verifyToken(token: string) {
     try {
       const { _id } = this.jwtService.verify(token)
-      console.log(_id)
       return _id
     } catch (error) {
       console.error('Error name:', error.name) // In ra tên lỗi để kiểm tra

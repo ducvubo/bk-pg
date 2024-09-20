@@ -9,20 +9,17 @@ export class RefreshTokenAccountRepository {
 
   async createToken({
     rf_cp_epl_id,
-    rf_type,
     rf_refresh_token,
     rf_public_key_refresh_token,
     rf_public_key_access_token
   }: {
     rf_cp_epl_id: string
-    rf_type: 'restaurant' | 'employee'
     rf_refresh_token: string
     rf_public_key_refresh_token: string
     rf_public_key_access_token: string
   }) {
     return await this.refreshTokenAccount.create({
       rf_cp_epl_id,
-      rf_type,
       rf_refresh_token,
       rf_public_key_refresh_token,
       rf_public_key_access_token
@@ -33,8 +30,8 @@ export class RefreshTokenAccountRepository {
     return await this.refreshTokenAccount.findOne({ rf_refresh_token }).lean()
   }
 
-  async logoutAll({ rf_cp_epl_id, type }: { rf_cp_epl_id: string; type: 'restaurant' | 'employee' }) {
-    return await this.refreshTokenAccount.deleteMany({ rf_cp_epl_id, rf_type: type })
+  async logoutAll({ rf_cp_epl_id }: { rf_cp_epl_id: string }) {
+    return await this.refreshTokenAccount.deleteMany({ rf_cp_epl_id })
   }
   async deleteToken({ rf_refresh_token, rf_cp_epl_id }: { rf_refresh_token: string; rf_cp_epl_id: string }) {
     return await this.refreshTokenAccount.deleteOne({ rf_refresh_token, rf_cp_epl_id })
