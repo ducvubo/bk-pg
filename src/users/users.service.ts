@@ -362,7 +362,7 @@ export class UsersService {
   async findOneUser({ _id }: { _id: string }) {
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Người dùng không tồn tại')
     const user = await this.userRepository.findOne({ _id })
-    if (!user) throw new NotFoundError('Tài khoản không tồn tại')
+    if (!user) throw new NotFoundError('Người dùng không tồn tại')
     return user
   }
 

@@ -123,7 +123,8 @@ export class UserRepository {
         deletedBy: {
           email: user.us_email,
           _id: user._id
-        }
+        },
+        deletedAt: new Date()
       },
       { new: true }
     )

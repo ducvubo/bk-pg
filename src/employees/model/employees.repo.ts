@@ -3,6 +3,7 @@ import { Employee, EmployeeDocument } from './employees.model'
 import { Model } from 'mongoose'
 import { CreateEmployeeDto } from '../dto/create-employee.dto'
 import { IAccount } from 'src/accounts/accounts.interface'
+import { UpdateEmployeeDto } from '../dto/update-employee.dto'
 
 export class EmloyeeRepository {
   constructor(@InjectModel(Employee.name) private employeeModel: Model<EmployeeDocument>) {}
@@ -29,19 +30,19 @@ export class EmloyeeRepository {
     return await this.employeeModel.findOne({ epl_email, epl_restaurant_id }).lean()
   }
 
-  async totalItems(account: IAccount) {
+  async totalItems(account: IAccount, isDeleted) {
     return await this.employeeModel
       .countDocuments({
-        isDeleted: false,
+        isDeleted,
         epl_restaurant_id: account.account_restaurant_id
       })
       .lean()
   }
 
-  async findAllPagination({ offset, defaultLimit, sort, population }, account) {
+  async findAllPagination({ offset, defaultLimit, sort, population }, account: IAccount, isDeleted) {
     return this.employeeModel
       .find({
-        isDeleted: false,
+        isDeleted,
         epl_restaurant_id: account.account_restaurant_id
       })
       .select('-updatedAt -createdAt -__v -createdBy -updatedBy -isDeleted -deletedAt -deletedBy')
@@ -50,5 +51,73 @@ export class EmloyeeRepository {
       .sort(sort as any) //ep kieu du lieu
       .populate(population)
       .exec()
+  }
+
+  async findOneById({ _id, account }: { _id: string; account: IAccount }) {
+    return await this.employeeModel.findOne({ _id, epl_restaurant_id: account.account_restaurant_id }).lean()
+  }
+
+  async update(updateEmployeeDto: UpdateEmployeeDto, account: IAccount) {
+    const { _id, epl_address, epl_avatar, epl_email, epl_gender, epl_name, epl_phone } = updateEmployeeDto
+    const { account_email, account_restaurant_id } = account
+    return await this.employeeModel.findOneAndUpdate(
+      { _id, epl_restaurant_id: account_restaurant_id },
+      {
+        epl_address,
+        epl_avatar,
+        epl_email,
+        epl_gender,
+        epl_name,
+        epl_phone,
+        updatedBy: {
+          email: account_email,
+          _id: account_restaurant_id
+        }
+      },
+      { new: true }
+    )
+  }
+
+  async delete({ _id, account }: { _id: string; account: IAccount }) {
+    return await this.employeeModel.findOneAndUpdate(
+      { _id, epl_restaurant_id: account.account_restaurant_id },
+      {
+        isDeleted: true,
+        deletedBy: {
+          email: account.account_email,
+          _id: account.account_restaurant_id
+        },
+        deletedAt: new Date()
+      },
+      { new: true }
+    )
+  }
+
+  async restore({ _id, account }: { _id: string; account: IAccount }) {
+    return await this.employeeModel.findOneAndUpdate(
+      { _id, epl_restaurant_id: account.account_restaurant_id },
+      {
+        isDeleted: false,
+        updatedBy: {
+          email: account.account_email,
+          _id: account.account_restaurant_id
+        }
+      },
+      { new: true }
+    )
+  }
+
+  async updateStatus({ _id, epl_status }, account: IAccount) {
+    return await this.employeeModel.findOneAndUpdate(
+      { _id, epl_restaurant_id: account.account_restaurant_id },
+      {
+        epl_status,
+        updatedBy: {
+          email: account.account_email,
+          _id: account.account_restaurant_id
+        }
+      },
+      { new: true }
+    )
   }
 }

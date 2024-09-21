@@ -103,7 +103,10 @@ export class RestaurantsService {
   }
 
   async findOne({ _id }: { _id: string }) {
-    return await this.restaurantRepository.findOne({ _id })
+    if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Nhà hàng không tồn tại')
+    const restaurant = await this.restaurantRepository.findOne({ _id })
+    if (!restaurant) throw new NotFoundError('Nhà hàng không tồn tại')
+    return restaurant
   }
 
   async update(updateRestaurantDto: UpdateRestaurantDto, user: IUser) {
