@@ -97,6 +97,12 @@ export class RestaurantsController {
     return await this.restaurantsService.findAllRecycle({ currentPage: +currentPage, limit: +limit, qs })
   }
 
+  @Get('/search-login-employee')
+  @ResponseMessage('Tìm kiếm nhà hàng thành công')
+  async search(@Query('search') q: string) {
+    return await this.restaurantsService.search({ q })
+  }
+
   @Patch('/restore/:id')
   @UseGuards(UserAuthGuard)
   @ResponseMessage('Khôi phục nhà hàng đã xóa thành công')

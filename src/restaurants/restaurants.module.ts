@@ -6,12 +6,14 @@ import { Restaurant, RestaurantSchema } from './model/restaurant.model'
 import { RestaurantRepository } from './model/restaurant.repo'
 import { UsersModule } from 'src/users/users.module'
 import { AccountsModule } from 'src/accounts/accounts.module'
+import { EmployeesModule } from 'src/employees/employees.module'
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Restaurant.name, schema: RestaurantSchema }]),
     UsersModule,
-    AccountsModule
+    AccountsModule,
+    EmployeesModule
   ],
   controllers: [RestaurantsController],
   providers: [RestaurantsService, RestaurantRepository],

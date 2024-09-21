@@ -76,6 +76,10 @@ export class AccountsService {
     return await this.accountRepository.findAccountByIdRestaurant({ account_restaurant_id })
   }
 
+  async findAccountByIdEmployee({ account_employee_id, account_restaurant_id }) {
+    return await this.accountRepository.findAccountByIdEmployee({ account_employee_id, account_restaurant_id })
+  }
+
   async generateRefreshTokenCP({ _id }: { _id: string }) {
     const token = await Promise.all([
       this.signToken(String(_id), 'access_token'),

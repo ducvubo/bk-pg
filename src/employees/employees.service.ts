@@ -3,17 +3,21 @@ import { EmloyeeRepository } from './model/employees.repo'
 import { CreateEmployeeDto } from './dto/create-employee.dto'
 import { IAccount } from 'src/accounts/accounts.interface'
 import { AccountsService } from 'src/accounts/accounts.service'
-import { BadRequestError, ConflictError, NotFoundError } from 'src/utils/errorResponse'
+import { BadRequestError, ConflictError, NotFoundError, UnauthorizedCodeError } from 'src/utils/errorResponse'
 import aqp from 'api-query-params'
 import mongoose from 'mongoose'
 import { UpdateEmployeeDto } from './dto/update-employee.dto'
 import { UpdateStatusEmployeeDto } from './dto/update-status-employee.dto'
+import { LoginEmployeeDto } from './dto/login-employee.dto'
+import { ConfigService } from '@nestjs/config'
+import { isValidPassword } from 'src/utils'
 
 @Injectable()
 export class EmployeesService {
   constructor(
     private readonly emloyeeRepository: EmloyeeRepository,
-    private readonly accountsService: AccountsService
+    private readonly accountsService: AccountsService,
+    private readonly configService: ConfigService
   ) {}
 
   async create(createEmployeeDto: CreateEmployeeDto, account: IAccount) {
@@ -163,5 +167,35 @@ export class EmployeesService {
     const employee = await this.emloyeeRepository.findOneById({ _id, account })
     if (!employee) throw new NotFoundError('Nhân viên không tồn tại')
     return await this.emloyeeRepository.updateStatus(updateStatusEmployeeDto, account)
+  }
+
+  async login(loginEmployeeDto: LoginEmployeeDto) {
+    const { epl_email, epl_password, epl_restaurant_id } = loginEmployeeDto
+
+    const employee = await this.emloyeeRepository.findOneByEmailWithLogin({ epl_email, epl_restaurant_id })
+    if (!employee) throw new UnauthorizedCodeError('Email hoặc mật khẩu không đúng', -1)
+
+    const account = await this.accountsService.findAccountByIdEmployee({
+      account_employee_id: String(employee._id),
+      account_restaurant_id: epl_restaurant_id
+    })
+
+    if (!isValidPassword(epl_password, account.account_password))
+      throw new UnauthorizedCodeError('Email hoặc mật khẩu không đúng', -1)
+
+    const token: { access_token_rtr: string; refresh_token_rtr: string } =
+      await this.accountsService.generateRefreshTokenCP({ _id: String(account._id) })
+    return token
+  }
+
+  async findOneByIdOfToken({ _id }) {
+    return await this.emloyeeRepository.findOneByIdOfToken({ _id })
+  }
+
+  async getInforEmployee(account: IAccount) {
+    return await this.emloyeeRepository.getInfor({
+      _id: account.account_employee_id,
+      epl_restaurant_id: account.restaurant_id
+    })
   }
 }

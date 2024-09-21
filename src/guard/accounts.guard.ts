@@ -1,5 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common'
 import { AccountsService } from 'src/accounts/accounts.service'
+import { EmployeesService } from 'src/employees/employees.service'
 import { RestaurantsService } from 'src/restaurants/restaurants.service'
 import { UnauthorizedCodeError } from 'src/utils/errorResponse'
 
@@ -7,7 +8,8 @@ import { UnauthorizedCodeError } from 'src/utils/errorResponse'
 export class AccountAuthGuard implements CanActivate {
   constructor(
     private accountsService: AccountsService,
-    private readonly restaurantsService: RestaurantsService
+    private readonly restaurantsService: RestaurantsService,
+    private readonly employeesService: EmployeesService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<any> {
@@ -39,15 +41,22 @@ export class AccountAuthGuard implements CanActivate {
         const restaurant = await this.restaurantsService.findOneByIdOfToken({ _id: account.account_restaurant_id })
         if (!restaurant) throw new UnauthorizedCodeError('Token không hợp lệ 5', -10)
 
-        delete account.account_password
+        account.account_password = undefined
         request.account = account
         return true
       }
-      // if (!restaurant) throw new UnauthorizedCodeError('Token không hợp lệ 5', -10)
 
-      // delete restaurant.restaurant_password
-      // restaurant.email = restaurant.restaurant_email
-      // request.restaurant = restaurant
+      if (account.account_type === 'employee') {
+        const employee = await this.employeesService.findOneByIdOfToken({ _id: account.account_employee_id })
+        if (!employee) throw new UnauthorizedCodeError('Token không hợp lệ 5', -10)
+
+        account['restaurant_id'] = account.account_restaurant_id
+        console.log(account)
+        account.account_restaurant_id = undefined
+        account.account_password = undefined
+        request.account = account
+        return true
+      }
       return true
     } catch (error) {
       console.log(error)

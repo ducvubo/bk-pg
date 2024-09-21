@@ -12,4 +12,6 @@ export interface IAccount {
   account_restaurant_id: string
 
   account_employee_id: string
+
+  restaurant_id: string
 }

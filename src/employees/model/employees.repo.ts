@@ -54,7 +54,9 @@ export class EmloyeeRepository {
   }
 
   async findOneById({ _id, account }: { _id: string; account: IAccount }) {
-    return await this.employeeModel.findOne({ _id, epl_restaurant_id: account.account_restaurant_id }).lean()
+    return await this.employeeModel
+      .findOne({ _id, epl_restaurant_id: account.account_restaurant_id, isDeleted: false })
+      .lean()
   }
 
   async update(updateEmployeeDto: UpdateEmployeeDto, account: IAccount) {
@@ -119,5 +121,35 @@ export class EmloyeeRepository {
       },
       { new: true }
     )
+  }
+
+  async findOneByEmailWithLogin({ epl_email, epl_restaurant_id }: { epl_email: string; epl_restaurant_id: string }) {
+    return await this.employeeModel
+      .findOne({
+        isDeleted: false,
+        epl_status: 'enable',
+        epl_email,
+        epl_restaurant_id
+      })
+      .lean()
+  }
+
+  async findOneByIdOfToken({ _id }) {
+    return await this.employeeModel.findOne({
+      _id,
+      isDeleted: false,
+      epl_status: 'enable'
+    })
+  }
+
+  async getInfor({ _id, epl_restaurant_id }) {
+    console.log({ _id, epl_restaurant_id })
+    return await this.employeeModel
+      .findOne({
+        _id,
+        epl_restaurant_id
+      })
+      .select('-__v -updatedBy -updatedAt -createdAt -isDeleted -deletedBy -deletedAt -epl_status -createdBy')
+      .lean()
   }
 }

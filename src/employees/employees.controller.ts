@@ -6,6 +6,7 @@ import { AccountAuthGuard } from 'src/guard/accounts.guard'
 import { IAccount } from 'src/accounts/accounts.interface'
 import { UpdateEmployeeDto } from './dto/update-employee.dto'
 import { UpdateStatusEmployeeDto } from './dto/update-status-employee.dto'
+import { LoginEmployeeDto } from './dto/login-employee.dto'
 
 @Controller('employees')
 export class EmployeesController {
@@ -61,6 +62,19 @@ export class EmployeesController {
   @UseGuards(AccountAuthGuard)
   async updateStatus(@Body() updateStatusEmployeeDto: UpdateStatusEmployeeDto, @Acccount() account: IAccount) {
     return await this.employeesService.updateStatus(updateStatusEmployeeDto, account)
+  }
+
+  @Post('/login')
+  @ResponseMessage('Đăng nhập thành công')
+  async login(@Body() loginEmployeeDto: LoginEmployeeDto) {
+    return await this.employeesService.login(loginEmployeeDto)
+  }
+
+  @Get('/infor')
+  @ResponseMessage('Lấy thông tin nhân viên thành công')
+  @UseGuards(AccountAuthGuard)
+  async getInforEmployee(@Acccount() account: IAccount) {
+    return this.employeesService.getInforEmployee(account)
   }
 
   @Get('/:id')

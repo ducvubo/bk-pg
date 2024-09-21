@@ -29,10 +29,16 @@ export class AccountRepository {
   }
 
   async findAccountByIdRestaurant({ account_restaurant_id }: { account_restaurant_id: string }) {
-    return await this.accountModel.findOne({ account_restaurant_id, account_type: 'restaurant' }).lean()
+    return await this.accountModel
+      .findOne({ account_restaurant_id, account_type: 'restaurant', isDeleted: false })
+      .lean()
   }
 
   async findAccoutById({ _id }: { _id: string }) {
-    return await this.accountModel.findOne({ _id })
+    return await this.accountModel.findOne({ _id, isDeleted: false })
+  }
+
+  async findAccountByIdEmployee({ account_employee_id, account_restaurant_id }) {
+    return await this.accountModel.findOne({ account_employee_id, account_restaurant_id, isDeleted: false })
   }
 }

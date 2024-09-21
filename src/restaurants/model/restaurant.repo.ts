@@ -57,7 +57,7 @@ export class RestaurantRepository {
       restaurant_image,
       restaurant_description,
       restaurant_verify: true,
-      restaurant_status: 'active',
+      restaurant_status: 'inactive',
       createdBy: {
         email: us_email,
         _id
@@ -315,5 +315,17 @@ export class RestaurantRepository {
         restaurant_email
       })
       .lean()
+  }
+
+  async search({ q }) {
+    return await this.restaurantModel
+      .find({
+        restaurant_name: { $regex: q, $options: 'i' },
+        isDeleted: false,
+        restaurant_status: 'inactive',
+        restaurant_state: true
+      })
+      .select('restaurant_name _id')
+      .exec()
   }
 }

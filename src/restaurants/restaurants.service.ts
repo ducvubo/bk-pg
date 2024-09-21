@@ -310,10 +310,15 @@ export class RestaurantsService {
               await this.accountsService.deleteToken({
                 rf_refresh_token: refresh_token,
                 rf_cp_epl_id: data_refresh_token._id
-              })
+              }),
+
+              await this.accountsService.findAccoutById({ _id: data_refresh_token._id })
             ])
 
+            console.log(result)
+
             return {
+              type: result[3].account_type,
               access_token_rtr: result[0].access_token_rtr,
               refresh_token_rtr: result[0].refresh_token_rtr
             }
@@ -330,5 +335,10 @@ export class RestaurantsService {
 
   async getInforRestaurant(account: IAccount) {
     return this.restaurantRepository.findOneByIdOfToken({ _id: account.account_restaurant_id })
+  }
+
+  async search({ q }) {
+    if (!q) return []
+    return await this.restaurantRepository.search({ q })
   }
 }
