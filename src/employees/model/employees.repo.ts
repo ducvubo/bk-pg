@@ -143,7 +143,6 @@ export class EmloyeeRepository {
   }
 
   async getInfor({ _id, epl_restaurant_id }) {
-    console.log({ _id, epl_restaurant_id })
     return await this.employeeModel
       .findOne({
         _id,

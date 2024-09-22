@@ -41,6 +41,7 @@ export class AccountAuthGuard implements CanActivate {
         const restaurant = await this.restaurantsService.findOneByIdOfToken({ _id: account.account_restaurant_id })
         if (!restaurant) throw new UnauthorizedCodeError('Token không hợp lệ 5', -10)
 
+        account['restaurant_id'] = account.account_restaurant_id
         account.account_password = undefined
         request.account = account
         return true
@@ -51,7 +52,6 @@ export class AccountAuthGuard implements CanActivate {
         if (!employee) throw new UnauthorizedCodeError('Token không hợp lệ 5', -10)
 
         account['restaurant_id'] = account.account_restaurant_id
-        console.log(account)
         account.account_restaurant_id = undefined
         account.account_password = undefined
         request.account = account

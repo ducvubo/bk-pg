@@ -16,6 +16,8 @@ import { ScheduleModule } from '@nestjs/schedule'
 import { CronModule } from './cron/cron.module'
 import { EmployeesModule } from './employees/employees.module'
 import { AccountsModule } from './accounts/accounts.module'
+import { Test2faModule } from './test-2fa/test-2fa.module'
+import { TablesModule } from './tables/tables.module'
 
 @Module({
   imports: [
@@ -41,7 +43,9 @@ import { AccountsModule } from './accounts/accounts.module'
     BookTableModule,
     CronModule,
     EmployeesModule,
-    AccountsModule
+    AccountsModule,
+    Test2faModule,
+    TablesModule
   ],
   controllers: [AppController],
   providers: [AppService]
