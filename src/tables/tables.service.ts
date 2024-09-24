@@ -14,8 +14,8 @@ export class TablesService {
 
   async create(createTableDto: CreateTableDto, account: IAccount) {
     const { tbl_name } = createTableDto
-    const { restaurant_id } = account
-    const table = await this.tableRepository.findOneByName({ tbl_name, tbl_restaurant_id: restaurant_id })
+    const { account_restaurant_id } = account
+    const table = await this.tableRepository.findOneByName({ tbl_name, tbl_restaurant_id: account_restaurant_id })
 
     if (table && table.isDeleted === true)
       throw new BadRequestError('Bàn này đã bị xóa, vui lòng khôi phục hoặc tạo bàn mới với tên khác')
@@ -84,7 +84,7 @@ export class TablesService {
 
     const nameExist = await this.tableRepository.findAllByNames({
       tbl_name: updateTableDto.tbl_name,
-      tbl_restaurant_id: account.restaurant_id,
+      tbl_restaurant_id: account.account_restaurant_id,
       _id
     })
 

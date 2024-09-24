@@ -11,17 +11,17 @@ export class TableRepository {
 
   async create(createTableDto: CreateTableDto, account: IAccount) {
     const { tbl_capacity, tbl_description, tbl_name } = createTableDto
-    const { restaurant_id, account_employee_id, account_email } = account
+    const { account_restaurant_id, account_employee_id, account_email } = account
 
     return await this.tableModel.create({
       tbl_capacity,
       tbl_description,
       tbl_name,
-      tbl_restaurant_id: restaurant_id,
+      tbl_restaurant_id: account_restaurant_id,
       tbl_status: 'enable',
       tbl_token: uuidv4(),
       createdBy: {
-        _id: account_employee_id ? account_employee_id : restaurant_id,
+        _id: account_employee_id ? account_employee_id : account_restaurant_id,
         email: account_email
       }
     })
@@ -39,7 +39,7 @@ export class TableRepository {
     return await this.tableModel
       .countDocuments({
         isDeleted,
-        tbl_restaurant_id: account.restaurant_id
+        tbl_restaurant_id: account.account_restaurant_id
       })
       .lean()
   }
@@ -48,7 +48,7 @@ export class TableRepository {
     return this.tableModel
       .find({
         isDeleted,
-        tbl_restaurant_id: account.restaurant_id
+        tbl_restaurant_id: account.account_restaurant_id
       })
       .select('-updatedAt -createdAt -__v -createdBy -updatedBy -isDeleted -deletedAt -deletedBy')
       .skip(offset)
@@ -59,21 +59,21 @@ export class TableRepository {
   }
 
   async findOneById({ _id, account }: { _id: string; account: IAccount }) {
-    return await this.tableModel.findOne({ _id, tbl_restaurant_id: account.restaurant_id }).lean()
+    return await this.tableModel.findOne({ _id, tbl_restaurant_id: account.account_restaurant_id }).lean()
   }
 
   async update(updateTableDto: UpdateTableDto, account: IAccount) {
     const { _id, tbl_capacity, tbl_description, tbl_name } = updateTableDto
-    const { restaurant_id, account_employee_id, account_email } = account
+    const { account_restaurant_id, account_email } = account
 
     return await this.tableModel.findOneAndUpdate(
-      { _id, tbl_restaurant_id: restaurant_id },
+      { _id, tbl_restaurant_id: account_restaurant_id },
       {
         tbl_capacity,
         tbl_description,
         tbl_name,
         updatedBy: {
-          _id: account_employee_id ? account_employee_id : restaurant_id,
+          _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
           email: account_email
         }
       },
@@ -83,11 +83,11 @@ export class TableRepository {
 
   async remove(id: string, account: IAccount) {
     return await this.tableModel.findOneAndUpdate(
-      { _id: id, tbl_restaurant_id: account.restaurant_id },
+      { _id: id, tbl_restaurant_id: account.account_restaurant_id },
       {
         isDeleted: true,
         deletedBy: {
-          _id: account.account_employee_id ? account.account_employee_id : account.restaurant_id,
+          _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
           email: account.account_email
         },
         deletedAt: new Date()
@@ -98,7 +98,7 @@ export class TableRepository {
 
   async restore(id: string, account: IAccount) {
     return await this.tableModel.findOneAndUpdate(
-      { _id: id, tbl_restaurant_id: account.restaurant_id },
+      { _id: id, tbl_restaurant_id: account.account_restaurant_id },
       {
         isDeleted: false,
         deletedBy: null,
@@ -110,11 +110,11 @@ export class TableRepository {
 
   async updateStatus({ _id, tbl_status }: { _id: string; tbl_status: string }, account: IAccount) {
     return await this.tableModel.findOneAndUpdate(
-      { _id, tbl_restaurant_id: account.restaurant_id },
+      { _id, tbl_restaurant_id: account.account_restaurant_id },
       {
         tbl_status,
         updatedBy: {
-          _id: account.account_employee_id ? account.account_employee_id : account.restaurant_id,
+          _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
           email: account.account_email
         }
       },
@@ -124,11 +124,11 @@ export class TableRepository {
 
   async updateToken(id: string, account: IAccount) {
     return await this.tableModel.findOneAndUpdate(
-      { _id: id, tbl_restaurant_id: account.restaurant_id },
+      { _id: id, tbl_restaurant_id: account.account_restaurant_id },
       {
         tbl_token: uuidv4(),
         updatedBy: {
-          _id: account.account_employee_id ? account.account_employee_id : account.restaurant_id,
+          _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
           email: account.account_email
         }
       },

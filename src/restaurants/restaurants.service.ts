@@ -269,9 +269,13 @@ export class RestaurantsService {
         -3
       )
 
-    const token: { access_token_rtr: string; refresh_token_rtr: string } =
-      await this.accountsService.generateRefreshTokenCP({ _id: String(account._id) })
-    return token
+    const token: { access_token: string; refresh_token: string } = await this.accountsService.generateRefreshTokenCP({
+      _id: String(account._id)
+    })
+    return {
+      access_token_rtr: token.access_token,
+      refresh_token_rtr: token.refresh_token
+    }
   }
 
   async findOneByIdOfToken({ _id }: { _id: string }) {
@@ -310,15 +314,12 @@ export class RestaurantsService {
               await this.accountsService.deleteToken({
                 rf_refresh_token: refresh_token,
                 rf_cp_epl_id: data_refresh_token._id
-              }),
-
-              await this.accountsService.findAccoutById({ _id: data_refresh_token._id })
+              })
             ])
 
             return {
-              type: result[3].account_type,
-              access_token_rtr: result[0].access_token_rtr,
-              refresh_token_rtr: result[0].refresh_token_rtr
+              access_token_rtr: result[0].access_token,
+              refresh_token_rtr: result[0].refresh_token
             }
           }
         } catch (error) {

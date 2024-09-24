@@ -97,8 +97,8 @@ export class AccountsService {
     })
 
     return {
-      access_token_rtr: token[0].token,
-      refresh_token_rtr: token[1].token
+      access_token: token[0].token,
+      refresh_token: token[1].token
     }
   }
 

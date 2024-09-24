@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common'
 import { EmployeesService } from './employees.service'
 import { Acccount, ResponseMessage } from 'src/decorator/customize'
 import { CreateEmployeeDto } from './dto/create-employee.dto'
@@ -68,6 +68,13 @@ export class EmployeesController {
   @ResponseMessage('Đăng nhập thành công')
   async login(@Body() loginEmployeeDto: LoginEmployeeDto) {
     return await this.employeesService.login(loginEmployeeDto)
+  }
+
+  @Post('/refresh-token')
+  @ResponseMessage('Làm mới token thành công')
+  async refreshToken(@Req() req: Request) {
+    const refresh_token = req.headers['authorization']?.split(' ')[1]
+    return await this.employeesService.refreshToken({ refresh_token })
   }
 
   @Get('/infor')

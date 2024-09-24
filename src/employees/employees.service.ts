@@ -10,7 +10,9 @@ import { UpdateEmployeeDto } from './dto/update-employee.dto'
 import { UpdateStatusEmployeeDto } from './dto/update-status-employee.dto'
 import { LoginEmployeeDto } from './dto/login-employee.dto'
 import { ConfigService } from '@nestjs/config'
-import { isValidPassword } from 'src/utils'
+import { decodeJwt, isValidPassword } from 'src/utils'
+import { getCacheIO, setCacheIOExpiration } from 'src/utils/cache'
+import { KEY_BLACK_LIST_TOKEN_EMPLOYEE } from 'src/constants/key.redis'
 
 @Injectable()
 export class EmployeesService {
@@ -158,9 +160,9 @@ export class EmployeesService {
 
   async restore({ _id, account }: { _id: string; account: IAccount }) {
     if (!_id) throw new BadRequestError('Nhân viên này không tồn tại')
-    if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Nhân viên không tồn tại')
+    if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Nhân viên không tồn tại1')
     const employee = await this.emloyeeRepository.findOneById({ _id, account })
-    if (!employee) throw new NotFoundError('Nhân viên không tồn tại')
+    if (!employee) throw new NotFoundError('Nhân viên không tồn tại2')
     return await this.emloyeeRepository.restore({ _id, account })
   }
 
@@ -186,9 +188,13 @@ export class EmployeesService {
     if (!isValidPassword(epl_password, account.account_password))
       throw new UnauthorizedCodeError('Email hoặc mật khẩu không đúng', -1)
 
-    const token: { access_token_rtr: string; refresh_token_rtr: string } =
-      await this.accountsService.generateRefreshTokenCP({ _id: String(account._id) })
-    return token
+    const token: { access_token: string; refresh_token: string } = await this.accountsService.generateRefreshTokenCP({
+      _id: String(account._id)
+    })
+    return {
+      access_token_epl: token.access_token,
+      refresh_token_epl: token.refresh_token
+    }
   }
 
   async findOneByIdOfToken({ _id }) {
@@ -198,7 +204,57 @@ export class EmployeesService {
   async getInforEmployee(account: IAccount) {
     return await this.emloyeeRepository.getInfor({
       _id: account.account_employee_id,
-      epl_restaurant_id: account.restaurant_id
+      epl_restaurant_id: account.account_restaurant_id
     })
+  }
+
+  async findRefreshToken({ rf_refresh_token }: { rf_refresh_token: string }) {
+    return await this.accountsService.findRefreshToken({ rf_refresh_token })
+  }
+
+  async refreshToken({ refresh_token }: { refresh_token: string }) {
+    if (refresh_token) {
+      const isBlackList = await getCacheIO(`${KEY_BLACK_LIST_TOKEN_EMPLOYEE}:${refresh_token}`)
+      if (isBlackList) {
+        const decodedJWT = decodeJwt(refresh_token)
+        await this.accountsService.logoutAll({ rf_cp_epl_id: decodedJWT._id })
+        throw new UnauthorizedCodeError('Token đã lỗi vui lòng đăng nhập lại để tiếp tục sử dụng dịch vụ 1', -10)
+      } else {
+        try {
+          const key = await this.findRefreshToken({
+            rf_refresh_token: refresh_token
+          })
+
+          if (!key) throw new UnauthorizedCodeError('Token không hợp lệ 1', -10)
+          if (key) {
+            const data_refresh_token = this.accountsService.verifyToken(refresh_token, key.rf_public_key_refresh_token)
+            const result = await Promise.all([
+              await this.accountsService.generateRefreshTokenCP({
+                _id: String(data_refresh_token._id)
+              }),
+              await setCacheIOExpiration(
+                `${KEY_BLACK_LIST_TOKEN_EMPLOYEE}:${refresh_token}`,
+                'hehehehehehehe',
+                this.configService.get<string>('JWT_REFRESH_EXPIRE_REDIS')
+              ),
+              await this.accountsService.deleteToken({
+                rf_refresh_token: refresh_token,
+                rf_cp_epl_id: data_refresh_token._id
+              })
+            ])
+
+            return {
+              access_token_epl: result[0].access_token,
+              refresh_token_epl: result[0].refresh_token
+            }
+          }
+        } catch (error) {
+          console.log(error)
+          throw new UnauthorizedCodeError('Token lỗi vui lòng đăng nhập lại để tiếp tục sử dụng dịch vụ 2', -10)
+        }
+      }
+    } else {
+      throw new UnauthorizedCodeError('Không tìm thấy token ở header', -10)
+    }
   }
 }

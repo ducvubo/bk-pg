@@ -14,8 +14,8 @@ export class DishesService {
 
   async createDish(createDishDto: CreateDishDto, account: IAccount) {
     const { dish_name } = createDishDto
-    const { restaurant_id } = account
-    const dish = await this.dishRepository.findOneByName({ dish_name, dish_restaurant_id: restaurant_id })
+    const { account_restaurant_id } = account
+    const dish = await this.dishRepository.findOneByName({ dish_name, dish_restaurant_id: account_restaurant_id })
 
     if (dish && dish.isDeleted === true)
       throw new BadRequestError('Món ăn này đã bị xóa, vui lòng khôi phục hoặc tạo món ăn mới với tên khác')
@@ -78,7 +78,7 @@ export class DishesService {
 
   async update(updateDishDto: UpdateDishDto, account: IAccount) {
     const { _id, dish_name } = updateDishDto
-    const { restaurant_id } = account
+    const { account_restaurant_id } = account
 
     const dish = await this.dishRepository.findOneById({ _id, account })
 
@@ -86,7 +86,7 @@ export class DishesService {
 
     const nameExist = await this.dishRepository.findAllByNames({
       dish_name,
-      dish_restaurant_id: restaurant_id,
+      dish_restaurant_id: account_restaurant_id,
       _id
     })
 

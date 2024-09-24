@@ -54,9 +54,7 @@ export class EmloyeeRepository {
   }
 
   async findOneById({ _id, account }: { _id: string; account: IAccount }) {
-    return await this.employeeModel
-      .findOne({ _id, epl_restaurant_id: account.account_restaurant_id, isDeleted: false })
-      .lean()
+    return await this.employeeModel.findOne({ _id, epl_restaurant_id: account.account_restaurant_id }).lean()
   }
 
   async update(updateEmployeeDto: UpdateEmployeeDto, account: IAccount) {

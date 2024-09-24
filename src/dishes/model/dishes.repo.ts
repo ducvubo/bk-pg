@@ -27,7 +27,7 @@ export class DishRepository {
       dish_sale,
       dish_short_description
     } = createDishDto
-    const { restaurant_id, account_employee_id, account_email } = account
+    const { account_restaurant_id, account_employee_id, account_email } = account
 
     return await this.DishModel.create({
       dish_name,
@@ -38,10 +38,10 @@ export class DishRepository {
       dish_note,
       dish_sale,
       dish_short_description,
-      dish_restaurant_id: restaurant_id,
+      dish_restaurant_id: account_restaurant_id,
       dish_status: 'enable',
       createdBy: {
-        _id: account_employee_id ? account_employee_id : restaurant_id,
+        _id: account_employee_id ? account_employee_id : account_restaurant_id,
         email: account_email
       }
     })
@@ -50,14 +50,14 @@ export class DishRepository {
   async totalItems(account: IAccount, isDeleted) {
     return await this.DishModel.countDocuments({
       isDeleted,
-      dish_restaurant_id: account.restaurant_id
+      dish_restaurant_id: account.account_restaurant_id
     }).lean()
   }
 
   async findAllPagination({ offset, defaultLimit, sort, population }, account: IAccount, isDeleted) {
     return this.DishModel.find({
       isDeleted,
-      dish_restaurant_id: account.restaurant_id
+      dish_restaurant_id: account.account_restaurant_id
     })
       .select('-updatedAt -createdAt -__v -createdBy -updatedBy -isDeleted -deletedAt -deletedBy')
       .skip(offset)
@@ -68,7 +68,7 @@ export class DishRepository {
   }
 
   async findOneById({ _id, account }: { _id: string; account: IAccount }) {
-    return await this.DishModel.findOne({ _id, dish_restaurant_id: account.restaurant_id }).lean()
+    return await this.DishModel.findOne({ _id, dish_restaurant_id: account.account_restaurant_id }).lean()
   }
 
   async update(updateDishDto: UpdateDishDto, account: IAccount) {
@@ -83,10 +83,10 @@ export class DishRepository {
       dish_sale,
       dish_short_description
     } = updateDishDto
-    const { restaurant_id, account_employee_id, account_email } = account
+    const { account_restaurant_id, account_employee_id, account_email } = account
 
     return await this.DishModel.findOneAndUpdate(
-      { _id, dish_restaurant_id: restaurant_id },
+      { _id, dish_restaurant_id: account_restaurant_id },
       {
         dish_name,
         dish_description,
@@ -97,7 +97,7 @@ export class DishRepository {
         dish_sale,
         dish_short_description,
         updatedBy: {
-          _id: account_employee_id ? account_employee_id : restaurant_id,
+          _id: account_employee_id ? account_employee_id : account_restaurant_id,
           email: account_email
         }
       },
@@ -107,11 +107,11 @@ export class DishRepository {
 
   async remove(id: string, account: IAccount) {
     return await this.DishModel.findOneAndUpdate(
-      { _id: id, dish_restaurant_id: account.restaurant_id },
+      { _id: id, dish_restaurant_id: account.account_restaurant_id },
       {
         isDeleted: true,
         deletedBy: {
-          _id: account.account_employee_id ? account.account_employee_id : account.restaurant_id,
+          _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
           email: account.account_email
         },
         deletedAt: new Date()
@@ -122,7 +122,7 @@ export class DishRepository {
 
   async restore(id: string, account: IAccount) {
     return await this.DishModel.findOneAndUpdate(
-      { _id: id, dish_restaurant_id: account.restaurant_id },
+      { _id: id, dish_restaurant_id: account.account_restaurant_id },
       {
         isDeleted: false,
         deletedBy: null,
@@ -134,11 +134,12 @@ export class DishRepository {
 
   async updateStatus({ _id, dish_status }, account: IAccount) {
     return await this.DishModel.findOneAndUpdate(
-      { _id, dish_restaurant_id: account.restaurant_id },
+      { _id, dish_restaurant_id: account.account_restaurant_id },
       {
         dish_status,
         updatedBy: {
-          _id: account.account_employee_id ? account.account_employee_id : account.restaurant_id,
+          // _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
+          _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
           email: account.account_email
         }
       },
