@@ -103,7 +103,8 @@ export class EmloyeeRepository {
         updatedBy: {
           email: account.account_email,
           _id: account.account_restaurant_id
-        }
+        },
+        deletedBy: null
       },
       { new: true }
     )

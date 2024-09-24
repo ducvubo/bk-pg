@@ -1,0 +1,148 @@
+import { InjectModel } from '@nestjs/mongoose'
+import { Model } from 'mongoose'
+import { Dish, DishDocument } from './dishes.model'
+import { CreateDishDto } from '../dto/create-dish.dto'
+import { IAccount } from 'src/accounts/accounts.interface'
+import { UpdateDishDto } from '../dto/update-dish.dto'
+
+export class DishRepository {
+  constructor(@InjectModel(Dish.name) private DishModel: Model<DishDocument>) {}
+
+  async findOneByName({ dish_name, dish_restaurant_id }) {
+    return await this.DishModel.findOne({ dish_name, dish_restaurant_id }).lean()
+  }
+
+  async findAllByNames({ dish_name, dish_restaurant_id, _id }) {
+    return await this.DishModel.find({ dish_name, dish_restaurant_id, _id: { $ne: _id } }).lean()
+  }
+
+  async createDish(createDishDto: CreateDishDto, account: IAccount) {
+    const {
+      dish_name,
+      dish_description,
+      dish_price,
+      dish_priority,
+      dish_image,
+      dish_note,
+      dish_sale,
+      dish_short_description
+    } = createDishDto
+    const { restaurant_id, account_employee_id, account_email } = account
+
+    return await this.DishModel.create({
+      dish_name,
+      dish_description,
+      dish_price,
+      dish_priority,
+      dish_image,
+      dish_note,
+      dish_sale,
+      dish_short_description,
+      dish_restaurant_id: restaurant_id,
+      dish_status: 'enable',
+      createdBy: {
+        _id: account_employee_id ? account_employee_id : restaurant_id,
+        email: account_email
+      }
+    })
+  }
+
+  async totalItems(account: IAccount, isDeleted) {
+    return await this.DishModel.countDocuments({
+      isDeleted,
+      dish_restaurant_id: account.restaurant_id
+    }).lean()
+  }
+
+  async findAllPagination({ offset, defaultLimit, sort, population }, account: IAccount, isDeleted) {
+    return this.DishModel.find({
+      isDeleted,
+      dish_restaurant_id: account.restaurant_id
+    })
+      .select('-updatedAt -createdAt -__v -createdBy -updatedBy -isDeleted -deletedAt -deletedBy')
+      .skip(offset)
+      .limit(defaultLimit)
+      .sort(sort as any) //ep kieu du lieu
+      .populate(population)
+      .exec()
+  }
+
+  async findOneById({ _id, account }: { _id: string; account: IAccount }) {
+    return await this.DishModel.findOne({ _id, dish_restaurant_id: account.restaurant_id }).lean()
+  }
+
+  async update(updateDishDto: UpdateDishDto, account: IAccount) {
+    const {
+      _id,
+      dish_name,
+      dish_description,
+      dish_price,
+      dish_priority,
+      dish_image,
+      dish_note,
+      dish_sale,
+      dish_short_description
+    } = updateDishDto
+    const { restaurant_id, account_employee_id, account_email } = account
+
+    return await this.DishModel.findOneAndUpdate(
+      { _id, dish_restaurant_id: restaurant_id },
+      {
+        dish_name,
+        dish_description,
+        dish_price,
+        dish_priority,
+        dish_image,
+        dish_note,
+        dish_sale,
+        dish_short_description,
+        updatedBy: {
+          _id: account_employee_id ? account_employee_id : restaurant_id,
+          email: account_email
+        }
+      },
+      { new: true }
+    )
+  }
+
+  async remove(id: string, account: IAccount) {
+    return await this.DishModel.findOneAndUpdate(
+      { _id: id, dish_restaurant_id: account.restaurant_id },
+      {
+        isDeleted: true,
+        deletedBy: {
+          _id: account.account_employee_id ? account.account_employee_id : account.restaurant_id,
+          email: account.account_email
+        },
+        deletedAt: new Date()
+      },
+      { new: true }
+    )
+  }
+
+  async restore(id: string, account: IAccount) {
+    return await this.DishModel.findOneAndUpdate(
+      { _id: id, dish_restaurant_id: account.restaurant_id },
+      {
+        isDeleted: false,
+        deletedBy: null,
+        deletedAt: null
+      },
+      { new: true }
+    )
+  }
+
+  async updateStatus({ _id, dish_status }, account: IAccount) {
+    return await this.DishModel.findOneAndUpdate(
+      { _id, dish_restaurant_id: account.restaurant_id },
+      {
+        dish_status,
+        updatedBy: {
+          _id: account.account_employee_id ? account.account_employee_id : account.restaurant_id,
+          email: account.account_email
+        }
+      },
+      { new: true }
+    )
+  }
+}

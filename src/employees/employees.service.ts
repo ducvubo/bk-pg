@@ -89,6 +89,7 @@ export class EmployeesService {
   }
 
   async findOneById({ _id, account }: { _id: string; account: IAccount }) {
+    if (!_id) throw new BadRequestError('Nhân viên này không tồn tại')
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Nhân viên không tồn tại')
     const employee = await this.emloyeeRepository.findOneById({ _id, account })
     if (!employee) throw new NotFoundError('Nhân viên không tồn tại')
@@ -104,6 +105,7 @@ export class EmployeesService {
   }
 
   async delete({ _id, account }: { _id: string; account: IAccount }) {
+    if (!_id) throw new BadRequestError('Nhân viên này không tồn tại')
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Nhân viên không tồn tại')
     const employee = await this.emloyeeRepository.findOneById({ _id, account })
     if (!employee) throw new NotFoundError('Nhân viên không tồn tại')
@@ -155,6 +157,7 @@ export class EmployeesService {
   }
 
   async restore({ _id, account }: { _id: string; account: IAccount }) {
+    if (!_id) throw new BadRequestError('Nhân viên này không tồn tại')
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Nhân viên không tồn tại')
     const employee = await this.emloyeeRepository.findOneById({ _id, account })
     if (!employee) throw new NotFoundError('Nhân viên không tồn tại')

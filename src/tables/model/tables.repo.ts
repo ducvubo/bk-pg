@@ -89,7 +89,8 @@ export class TableRepository {
         deletedBy: {
           _id: account.account_employee_id ? account.account_employee_id : account.restaurant_id,
           email: account.account_email
-        }
+        },
+        deletedAt: new Date()
       },
       { new: true }
     )
@@ -100,7 +101,8 @@ export class TableRepository {
       { _id: id, tbl_restaurant_id: account.restaurant_id },
       {
         isDeleted: false,
-        deletedBy: null
+        deletedBy: null,
+        deletedAt: null
       },
       { new: true }
     )
@@ -111,6 +113,20 @@ export class TableRepository {
       { _id, tbl_restaurant_id: account.restaurant_id },
       {
         tbl_status,
+        updatedBy: {
+          _id: account.account_employee_id ? account.account_employee_id : account.restaurant_id,
+          email: account.account_email
+        }
+      },
+      { new: true }
+    )
+  }
+
+  async updateToken(id: string, account: IAccount) {
+    return await this.tableModel.findOneAndUpdate(
+      { _id: id, tbl_restaurant_id: account.restaurant_id },
+      {
+        tbl_token: uuidv4(),
         updatedBy: {
           _id: account.account_employee_id ? account.account_employee_id : account.restaurant_id,
           email: account.account_email

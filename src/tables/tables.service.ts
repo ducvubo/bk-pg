@@ -6,6 +6,7 @@ import { BadRequestError } from 'src/utils/errorResponse'
 import aqp from 'api-query-params'
 import { UpdateTableDto } from './dto/update-table.dto'
 import { UpdateStatusTableDto } from './dto/update-status-table.dto'
+import mongoose from 'mongoose'
 
 @Injectable()
 export class TablesService {
@@ -71,6 +72,8 @@ export class TablesService {
   }
 
   async findOne(id: string, account: IAccount) {
+    if (!id) throw new BadRequestError('Bàn này không tồn tại')
+    if (mongoose.Types.ObjectId.isValid(id) === false) throw new BadRequestError('Bàn này không tồn tại')
     return await this.tableRepository.findOneById({ _id: id, account })
   }
 
@@ -92,6 +95,8 @@ export class TablesService {
   }
 
   async remove(id: string, account: IAccount) {
+    if (!id) throw new BadRequestError('Bàn này không tồn tại')
+    if (mongoose.Types.ObjectId.isValid(id) === false) throw new BadRequestError('Bàn này không tồn tại')
     const table = await this.tableRepository.findOneById({ _id: id, account })
     if (!table) throw new BadRequestError('Bàn này không tồn tại')
 
@@ -143,6 +148,8 @@ export class TablesService {
   }
 
   async restore(id: string, account: IAccount) {
+    if (!id) throw new BadRequestError('Bàn này không tồn tại')
+    if (mongoose.Types.ObjectId.isValid(id) === false) throw new BadRequestError('Bàn này không tồn tại')
     const table = await this.tableRepository.findOneById({ _id: id, account })
     if (!table) throw new BadRequestError('Bàn này không tồn tại')
 
@@ -155,5 +162,14 @@ export class TablesService {
     if (!table) throw new BadRequestError('Bàn này không tồn tại')
 
     return await this.tableRepository.updateStatus(updateStatusTableDto, account)
+  }
+
+  async updateToken(id: string, account: IAccount) {
+    if (!id) throw new BadRequestError('Bàn này không tồn tại')
+    if (mongoose.Types.ObjectId.isValid(id) === false) throw new BadRequestError('Bàn này không tồn tại')
+    const table = await this.tableRepository.findOneById({ _id: id, account })
+    if (!table) throw new BadRequestError('Bàn này không tồn tại')
+
+    return await this.tableRepository.updateToken(id, account)
   }
 }

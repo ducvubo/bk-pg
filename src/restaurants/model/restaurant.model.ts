@@ -30,14 +30,6 @@ class RestaurantAddress {
   address_specific: string
 }
 
-export class MarkDown {
-  @Prop({ type: String, required: true })
-  text: string
-
-  @Prop({ type: String, required: true })
-  html: string
-}
-
 class RestaurantPrice {
   @Prop({ type: String, required: true, enum: ['up', 'down', 'range'] })
   restaurant_price_option: string

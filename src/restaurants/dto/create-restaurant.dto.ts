@@ -172,12 +172,12 @@ class RestaurantPrice {
 }
 
 export class ImageUrl {
-  @IsNotEmpty({ message: 'Link ảnh cloud không được để trống' })
-  @IsString({ message: 'Link ảnh cloud phải là chuỗi' })
+  @IsNotEmpty({ message: 'Vui lòng tải ảnh lên1' })
+  @IsString({ message: 'Vui lòng tải ảnh lên2' })
   image_cloud: string
 
-  @IsNotEmpty({ message: 'Link ảnh tùy chỉnh không được để trống' })
-  @IsString({ message: 'Link ảnh tùy chỉnh phải là chuỗi' })
+  @IsNotEmpty({ message: 'Vui lòng tải ảnh lên3' })
+  @IsString({ message: 'Vui lòng tải ảnh lên4' })
   image_custom: string
 }
 
@@ -194,16 +194,6 @@ export class RestaurantHours {
   @IsNotEmpty({ message: 'Giờ đóng cửa không được để trống' })
   @IsIn(HourValueArr, { message: 'Giờ mở cửa phải là một trong các giá trị hợp lệ' })
   close: number
-}
-
-export class MarkDown {
-  @IsNotEmpty({ message: 'Markdown text không được để trống' })
-  @IsString({ message: 'Markdown text phải là chuỗi' })
-  text: string
-
-  @IsNotEmpty({ message: 'Markdown html không được để trống' })
-  @IsString({ message: 'Markdown html phải là chuỗi' })
-  html: string
 }
 
 export class CreateRestaurantDto {

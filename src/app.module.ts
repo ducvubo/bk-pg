@@ -18,6 +18,7 @@ import { EmployeesModule } from './employees/employees.module'
 import { AccountsModule } from './accounts/accounts.module'
 import { Test2faModule } from './test-2fa/test-2fa.module'
 import { TablesModule } from './tables/tables.module'
+import { DishesModule } from './dishes/dishes.module';
 
 @Module({
   imports: [
@@ -45,7 +46,8 @@ import { TablesModule } from './tables/tables.module'
     EmployeesModule,
     AccountsModule,
     Test2faModule,
-    TablesModule
+    TablesModule,
+    DishesModule
   ],
   controllers: [AppController],
   providers: [AppService]

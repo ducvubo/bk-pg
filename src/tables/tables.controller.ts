@@ -15,7 +15,6 @@ export class TablesController {
   @ResponseMessage('Thêm bàn mới thành công')
   @UseGuards(AccountAuthGuard)
   async create(@Body() createTableDto: CreateTableDto, @Acccount() account: IAccount) {
-    console.log(createTableDto)
     return await this.tablesService.create(createTableDto, account)
   }
 
@@ -55,6 +54,13 @@ export class TablesController {
   @UseGuards(AccountAuthGuard)
   async updateStatus(@Body() updateStatusTableDto: UpdateStatusTableDto, @Acccount() account: IAccount) {
     return await this.tablesService.updateStatus(updateStatusTableDto, account)
+  }
+
+  @Patch('/update-token/:id')
+  @ResponseMessage('Cập nhật mã qr bàn thành công')
+  @UseGuards(AccountAuthGuard)
+  async updateToken(@Param('id') id: string, @Acccount() account: IAccount) {
+    return await this.tablesService.updateToken(id, account)
   }
 
   @Patch('/restore/:id')
