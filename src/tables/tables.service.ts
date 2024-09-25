@@ -172,4 +172,12 @@ export class TablesService {
 
     return await this.tableRepository.updateToken(id, account)
   }
+
+  async findOneByToken({ tbl_token, tbl_restaurant_id }: { tbl_token: string; tbl_restaurant_id: string }) {
+    return await this.tableRepository.findOneByToken({ tbl_token, tbl_restaurant_id })
+  }
+
+  async updateStatusById({ _id, tbl_status }: { _id: string; tbl_status: string }) {
+    return await this.tableRepository.updateStatusById({ _id, tbl_status })
+  }
 }

@@ -4,7 +4,9 @@ import { Model } from 'mongoose'
 import { CreateEmployeeDto } from '../dto/create-employee.dto'
 import { IAccount } from 'src/accounts/accounts.interface'
 import { UpdateEmployeeDto } from '../dto/update-employee.dto'
+import { Injectable } from '@nestjs/common'
 
+@Injectable()
 export class EmloyeeRepository {
   constructor(@InjectModel(Employee.name) private employeeModel: Model<EmployeeDocument>) {}
 

@@ -163,4 +163,8 @@ export class DishesService {
 
     return await this.dishRepository.updateStatus(updateStatusDishDto, account)
   }
+
+  async findAllDishOrder({ dish_restaurant_id }: { dish_restaurant_id: string }) {
+    return await this.dishRepository.findAllDishOrder({ dish_restaurant_id })
+  }
 }

@@ -328,4 +328,16 @@ export class RestaurantRepository {
       .select('restaurant_name _id')
       .exec()
   }
+
+  async findOneById({ _id }) {
+    return await this.restaurantModel
+      .findOne({
+        _id,
+        restaurant_verify: true,
+        restaurant_status: 'inactive',
+        restaurant_state: true,
+        isDeleted: false
+      })
+      .lean()
+  }
 }

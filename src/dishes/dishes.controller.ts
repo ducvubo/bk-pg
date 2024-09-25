@@ -44,6 +44,14 @@ export class DishesController {
     return await this.dishesService.restore(id, account)
   }
 
+  @Get('/list-dish-order/:id')
+  @ResponseMessage('Lấy danh sách món ăn cho order')
+  async findAllDishOrder(@Param('id') dish_restaurant_id: string) {
+    return await this.dishesService.findAllDishOrder({
+      dish_restaurant_id
+    })
+  }
+
   @Patch('update-status')
   @ResponseMessage('Cập nhật trạng thái món ăn thành công')
   @UseGuards(AccountAuthGuard)

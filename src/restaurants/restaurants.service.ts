@@ -340,4 +340,8 @@ export class RestaurantsService {
     if (!q) return []
     return await this.restaurantRepository.search({ q })
   }
+
+  async findOneById({ _id }) {
+    return await this.restaurantRepository.findOneById({ _id })
+  }
 }

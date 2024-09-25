@@ -19,8 +19,9 @@ export class Table extends SampleSchema {
   @Prop({ type: Number, required: true })
   tbl_capacity: number
 
-  @Prop({ type: String, required: true, enums: ['enable', 'disable'], default: 'enable' })
-  tbl_status: string
+  //đang hoạt động | ngưng hoạt động | đã đặt trước | đang phục vụ
+  @Prop({ type: String, required: true, enums: ['enable', 'disable', 'serving', 'reserve'], default: 'enable' })
+  tbl_status: 'enable' | 'disable' | 'serving' | 'reserve'
 
   //token
   @Prop({ type: String, required: true })

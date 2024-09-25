@@ -146,4 +146,18 @@ export class DishRepository {
       { new: true }
     )
   }
+
+  async findAllDishOrder({ dish_restaurant_id }: { dish_restaurant_id: string }) {
+    return await this.DishModel.find({ dish_restaurant_id, dish_status: 'enable', isDeleted: false })
+      .select('-updatedAt -createdAt -__v -createdBy -updatedBy -isDeleted -deletedAt -deletedBy -dish_status')
+      .lean()
+  }
+
+  // async findOne({ _id }: { _id: string }) {
+  //   return await this.DishModel.findOne({ _id, dish_status: 'enable' }).lean()
+  // }
+
+  async findOne({ _id }: { _id: string }, session: any = null) {
+    return await this.DishModel.findOne({ _id, dish_status: 'enable' }).session(session).lean()
+  }
 }

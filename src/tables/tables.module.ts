@@ -16,6 +16,7 @@ import { EmployeesModule } from 'src/employees/employees.module'
     EmployeesModule
   ],
   controllers: [TablesController],
-  providers: [TablesService, TableRepository]
+  providers: [TablesService, TableRepository],
+  exports: [TablesService, TableRepository]
 })
 export class TablesModule {}

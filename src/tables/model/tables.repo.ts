@@ -5,7 +5,9 @@ import { CreateTableDto } from '../dto/create-table.dto'
 import { IAccount } from 'src/accounts/accounts.interface'
 import { v4 as uuidv4 } from 'uuid'
 import { UpdateTableDto } from '../dto/update-table.dto'
+import { Injectable } from '@nestjs/common'
 
+@Injectable()
 export class TableRepository {
   constructor(@InjectModel(Table.name) private tableModel: Model<TableDocument>) {}
 
@@ -134,5 +136,13 @@ export class TableRepository {
       },
       { new: true }
     )
+  }
+
+  async findOneByToken({ tbl_token, tbl_restaurant_id }: { tbl_token: string; tbl_restaurant_id: string }) {
+    return await this.tableModel.findOne({ tbl_token, tbl_restaurant_id }).lean()
+  }
+
+  async updateStatusById({ _id, tbl_status }: { _id: string; tbl_status: string }) {
+    return await this.tableModel.findOneAndUpdate({ _id }, { tbl_status }, { new: true })
   }
 }
