@@ -88,4 +88,8 @@ export class OrderDishService {
       session.endSession() // End the session
     }
   }
+
+  async listOrderGuest(guest: IGuest) {
+    return this.orderDishRepository.listOrderGuest(guest)
+  }
 }
