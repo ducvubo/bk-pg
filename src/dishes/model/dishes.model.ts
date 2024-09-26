@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import { HydratedDocument } from 'mongoose'
+import mongoose, { HydratedDocument } from 'mongoose'
 import { ImageUrl } from 'src/restaurants/model/restaurant.model'
 import { Restaurant } from 'src/restaurants/model/restaurant.model'
 import { SampleSchema } from 'src/utils/sample.schema'
@@ -16,8 +16,8 @@ export class Sale {
 
 @Schema({ timestamps: true })
 export class Dish extends SampleSchema {
-  @Prop({ type: String, ref: Restaurant.name, required: true })
-  dish_restaurant_id: string
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Restaurant.name, required: true })
+  dish_restaurant_id: mongoose.Schema.Types.ObjectId
 
   //tên
   @Prop({ type: String, required: true })

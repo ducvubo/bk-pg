@@ -84,15 +84,15 @@ export class GuestRestaurantService {
     const guest = await this.guestRestaurantRepository.findOneByRefreshToken({ guest_refresh_token: refresh_token })
     if (!guest) throw new BadRequestError('Token không hợp lệ2')
 
-    const refresh_token_guest = this.signToken(guest, 'refresh_token')
-    await this.guestRestaurantRepository.updateRefreshToken({
-      _id: String(guest._id),
-      guest_refresh_token: refresh_token_guest
-    })
+    // const refresh_token_guest = this.signToken(guest, 'refresh_token')
+    // await this.guestRestaurantRepository.updateRefreshToken({
+    //   _id: String(guest._id),
+    //   guest_refresh_token: refresh_token_guest
+    // })
 
     const access_token_guest = this.signToken(guest, 'access_token')
     delete guest.guest_refresh_token
 
-    return { access_token_guest, refresh_token_guest, infor: guest }
+    return { access_token_guest, refresh_token_guest: refresh_token, infor: guest }
   }
 }

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import { HydratedDocument } from 'mongoose'
+import mongoose, { HydratedDocument } from 'mongoose'
 import { Restaurant } from 'src/restaurants/model/restaurant.model'
 import { SampleSchema } from 'src/utils/sample.schema'
 
@@ -7,8 +7,8 @@ export type TableDocument = HydratedDocument<Table>
 
 @Schema({ timestamps: true })
 export class Table extends SampleSchema {
-  @Prop({ type: String, ref: Restaurant.name, required: true })
-  tbl_restaurant_id: string
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Restaurant.name, required: true })
+  tbl_restaurant_id: mongoose.Schema.Types.ObjectId
 
   @Prop({ type: String, required: true })
   tbl_name: string
