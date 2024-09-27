@@ -6,6 +6,8 @@ export class UpdateStatusTableDto {
   _id: string
 
   @IsNotEmpty({ message: 'Trạng thái không được để trống' })
-  @IsIn(['enable', 'disable'], { message: 'Status phải là "enable", "disable"' })
+  @IsIn(['enable', 'disable', 'serving'], {
+    message: 'Status phải là "enable", "disable","serving"'
+  })
   tbl_status: string
 }

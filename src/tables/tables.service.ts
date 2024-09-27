@@ -160,6 +160,8 @@ export class TablesService {
     const { _id } = updateStatusTableDto
     const table = await this.tableRepository.findOne({ _id, account })
     if (!table) throw new BadRequestError('Bàn này không tồn tại')
+    if (table.tbl_status === 'reserve')
+      throw new BadRequestError('Bàn này đang phục vụ, không thể cập nhật trạng thái, vui lòng cập nhật trong đơn hàng')
 
     return await this.tableRepository.updateStatus(updateStatusTableDto, account)
   }
