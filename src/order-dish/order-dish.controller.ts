@@ -1,9 +1,12 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Patch, Post, Query, UseGuards } from '@nestjs/common'
 import { OrderDishService } from './order-dish.service'
-import { GuestRestaurant, ResponseMessage } from 'src/decorator/customize'
+import { Acccount, GuestRestaurant, ResponseMessage } from 'src/decorator/customize'
 import { GuestRestaurantAuthGuard } from 'src/guard/guest.guard'
 import { CreateOrderDishDto } from './dto/create-order-dish.dto'
 import { IGuest } from 'src/guest-restaurant/guest.interface'
+import { AccountAuthGuard } from 'src/guard/accounts.guard'
+import { IAccount } from 'src/accounts/accounts.interface'
+import { UpdateStatusOrderDishDto } from './dto/update-status-order-dish.dto'
 
 @Controller('order-dish')
 export class OrderDishController {
@@ -21,5 +24,27 @@ export class OrderDishController {
   @UseGuards(GuestRestaurantAuthGuard)
   async listOrderGuest(@GuestRestaurant() guest: IGuest) {
     return this.orderDishService.listOrderGuest(guest)
+  }
+
+  @Get('/list-order-restaurant')
+  @ResponseMessage('Danh sách món ăn đã đặt')
+  @UseGuards(AccountAuthGuard)
+  async listOrderRestaurant(
+    @Query('current') currentPage: string,
+    @Query('pageSize') limit: string,
+    @Query() qs: string,
+    @Acccount() account: IAccount
+  ) {
+    return await this.orderDishService.listOrderRestaurant({ currentPage: +currentPage, limit: +limit, qs }, account)
+  }
+
+  @Patch('/update-status')
+  @ResponseMessage('Cập nhật trạng thái món ăn thành công')
+  @UseGuards(AccountAuthGuard)
+  async updateStatusOrderDish(
+    @Body() updateStatusOrderDishDto: UpdateStatusOrderDishDto,
+    @Acccount() account: IAccount
+  ) {
+    return this.orderDishService.updateStatusOrderDish(updateStatusOrderDishDto, account)
   }
 }

@@ -145,4 +145,8 @@ export class TableRepository {
   async updateStatusById({ _id, tbl_status }: { _id: string; tbl_status: string }) {
     return await this.tableModel.findOneAndUpdate({ _id }, { tbl_status }, { new: true })
   }
+
+  async findByName({ tbl_name }: { tbl_name: string }) {
+    return await this.tableModel.find({ tbl_name: { $regex: tbl_name, $options: 'i' } }).select('_id')
+  }
 }

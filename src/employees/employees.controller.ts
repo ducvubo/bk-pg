@@ -73,7 +73,6 @@ export class EmployeesController {
   @Post('/refresh-token')
   @ResponseMessage('Làm mới token thành công')
   async refreshToken(@Req() req: Request) {
-    console.log('reffresh token')
     const refresh_token = req.headers['authorization']?.split(' ')[1]
     return await this.employeesService.refreshToken({ refresh_token })
   }
@@ -82,7 +81,6 @@ export class EmployeesController {
   @ResponseMessage('Lấy thông tin nhân viên thành công')
   @UseGuards(AccountAuthGuard)
   async getInforEmployee(@Acccount() account: IAccount) {
-    console.log('get infor')
     return this.employeesService.getInforEmployee(account)
   }
 

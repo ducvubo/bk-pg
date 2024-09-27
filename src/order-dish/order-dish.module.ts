@@ -10,6 +10,7 @@ import { DishDuplicate, DishDuplicateSchema } from './model/dish-duplicate.model
 import { OrderDishRepository } from './model/order-dish.repo'
 import { GuestRestaurantModule } from 'src/guest-restaurant/guest-restaurant.module'
 import { DishesModule } from 'src/dishes/dishes.module'
+import { TablesModule } from 'src/tables/tables.module'
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { DishesModule } from 'src/dishes/dishes.module'
     RestaurantsModule,
     EmployeesModule,
     GuestRestaurantModule,
+    TablesModule,
     DishesModule
   ],
   controllers: [OrderDishController],

@@ -17,6 +17,6 @@ import { TablesModule } from 'src/tables/tables.module'
   ],
   controllers: [GuestRestaurantController],
   providers: [GuestRestaurantService, GuestRestaurantRepository],
-  exports: [GuestRestaurantService]
+  exports: [GuestRestaurantService, GuestRestaurantRepository]
 })
 export class GuestRestaurantModule {}

@@ -29,4 +29,8 @@ export class GuestRestaurantRepository {
   async updateRefreshToken({ _id, guest_refresh_token }: { _id: string; guest_refresh_token: string }) {
     return await this.guestRestaurantModel.findByIdAndUpdate({ _id }, { guest_refresh_token })
   }
+
+  async findByName({ guest_name }: { guest_name: string }) {
+    return await this.guestRestaurantModel.find({ guest_name: { $regex: guest_name, $options: 'i' } }).select('_id')
+  }
 }
