@@ -16,11 +16,10 @@ import { ScheduleModule } from '@nestjs/schedule'
 import { CronModule } from './cron/cron.module'
 import { EmployeesModule } from './employees/employees.module'
 import { AccountsModule } from './accounts/accounts.module'
-import { Test2faModule } from './test-2fa/test-2fa.module'
 import { TablesModule } from './tables/tables.module'
-import { DishesModule } from './dishes/dishes.module';
-import { GuestRestaurantModule } from './guest-restaurant/guest-restaurant.module';
-import { OrderDishModule } from './order-dish/order-dish.module';
+import { DishesModule } from './dishes/dishes.module'
+import { GuestRestaurantModule } from './guest-restaurant/guest-restaurant.module'
+import { OrderDishModule } from './order-dish/order-dish.module'
 
 @Module({
   imports: [
@@ -47,7 +46,6 @@ import { OrderDishModule } from './order-dish/order-dish.module';
     CronModule,
     EmployeesModule,
     AccountsModule,
-    Test2faModule,
     TablesModule,
     DishesModule,
     GuestRestaurantModule,

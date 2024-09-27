@@ -74,12 +74,12 @@ export class TablesService {
   async findOne(id: string, account: IAccount) {
     if (!id) throw new BadRequestError('Bàn này không tồn tại')
     if (mongoose.Types.ObjectId.isValid(id) === false) throw new BadRequestError('Bàn này không tồn tại')
-    return await this.tableRepository.findOneById({ _id: id, account })
+    return await this.tableRepository.findOne({ _id: id, account })
   }
 
   async update(updateTableDto: UpdateTableDto, account: IAccount) {
     const { _id } = updateTableDto
-    const table = await this.tableRepository.findOneById({ _id, account })
+    const table = await this.tableRepository.findOne({ _id, account })
     if (!table) throw new BadRequestError('Bàn này không tồn tại')
 
     const nameExist = await this.tableRepository.findAllByNames({
@@ -97,7 +97,7 @@ export class TablesService {
   async remove(id: string, account: IAccount) {
     if (!id) throw new BadRequestError('Bàn này không tồn tại')
     if (mongoose.Types.ObjectId.isValid(id) === false) throw new BadRequestError('Bàn này không tồn tại')
-    const table = await this.tableRepository.findOneById({ _id: id, account })
+    const table = await this.tableRepository.findOne({ _id: id, account })
     if (!table) throw new BadRequestError('Bàn này không tồn tại')
 
     return await this.tableRepository.remove(id, account)
@@ -150,7 +150,7 @@ export class TablesService {
   async restore(id: string, account: IAccount) {
     if (!id) throw new BadRequestError('Bàn này không tồn tại')
     if (mongoose.Types.ObjectId.isValid(id) === false) throw new BadRequestError('Bàn này không tồn tại')
-    const table = await this.tableRepository.findOneById({ _id: id, account })
+    const table = await this.tableRepository.findOne({ _id: id, account })
     if (!table) throw new BadRequestError('Bàn này không tồn tại')
 
     return await this.tableRepository.restore(id, account)
@@ -158,7 +158,7 @@ export class TablesService {
 
   async updateStatus(updateStatusTableDto: UpdateStatusTableDto, account: IAccount) {
     const { _id } = updateStatusTableDto
-    const table = await this.tableRepository.findOneById({ _id, account })
+    const table = await this.tableRepository.findOne({ _id, account })
     if (!table) throw new BadRequestError('Bàn này không tồn tại')
 
     return await this.tableRepository.updateStatus(updateStatusTableDto, account)
@@ -167,7 +167,7 @@ export class TablesService {
   async updateToken(id: string, account: IAccount) {
     if (!id) throw new BadRequestError('Bàn này không tồn tại')
     if (mongoose.Types.ObjectId.isValid(id) === false) throw new BadRequestError('Bàn này không tồn tại')
-    const table = await this.tableRepository.findOneById({ _id: id, account })
+    const table = await this.tableRepository.findOne({ _id: id, account })
     if (!table) throw new BadRequestError('Bàn này không tồn tại')
 
     return await this.tableRepository.updateToken(id, account)
@@ -179,5 +179,9 @@ export class TablesService {
 
   async updateStatusById({ _id, tbl_status }: { _id: string; tbl_status: string }) {
     return await this.tableRepository.updateStatusById({ _id, tbl_status })
+  }
+
+  async findOneById({ _id }: { _id: string }) {
+    return await this.tableRepository.findOneById({ _id })
   }
 }

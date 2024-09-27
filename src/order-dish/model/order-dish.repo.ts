@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose'
 import { OrderDish, OrderDishDocument } from './order-dish.model'
 import { Model } from 'mongoose'
 import { DishDuplicate, DishDuplicateDocument } from './dish-duplicate.model'
-import { IGuest } from 'src/guest-restaurant/guest.interface'
 import { IAccount } from 'src/accounts/accounts.interface'
 import { GuestRestaurantRepository } from 'src/guest-restaurant/model/guest-restaurant.repo'
 import { TableRepository } from 'src/tables/model/tables.repo'
@@ -26,12 +25,12 @@ export class OrderDishRepository {
     return await this.orderDishModel.insertMany(orders, options)
   }
 
-  async listOrderGuest(guest: IGuest) {
+  async listOrderGuest(guestArray: { _id: string; guest_table_id: string; guest_restaurant_id: string }[]) {
     return await this.orderDishModel
       .find({
-        od_dish_guest_id: guest._id,
-        od_dish_table_id: guest.guest_table_id,
-        od_dish_restaurant_id: guest.guest_restaurant_id
+        od_dish_guest_id: { $in: guestArray.map((guest) => guest._id) }, // Tìm theo danh sách các _id trong guestArray
+        od_dish_table_id: guestArray[0].guest_table_id, // Giữ nguyên guest_table_id từ phần tử đầu tiên
+        od_dish_restaurant_id: guestArray[0].guest_restaurant_id // Giữ nguyên guest_restaurant_id từ phần tử đầu tiên
       })
       .populate('od_dish_duplicate_id')
       .lean()

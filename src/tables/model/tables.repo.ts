@@ -60,7 +60,7 @@ export class TableRepository {
       .exec()
   }
 
-  async findOneById({ _id, account }: { _id: string; account: IAccount }) {
+  async findOne({ _id, account }: { _id: string; account: IAccount }) {
     return await this.tableModel.findOne({ _id, tbl_restaurant_id: account.account_restaurant_id }).lean()
   }
 
@@ -148,5 +148,9 @@ export class TableRepository {
 
   async findByName({ tbl_name }: { tbl_name: string }) {
     return await this.tableModel.find({ tbl_name: { $regex: tbl_name, $options: 'i' } }).select('_id')
+  }
+
+  async findOneById({ _id }: { _id: string }) {
+    return await this.tableModel.findById({ _id })
   }
 }

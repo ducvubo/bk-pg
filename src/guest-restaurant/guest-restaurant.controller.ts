@@ -4,6 +4,7 @@ import { GuestRestaurant, ResponseMessage } from 'src/decorator/customize'
 import { LoginGuestRestaurantDto } from './dto/login-guest.dto'
 import { GuestRestaurantAuthGuard } from 'src/guard/guest.guard'
 import { IGuest } from './guest.interface'
+import { AddMemberDto } from './dto/add-member.dto'
 
 @Controller('guest-restaurant')
 export class GuestRestaurantController {
@@ -27,5 +28,18 @@ export class GuestRestaurantController {
   @UseGuards(GuestRestaurantAuthGuard)
   async me(@GuestRestaurant() guest: IGuest) {
     return guest
+  }
+
+  @Post('/generate-token-add-member')
+  @ResponseMessage('Tạo token thành công')
+  @UseGuards(GuestRestaurantAuthGuard)
+  async generateTokenAddMember(@GuestRestaurant() guest: IGuest) {
+    return this.guestRestaurantService.generateTokenAddMember(guest)
+  }
+
+  @Post('/add-member')
+  @ResponseMessage('Thêm thành viên vào thành công')
+  async addMember(@Body() addMemberDto: AddMemberDto) {
+    return this.guestRestaurantService.addMember(addMemberDto)
   }
 }

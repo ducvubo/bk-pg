@@ -15,14 +15,15 @@ export class GuestRestaurantRepository {
       guest_name,
       guest_restaurant_id,
       guest_table_id,
-      guest_refresh_token: refresh_token
+      guest_refresh_token: refresh_token,
+      guest_type: 'owner'
     })
   }
 
   async findOneByRefreshToken({ guest_refresh_token }: { guest_refresh_token: string }) {
     return await this.guestRestaurantModel
       .findOne({ guest_refresh_token })
-      .select('guest_name guest_restaurant_id guest_table_id _id')
+      .select('guest_name guest_restaurant_id guest_table_id _id guest_type')
       .lean()
   }
 
@@ -32,5 +33,43 @@ export class GuestRestaurantRepository {
 
   async findByName({ guest_name }: { guest_name: string }) {
     return await this.guestRestaurantModel.find({ guest_name: { $regex: guest_name, $options: 'i' } }).select('_id')
+  }
+
+  async findOneById({ _id }: { _id: string }) {
+    return await this.guestRestaurantModel.findById({ _id })
+  }
+
+  async addMember({
+    owner_id,
+    owner_name,
+    guest_name,
+    guest_restaurant_id,
+    guest_table_id,
+    guest_refresh_token
+  }: {
+    guest_name: string
+    guest_restaurant_id: string
+    guest_refresh_token: string
+    guest_table_id: string
+    owner_id: string
+    owner_name: string
+  }) {
+    return await this.guestRestaurantModel.create({
+      guest_name,
+      guest_restaurant_id,
+      guest_table_id,
+      guest_refresh_token: guest_refresh_token,
+      guest_type: 'member',
+      guest_owner: { owner_id, owner_name }
+    })
+  }
+
+  async findListMember({ owner_id }: { owner_id: string }) {
+    console.log(owner_id)
+    return await this.guestRestaurantModel
+      .find({
+        'guest_owner.owner_id': owner_id
+      })
+      .select('_id')
   }
 }

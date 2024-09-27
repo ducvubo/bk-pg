@@ -6,6 +6,8 @@ import { ConfigService } from '@nestjs/config'
 import { RestaurantsService } from 'src/restaurants/restaurants.service'
 import { TablesService } from 'src/tables/tables.service'
 import { BadRequestError, NotFoundError } from 'src/utils/errorResponse'
+import { IGuest } from './guest.interface'
+import { AddMemberDto } from './dto/add-member.dto'
 
 @Injectable()
 export class GuestRestaurantService {
@@ -46,6 +48,26 @@ export class GuestRestaurantService {
     }
   }
 
+  signTokenAdd(data: any) {
+    const token = this.jwtService.sign(data, {
+      secret: this.configService.get<string>('JWT_TOKEN_GUEST_ADD_MEMBER_SECRET'),
+      expiresIn: this.configService.get<string>('JWT_TOKEN_GUEST_ADD_MEMBER_EXPIRE')
+    })
+
+    return token
+  }
+
+  verifyTokenAdd(token: string) {
+    try {
+      const decoded = this.jwtService.verify(token, {
+        secret: this.configService.get<string>('JWT_TOKEN_GUEST_ADD_MEMBER_SECRET')
+      })
+      return decoded
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   async loginGuestRestaurant(loginGuestRestaurantDto: LoginGuestRestaurantDto) {
     const { guest_restaurant_id, guest_table_id } = loginGuestRestaurantDto
     const restaurant = await this.restaurantsService.findOneById({ _id: guest_restaurant_id })
@@ -61,6 +83,11 @@ export class GuestRestaurantService {
     if (!table && table.tbl_status === 'serving')
       throw new NotFoundError('Bàn này đã được đặt trước, vui lòng chọn bàn khác hoặc thông báo với nhân viên quán')
 
+    if (table && table.tbl_status === 'reserve')
+      throw new NotFoundError(
+        'Bàn này đã có khách ngồi liên hệ với chủ bàn để order, vui lòng chọn bàn khác hoặc thông báo với nhân viên quán'
+      )
+
     loginGuestRestaurantDto.guest_table_id = String(table._id)
     if (table.tbl_status === 'enable') {
       await this.tablesService.updateStatusById({ _id: loginGuestRestaurantDto.guest_table_id, tbl_status: 'reserve' })
@@ -72,7 +99,10 @@ export class GuestRestaurantService {
       refresh_token_guest
     )
 
-    const access_token_guest = this.signToken({ ...loginGuestRestaurantDto, _id: newGuest._id }, 'access_token')
+    const access_token_guest = this.signToken(
+      { ...loginGuestRestaurantDto, _id: newGuest._id, guest_type: newGuest.guest_type },
+      'access_token'
+    )
 
     return { access_token_guest, refresh_token_guest }
   }
@@ -94,5 +124,85 @@ export class GuestRestaurantService {
     delete guest.guest_refresh_token
 
     return { access_token_guest, refresh_token_guest: refresh_token, infor: guest }
+  }
+
+  async generateTokenAddMember(guest: IGuest) {
+    console.log('guest:::::', guest)
+    if (guest.guest_type !== 'owner') throw new BadRequestError('Chỉ chủ bàn mới có quyền thêm thành viên')
+    const token = this.signTokenAdd({
+      guest_owner_id: guest._id,
+      guest_restaurant_id: guest.guest_restaurant_id,
+      guest_table_id: guest.guest_table_id
+    })
+    return token
+  }
+
+  async addMember(addMemberDto: AddMemberDto) {
+    const { token, guest_name } = addMemberDto
+    console.log(addMemberDto)
+    const decoded = this.verifyTokenAdd(token)
+    if (!decoded) throw new BadRequestError('Vui lòng quét lại qr code để thêm thành viên1')
+
+    const { guest_owner_id, guest_restaurant_id, guest_table_id } = decoded
+    const guest = await this.guestRestaurantRepository.findOneById({ _id: guest_owner_id })
+    if (!guest) throw new BadRequestError('Vui lòng quét lại qr code để thêm thành viên')
+
+    const restaurant = await this.restaurantsService.findOneById({ _id: guest_restaurant_id })
+    if (!restaurant)
+      throw new NotFoundError('Nhà hàng không tồn tại, vui lòng kiểm tra lại hoặc thông báo với nhân viên quán')
+    const table = await this.tablesService.findOneById({
+      _id: guest_table_id
+    })
+    if (!table && table.tbl_status === 'disable')
+      throw new NotFoundError('Bàn này không tồn tại, vui lòng kiểm tra lại hoặc thông báo với nhân viên quán')
+
+    if (!table && table.tbl_status === 'serving')
+      throw new NotFoundError('Bàn này đã được đặt trước, vui lòng chọn bàn khác hoặc thông báo với nhân viên quán')
+
+    if (!table && table.tbl_status !== 'reserve')
+      throw new NotFoundError(
+        'Bàn này chưa có khách ngồi vui lòng quét qr của bàn, vui lòng chọn bàn khác hoặc thông báo với nhân viên quán'
+      )
+
+    // loginGuestRestaurantDto.guest_table_id = String(table._id)
+    // if (table.tbl_status === 'enable') {
+    //   await this.tablesService.updateStatusById({ _id: loginGuestRestaurantDto.guest_table_id, tbl_status: 'reserve' })
+    // }
+
+    const refresh_token_guest = this.signToken(
+      {
+        guest_name: guest_name,
+        guest_table_id: guest_table_id,
+        guest_restaurant_id: guest_restaurant_id
+      },
+      'refresh_token'
+    )
+    const newGuest = await this.guestRestaurantRepository.addMember({
+      guest_name: guest_name,
+      guest_table_id: guest_table_id,
+      guest_restaurant_id: guest_restaurant_id,
+      guest_refresh_token: refresh_token_guest,
+      owner_id: String(guest._id),
+      owner_name: guest.guest_name
+    })
+
+    const access_token_guest = this.signToken(
+      {
+        guest_name: guest_name,
+        guest_table_id: guest_table_id,
+        guest_restaurant_id: guest_restaurant_id,
+        _id: newGuest._id,
+        guest_type: newGuest.guest_type
+      },
+      'access_token'
+    )
+
+    return {
+      access_token_guest,
+      refresh_token_guest,
+      guest_name: guest_name,
+      guest_restaurant_id: guest_restaurant_id,
+      guest_table_id: guest_table_id
+    }
   }
 }

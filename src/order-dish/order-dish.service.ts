@@ -9,11 +9,13 @@ import { InjectConnection } from '@nestjs/mongoose'
 import aqp from 'api-query-params'
 import { IAccount } from 'src/accounts/accounts.interface'
 import { UpdateStatusOrderDishDto } from './dto/update-status-order-dish.dto'
+import { GuestRestaurantRepository } from 'src/guest-restaurant/model/guest-restaurant.repo'
 
 @Injectable()
 export class OrderDishService {
   constructor(
     private readonly orderDishRepository: OrderDishRepository,
+    private readonly guestRestaurantRepository: GuestRestaurantRepository,
     private readonly dishRepository: DishRepository,
     @InjectConnection() private readonly connection: Connection
   ) {}
@@ -99,7 +101,6 @@ export class OrderDishService {
   async createOrderDish(createOrderDishDto: CreateOrderDishDto[], guest: IGuest) {
     const session = await this.connection.startSession() // Start session for transaction
     session.startTransaction()
-    console.log('Transaction started')
 
     try {
       const listDish = await Promise.all(
@@ -138,7 +139,6 @@ export class OrderDishService {
       await this.orderDishRepository.bulkCreateOrderDish(newListOrderDish, { session }) // Use session
 
       await session.commitTransaction() // Commit the transaction
-      console.log('Transaction committed')
       return null
     } catch (error) {
       await session.abortTransaction() // Abort the transaction in case of error
@@ -146,13 +146,66 @@ export class OrderDishService {
       throw new ServerError('Có lỗi xảy ra, vui lòng thử lại sau ít phút')
     } finally {
       await session.endSession() // End the session
-      console.log('Session ended')
     }
   }
 
   async listOrderGuest(guest: IGuest) {
-    return this.orderDishRepository.listOrderGuest(guest)
+    console.log(guest)
+    let guestArray = []
+
+    if (guest.guest_type === 'owner') {
+      guestArray.push({
+        _id: guest._id,
+        guest_table_id: guest.guest_table_id,
+        guest_restaurant_id: guest.guest_restaurant_id
+      })
+      const listMember = await this.guestRestaurantRepository.findListMember({ owner_id: guest._id })
+      guestArray = guestArray.concat(
+        listMember.map((member) => ({
+          _id: member._id, // Sử dụng _id từ listMember
+          guest_table_id: guest.guest_table_id, // Giữ nguyên giá trị từ guest
+          guest_restaurant_id: guest.guest_restaurant_id // Giữ nguyên giá trị từ guest
+        }))
+      )
+    }
+    if (guest.guest_type === 'member') {
+      const inforGuest = await this.guestRestaurantRepository.findOneById({ _id: guest._id })
+      guestArray.push({
+        _id: inforGuest.guest_owner.owner_id,
+        guest_table_id: guest.guest_table_id,
+        guest_restaurant_id: guest.guest_restaurant_id
+      })
+      const listMember = await this.guestRestaurantRepository.findListMember({
+        owner_id: inforGuest.guest_owner.owner_id
+      })
+      guestArray = guestArray.concat(
+        listMember.map((member) => ({
+          _id: member._id, // Sử dụng _id từ listMember
+          guest_table_id: guest.guest_table_id, // Giữ nguyên giá trị từ guest
+          guest_restaurant_id: guest.guest_restaurant_id // Giữ nguyên giá trị từ guest
+        }))
+      )
+    }
+    return this.orderDishRepository.listOrderGuest(guestArray)
   }
+
+  // [
+  //   {
+  //     _id: guest._id,
+  //     guest_table_id: guest.guest_table_id,
+  //     guest_restaurant_id: guest.guest_restaurant_id
+  //   },
+  //   {
+  //     _id:....,
+  //     guest_table_id: guest.guest_table_id,
+  //     guest_restaurant_id: guest.guest_restaurant_id
+  //   },
+  //   {
+  //     _id:...,
+  //     guest_table_id: guest.guest_table_id,
+  //     guest_restaurant_id: guest.guest_restaurant_id
+  //   }
+  // ]
 
   async listOrderRestaurant(
     { currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string },
@@ -166,7 +219,6 @@ export class OrderDishService {
     }
 
     const { filter, sort } = aqp(qs)
-
 
     delete filter.current
     delete filter.pageSize
