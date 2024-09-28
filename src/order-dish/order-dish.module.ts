@@ -1,16 +1,16 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 import { OrderDishService } from './order-dish.service'
 import { OrderDishController } from './order-dish.controller'
 import { MongooseModule } from '@nestjs/mongoose'
-import { AccountsModule } from 'src/accounts/accounts.module'
-import { RestaurantsModule } from 'src/restaurants/restaurants.module'
-import { EmployeesModule } from 'src/employees/employees.module'
 import { OrderDish, OrderDishSchema } from './model/order-dish.model'
 import { DishDuplicate, DishDuplicateSchema } from './model/dish-duplicate.model'
 import { OrderDishRepository } from './model/order-dish.repo'
 import { GuestRestaurantModule } from 'src/guest-restaurant/guest-restaurant.module'
 import { DishesModule } from 'src/dishes/dishes.module'
-import { TablesModule } from 'src/tables/tables.module'
+import { OrderDishSummaryModule } from 'src/order-dish-summary/order-dish-summary.module'
+import { AccountsModule } from 'src/accounts/accounts.module'
+import { RestaurantsModule } from 'src/restaurants/restaurants.module'
+import { EmployeesModule } from 'src/employees/employees.module'
 
 @Module({
   imports: [
@@ -18,14 +18,15 @@ import { TablesModule } from 'src/tables/tables.module'
       { name: OrderDish.name, schema: OrderDishSchema },
       { name: DishDuplicate.name, schema: DishDuplicateSchema }
     ]),
+    forwardRef(() => OrderDishSummaryModule),
+    forwardRef(() => DishesModule),
+    forwardRef(() => GuestRestaurantModule),
     AccountsModule,
     RestaurantsModule,
-    EmployeesModule,
-    GuestRestaurantModule,
-    TablesModule,
-    DishesModule
+    EmployeesModule
   ],
   controllers: [OrderDishController],
-  providers: [OrderDishService, OrderDishRepository]
+  providers: [OrderDishService, OrderDishRepository],
+  exports: [OrderDishService, OrderDishRepository]
 })
 export class OrderDishModule {}

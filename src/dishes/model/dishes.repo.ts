@@ -138,7 +138,6 @@ export class DishRepository {
       {
         dish_status,
         updatedBy: {
-          // _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
           _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
           email: account.account_email
         }

@@ -1,22 +1,22 @@
-import { Injectable } from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { OrderDishRepository } from './model/order-dish.repo'
 import { CreateOrderDishDto } from './dto/create-order-dish.dto'
 import { IGuest } from 'src/guest-restaurant/guest.interface'
 import { DishRepository } from 'src/dishes/model/dishes.repo'
-import { BadRequestError, NotFoundError, ServerError } from 'src/utils/errorResponse'
-import mongoose, { Connection } from 'mongoose'
+import { BadRequestError, ServerError } from 'src/utils/errorResponse'
+import { Connection } from 'mongoose'
 import { InjectConnection } from '@nestjs/mongoose'
-import aqp from 'api-query-params'
+import { OrderDishSummaryRepository } from 'src/order-dish-summary/model/order-dish-summary.repo'
 import { IAccount } from 'src/accounts/accounts.interface'
 import { UpdateStatusOrderDishDto } from './dto/update-status-order-dish.dto'
-import { GuestRestaurantRepository } from 'src/guest-restaurant/model/guest-restaurant.repo'
 
 @Injectable()
 export class OrderDishService {
   constructor(
     private readonly orderDishRepository: OrderDishRepository,
-    private readonly guestRestaurantRepository: GuestRestaurantRepository,
     private readonly dishRepository: DishRepository,
+    @Inject(forwardRef(() => OrderDishSummaryRepository))
+    private readonly orderDishSummaryRepository: OrderDishSummaryRepository,
     @InjectConnection() private readonly connection: Connection
   ) {}
 
@@ -103,6 +103,17 @@ export class OrderDishService {
     session.startTransaction()
 
     try {
+      const orderSummary = await this.orderDishSummaryRepository.findOneById({ _id: guest.order_id })
+      if (!orderSummary) throw new BadRequestError('Đơn hàng không tồn tại, vui lòng thử lại sau ít phút')
+      if (orderSummary.od_dish_smr_status === 'paid')
+        throw new BadRequestError(
+          'Đơn hàng đã thanh toán không thể order thêm, vui lòng liên hệ nhân viên để được hỗ trợ'
+        )
+      if (orderSummary.od_dish_smr_status === 'refuse')
+        throw new BadRequestError(
+          'Đơn hàng đã bị từ chối không thể order thêm, vui lòng liên hệ nhân viên để được hỗ trợ'
+        )
+
       const listDish = await Promise.all(
         createOrderDishDto.map(async (item: CreateOrderDishDto) => {
           const dish = await this.dishRepository.findOne({ _id: item.od_dish_id }, session) // Use session
@@ -127,9 +138,8 @@ export class OrderDishService {
           throw new BadRequestError('Món ăn không tồn tại, vui lòng thử lại sau ít phút')
         }
         return {
-          od_dish_restaurant_id: guest.guest_restaurant_id,
+          od_dish_summary_id: orderSummary._id,
           od_dish_guest_id: guest._id,
-          od_dish_table_id: guest.guest_table_id,
           od_dish_duplicate_id: duplicateDish._id,
           od_dish_quantity: item1.od_dish_quantity,
           od_dish_status: 'pending'
@@ -150,122 +160,36 @@ export class OrderDishService {
   }
 
   async listOrderGuest(guest: IGuest) {
-    console.log(guest)
-    let guestArray = []
-
-    if (guest.guest_type === 'owner') {
-      guestArray.push({
-        _id: guest._id,
-        guest_table_id: guest.guest_table_id,
-        guest_restaurant_id: guest.guest_restaurant_id
-      })
-      const listMember = await this.guestRestaurantRepository.findListMember({ owner_id: guest._id })
-      guestArray = guestArray.concat(
-        listMember.map((member) => ({
-          _id: member._id, // Sử dụng _id từ listMember
-          guest_table_id: guest.guest_table_id, // Giữ nguyên giá trị từ guest
-          guest_restaurant_id: guest.guest_restaurant_id // Giữ nguyên giá trị từ guest
-        }))
-      )
+    const orderSummary = await this.orderDishSummaryRepository.findOneById({ _id: guest.order_id })
+    const order = await this.orderDishRepository.listOrderGuest({ od_dish_summary_id: guest.order_id })
+    const newOrder = {
+      _id: orderSummary._id,
+      od_dish_smr_restaurant_id: orderSummary.od_dish_smr_restaurant_id,
+      od_dish_smr_guest_id: orderSummary.od_dish_smr_guest_id,
+      od_dish_smr_table_id: orderSummary.od_dish_smr_table_id,
+      od_dish_smr_status: orderSummary.od_dish_smr_status,
+      or_dish: order
     }
-    if (guest.guest_type === 'member') {
-      const inforGuest = await this.guestRestaurantRepository.findOneById({ _id: guest._id })
-      guestArray.push({
-        _id: inforGuest.guest_owner.owner_id,
-        guest_table_id: guest.guest_table_id,
-        guest_restaurant_id: guest.guest_restaurant_id
-      })
-      const listMember = await this.guestRestaurantRepository.findListMember({
-        owner_id: inforGuest.guest_owner.owner_id
-      })
-      guestArray = guestArray.concat(
-        listMember.map((member) => ({
-          _id: member._id, // Sử dụng _id từ listMember
-          guest_table_id: guest.guest_table_id, // Giữ nguyên giá trị từ guest
-          guest_restaurant_id: guest.guest_restaurant_id // Giữ nguyên giá trị từ guest
-        }))
-      )
-    }
-    return this.orderDishRepository.listOrderGuest(guestArray)
+    return newOrder
   }
-
-  // [
-  //   {
-  //     _id: guest._id,
-  //     guest_table_id: guest.guest_table_id,
-  //     guest_restaurant_id: guest.guest_restaurant_id
-  //   },
-  //   {
-  //     _id:....,
-  //     guest_table_id: guest.guest_table_id,
-  //     guest_restaurant_id: guest.guest_restaurant_id
-  //   },
-  //   {
-  //     _id:...,
-  //     guest_table_id: guest.guest_table_id,
-  //     guest_restaurant_id: guest.guest_restaurant_id
-  //   }
-  // ]
-
-  async listOrderRestaurant(
-    { currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string },
-    account: IAccount
-  ) {
-    currentPage = isNaN(currentPage) ? 1 : currentPage
-    limit = isNaN(limit) ? 8 : limit
-
-    if (currentPage <= 0 || limit <= 0) {
-      throw new BadRequestError('Trang hiện tại và số record phải lớn hơn 0')
-    }
-
-    const { filter, sort } = aqp(qs)
-
-    delete filter.current
-    delete filter.pageSize
-
-    const offset = (+currentPage - 1) * +limit
-    const defaultLimit = +limit ? +limit : 10
-
-    filter.guest_name = filter.guest_name ? filter.guest_name : undefined
-    filter.tbl_name = filter.tbl_name ? filter.tbl_name : undefined
-
-    //'processing' | 'pending' | 'paid' | 'delivered' | 'refuse'
-    const validStatuses = ['processing', 'pending', 'paid', 'delivered', 'refuse']
-
-    if (!validStatuses.includes(filter.od_dish_status)) {
-      delete filter.od_dish_status
-    }
-
-    const item = await this.orderDishRepository.totalItemsListOrderRestaurant(filter, account)
-    const totalPages = Math.ceil(item.totalItems / defaultLimit)
-
-    const result = await this.orderDishRepository.findPaginationListOrderRestaurant(
-      {
-        offset,
-        defaultLimit,
-        sort,
-        filter
-      },
-      account
-    )
-
-    return {
-      meta: {
-        current: currentPage,
-        pageSize: limit,
-        totalPage: totalPages,
-        totalItem: item.totalItems,
-        statusCount: item.statusCounts
-      },
-      result
-    }
-  }
+  // async updateStatusOrderDish(updateStatusOrderDishDto: UpdateStatusOrderDishDto, account: IAccount) {
+  //   const { _id } = updateStatusOrderDishDto
+  //   if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Đơn hàng không tồn tại')
+  //   const order = await this.orderDishRepository.findOneById({ _id, account })
+  //   if (!order) throw new NotFoundError('Đơn hàng không tồn tại')
+  //   return this.orderDishRepository.updateStatusOrderDish(updateStatusOrderDishDto, account)
+  // }
 
   async updateStatusOrderDish(updateStatusOrderDishDto: UpdateStatusOrderDishDto, account: IAccount) {
-    const { _id } = updateStatusOrderDishDto
-    if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Đơn hàng không tồn tại')
-    const order = await this.orderDishRepository.findOneById({ _id, account })
-    if (!order) throw new NotFoundError('Đơn hàng không tồn tại')
+    const { _id, od_dish_summary_id } = updateStatusOrderDishDto
+    const orderSummary = await this.orderDishSummaryRepository.findOneById({ _id: od_dish_summary_id })
+    if (!orderSummary) throw new BadRequestError('Đơn hàng không tồn tại, vui lòng thử lại sau ít phút')
+    if (orderSummary.od_dish_smr_status === 'paid')
+      throw new BadRequestError('Đơn hàng đã thanh toán không thể cập nhật trạng thái')
+    if (orderSummary.od_dish_smr_status === 'refuse')
+      throw new BadRequestError('Đơn hàng đã bị từ chối không thể cập nhật trạng thái')
+    const order = await this.orderDishRepository.findOneById({ _id })
+    if (!order) throw new BadRequestError('Đơn hàng không tồn tại, vui lòng thử lại sau ít phút')
     return this.orderDishRepository.updateStatusOrderDish(updateStatusOrderDishDto, account)
   }
 }

@@ -4,4 +4,5 @@ export interface IGuest {
   guest_table_id: string
   guest_name: string
   guest_type: 'member' | 'owner'
+  order_id: string
 }

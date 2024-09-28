@@ -20,6 +20,7 @@ import { TablesModule } from './tables/tables.module'
 import { DishesModule } from './dishes/dishes.module'
 import { GuestRestaurantModule } from './guest-restaurant/guest-restaurant.module'
 import { OrderDishModule } from './order-dish/order-dish.module'
+import { OrderDishSummaryModule } from './order-dish-summary/order-dish-summary.module'
 
 @Module({
   imports: [
@@ -49,7 +50,8 @@ import { OrderDishModule } from './order-dish/order-dish.module'
     TablesModule,
     DishesModule,
     GuestRestaurantModule,
-    OrderDishModule
+    OrderDishModule,
+    OrderDishSummaryModule
   ],
   controllers: [AppController],
   providers: [AppService]

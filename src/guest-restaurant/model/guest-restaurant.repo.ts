@@ -23,7 +23,7 @@ export class GuestRestaurantRepository {
   async findOneByRefreshToken({ guest_refresh_token }: { guest_refresh_token: string }) {
     return await this.guestRestaurantModel
       .findOne({ guest_refresh_token })
-      .select('guest_name guest_restaurant_id guest_table_id _id guest_type')
+      .select('guest_name guest_restaurant_id guest_table_id _id guest_type guest_owner')
       .lean()
   }
 
@@ -71,5 +71,9 @@ export class GuestRestaurantRepository {
         'guest_owner.owner_id': owner_id
       })
       .select('_id')
+  }
+
+  async logOutTable({ guest_table_id }: { guest_table_id: string }) {
+    return await this.guestRestaurantModel.updateMany({ guest_table_id }, { guest_refresh_token: null })
   }
 }

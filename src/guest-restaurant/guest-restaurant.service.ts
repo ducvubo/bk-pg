@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { GuestRestaurantRepository } from './model/guest-restaurant.repo'
 import { LoginGuestRestaurantDto } from './dto/login-guest.dto'
 import { JwtService } from '@nestjs/jwt'
@@ -8,6 +8,7 @@ import { TablesService } from 'src/tables/tables.service'
 import { BadRequestError, NotFoundError } from 'src/utils/errorResponse'
 import { IGuest } from './guest.interface'
 import { AddMemberDto } from './dto/add-member.dto'
+import { OrderDishSummaryRepository } from 'src/order-dish-summary/model/order-dish-summary.repo'
 
 @Injectable()
 export class GuestRestaurantService {
@@ -16,7 +17,9 @@ export class GuestRestaurantService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly restaurantsService: RestaurantsService,
-    private readonly tablesService: TablesService
+    private readonly tablesService: TablesService,
+    @Inject(forwardRef(() => OrderDishSummaryRepository))
+    private readonly orderDishSummaryRepository: OrderDishSummaryRepository
   ) {}
 
   signToken(data: any, type: 'access_token' | 'refresh_token') {
@@ -99,8 +102,19 @@ export class GuestRestaurantService {
       refresh_token_guest
     )
 
+    const newOrder = await this.orderDishSummaryRepository.createOrderDishSummary({
+      od_dish_smr_restaurant_id: guest_restaurant_id,
+      od_dish_smr_guest_id: String(newGuest._id),
+      od_dish_smr_table_id: String(table._id)
+    })
+
     const access_token_guest = this.signToken(
-      { ...loginGuestRestaurantDto, _id: newGuest._id, guest_type: newGuest.guest_type },
+      {
+        ...loginGuestRestaurantDto,
+        _id: newGuest._id,
+        guest_type: newGuest.guest_type,
+        order_id: newOrder._id
+      },
       'access_token'
     )
 
@@ -119,21 +133,39 @@ export class GuestRestaurantService {
     //   _id: String(guest._id),
     //   guest_refresh_token: refresh_token_guest
     // })
+    let order
+    if (guest.guest_type === 'owner') {
+      order = await this.orderDishSummaryRepository.findOneByGuestId({ od_dish_smr_guest_id: String(guest._id) })
+    } else if (guest.guest_type === 'member') {
+      order = await this.orderDishSummaryRepository.findOneByGuestId({
+        od_dish_smr_guest_id: String(guest.guest_owner.owner_id)
+      })
+    }
 
-    const access_token_guest = this.signToken(guest, 'access_token')
+    const access_token_guest = this.signToken({ ...guest, order_id: order._id }, 'access_token')
     delete guest.guest_refresh_token
 
     return { access_token_guest, refresh_token_guest: refresh_token, infor: guest }
   }
 
   async generateTokenAddMember(guest: IGuest) {
-    console.log('guest:::::', guest)
     if (guest.guest_type !== 'owner') throw new BadRequestError('Chỉ chủ bàn mới có quyền thêm thành viên')
+
+    const order = await this.orderDishSummaryRepository.findOneById({ _id: guest.order_id })
+    if (!order) throw new BadRequestError('Vui lòng quét lại qr code để thêm thành viên')
+
+    if (order.od_dish_smr_status === 'paid')
+      throw new BadRequestError('Bàn này đã thanh toán không thể thêm thành viên')
+    if (order.od_dish_smr_status === 'refuse')
+      throw new BadRequestError('Bàn này đã từ chối order không thể thêm thành viên')
+
     const token = this.signTokenAdd({
       guest_owner_id: guest._id,
       guest_restaurant_id: guest.guest_restaurant_id,
-      guest_table_id: guest.guest_table_id
+      guest_table_id: guest.guest_table_id,
+      order_id: order._id
     })
+
     return token
   }
 
@@ -144,8 +176,8 @@ export class GuestRestaurantService {
     if (!decoded) throw new BadRequestError('Vui lòng quét lại qr code để thêm thành viên1')
 
     const { guest_owner_id, guest_restaurant_id, guest_table_id } = decoded
-    const guest = await this.guestRestaurantRepository.findOneById({ _id: guest_owner_id })
-    if (!guest) throw new BadRequestError('Vui lòng quét lại qr code để thêm thành viên')
+    const guestOwner = await this.guestRestaurantRepository.findOneById({ _id: guest_owner_id })
+    if (!guestOwner) throw new BadRequestError('Vui lòng quét lại qr code để thêm thành viên')
 
     const restaurant = await this.restaurantsService.findOneById({ _id: guest_restaurant_id })
     if (!restaurant)
@@ -163,6 +195,14 @@ export class GuestRestaurantService {
       throw new NotFoundError(
         'Bàn này chưa có khách ngồi vui lòng quét qr của bàn, vui lòng chọn bàn khác hoặc thông báo với nhân viên quán'
       )
+
+    const order = await this.orderDishSummaryRepository.findOneById({ _id: decoded.order_id })
+    if (!order) throw new BadRequestError('Vui lòng quét lại qr code để thêm thành viên')
+
+    if (order.od_dish_smr_status === 'paid')
+      throw new BadRequestError('Bàn này đã thanh toán không thể thêm thành viên')
+    if (order.od_dish_smr_status === 'refuse')
+      throw new BadRequestError('Bàn này đã từ chối order không thể thêm thành viên')
 
     // loginGuestRestaurantDto.guest_table_id = String(table._id)
     // if (table.tbl_status === 'enable') {
@@ -182,8 +222,8 @@ export class GuestRestaurantService {
       guest_table_id: guest_table_id,
       guest_restaurant_id: guest_restaurant_id,
       guest_refresh_token: refresh_token_guest,
-      owner_id: String(guest._id),
-      owner_name: guest.guest_name
+      owner_id: String(guestOwner._id),
+      owner_name: guestOwner.guest_name
     })
 
     const access_token_guest = this.signToken(
@@ -192,17 +232,15 @@ export class GuestRestaurantService {
         guest_table_id: guest_table_id,
         guest_restaurant_id: guest_restaurant_id,
         _id: newGuest._id,
-        guest_type: newGuest.guest_type
+        guest_type: newGuest.guest_type,
+        order_id: order._id
       },
       'access_token'
     )
 
     return {
       access_token_guest,
-      refresh_token_guest,
-      guest_name: guest_name,
-      guest_restaurant_id: guest_restaurant_id,
-      guest_table_id: guest_table_id
+      refresh_token_guest
     }
   }
 }
