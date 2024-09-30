@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 import { DishesService } from './dishes.service'
 import { DishesController } from './dishes.controller'
 import { MongooseModule } from '@nestjs/mongoose'
@@ -15,7 +15,8 @@ import { GuestRestaurantModule } from 'src/guest-restaurant/guest-restaurant.mod
     AccountsModule,
     RestaurantsModule,
     EmployeesModule,
-    GuestRestaurantModule
+    forwardRef(() => GuestRestaurantModule)
+    // GuestRestaurantModule
   ],
   controllers: [DishesController],
   providers: [DishesService, DishRepository],

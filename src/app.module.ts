@@ -21,6 +21,7 @@ import { DishesModule } from './dishes/dishes.module'
 import { GuestRestaurantModule } from './guest-restaurant/guest-restaurant.module'
 import { OrderDishModule } from './order-dish/order-dish.module'
 import { OrderDishSummaryModule } from './order-dish-summary/order-dish-summary.module'
+import { SocketModule } from './socket/socket.module'
 
 @Module({
   imports: [
@@ -51,7 +52,8 @@ import { OrderDishSummaryModule } from './order-dish-summary/order-dish-summary.
     DishesModule,
     GuestRestaurantModule,
     OrderDishModule,
-    OrderDishSummaryModule
+    OrderDishSummaryModule,
+    SocketModule
   ],
   controllers: [AppController],
   providers: [AppService]

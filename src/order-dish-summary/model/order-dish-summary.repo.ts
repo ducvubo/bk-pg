@@ -190,6 +190,16 @@ export class OrderDishSummaryRepository {
       { new: true }
     )
   }
+
+  async findTableStatusOrderById({
+    od_dish_smr_table_id,
+    od_dish_smr_status
+  }: {
+    od_dish_smr_table_id: string
+    od_dish_smr_status: 'paid' | 'refuse' | 'ordering'
+  }) {
+    return this.orderDishSumaryModel.find({ od_dish_smr_table_id, od_dish_smr_status })
+  }
 }
 
 // ;[

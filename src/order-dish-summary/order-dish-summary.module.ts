@@ -10,13 +10,15 @@ import { OrderDishModule } from 'src/order-dish/order-dish.module'
 import { AccountsModule } from 'src/accounts/accounts.module'
 import { EmployeesModule } from 'src/employees/employees.module'
 import { RestaurantsModule } from 'src/restaurants/restaurants.module'
+import { SocketModule } from 'src/socket/socket.module'
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: OrderDishSummary.name, schema: OrderDishSummarySchema }]),
     forwardRef(() => GuestRestaurantModule),
     forwardRef(() => OrderDishModule),
-    TablesModule,
+    forwardRef(() => TablesModule),
+    SocketModule,
     AccountsModule,
     EmployeesModule,
     RestaurantsModule

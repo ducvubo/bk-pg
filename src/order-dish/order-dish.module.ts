@@ -11,6 +11,7 @@ import { OrderDishSummaryModule } from 'src/order-dish-summary/order-dish-summar
 import { AccountsModule } from 'src/accounts/accounts.module'
 import { RestaurantsModule } from 'src/restaurants/restaurants.module'
 import { EmployeesModule } from 'src/employees/employees.module'
+import { SocketModule } from 'src/socket/socket.module'
 
 @Module({
   imports: [
@@ -23,7 +24,9 @@ import { EmployeesModule } from 'src/employees/employees.module'
     forwardRef(() => GuestRestaurantModule),
     AccountsModule,
     RestaurantsModule,
-    EmployeesModule
+    EmployeesModule,
+    forwardRef(() => SocketModule)
+    // SocketModule
   ],
   controllers: [OrderDishController],
   providers: [OrderDishService, OrderDishRepository],

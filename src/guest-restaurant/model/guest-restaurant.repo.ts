@@ -65,7 +65,6 @@ export class GuestRestaurantRepository {
   }
 
   async findListMember({ owner_id }: { owner_id: string }) {
-    console.log(owner_id)
     return await this.guestRestaurantModel
       .find({
         'guest_owner.owner_id': owner_id
@@ -74,6 +73,10 @@ export class GuestRestaurantRepository {
   }
 
   async logOutTable({ guest_table_id }: { guest_table_id: string }) {
-    return await this.guestRestaurantModel.updateMany({ guest_table_id }, { guest_refresh_token: null })
+    const updatedRecords = await this.guestRestaurantModel.find({ guest_table_id }).select('_id')
+
+    await this.guestRestaurantModel.updateMany({ guest_table_id }, { guest_refresh_token: null })
+
+    return updatedRecords.map((record) => record._id)
   }
 }

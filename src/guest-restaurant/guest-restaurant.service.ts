@@ -9,6 +9,8 @@ import { BadRequestError, NotFoundError } from 'src/utils/errorResponse'
 import { IGuest } from './guest.interface'
 import { AddMemberDto } from './dto/add-member.dto'
 import { OrderDishSummaryRepository } from 'src/order-dish-summary/model/order-dish-summary.repo'
+import { SocketGateway } from 'src/socket/socket.gateway'
+import { KEY_SOCKET_GUEST_ORDER_DISH_SUMMARY_ID, KEY_SOCKET_RESTAURANT_ID } from 'src/constants/key.socket'
 
 @Injectable()
 export class GuestRestaurantService {
@@ -19,7 +21,8 @@ export class GuestRestaurantService {
     private readonly restaurantsService: RestaurantsService,
     private readonly tablesService: TablesService,
     @Inject(forwardRef(() => OrderDishSummaryRepository))
-    private readonly orderDishSummaryRepository: OrderDishSummaryRepository
+    private readonly orderDishSummaryRepository: OrderDishSummaryRepository,
+    private readonly socketGateway: SocketGateway
   ) {}
 
   signToken(data: any, type: 'access_token' | 'refresh_token') {
@@ -118,6 +121,15 @@ export class GuestRestaurantService {
       'access_token'
     )
 
+    this.socketGateway.handleEmitSocket({
+      to: `${KEY_SOCKET_RESTAURANT_ID}:${guest_restaurant_id}`,
+      event: 'login_guest_table',
+      data: {
+        guest_name: loginGuestRestaurantDto.guest_name,
+        tbl_name: table.tbl_name
+      }
+    })
+
     return { access_token_guest, refresh_token_guest }
   }
 
@@ -171,7 +183,6 @@ export class GuestRestaurantService {
 
   async addMember(addMemberDto: AddMemberDto) {
     const { token, guest_name } = addMemberDto
-    console.log(addMemberDto)
     const decoded = this.verifyTokenAdd(token)
     if (!decoded) throw new BadRequestError('Vui lòng quét lại qr code để thêm thành viên1')
 
@@ -237,6 +248,14 @@ export class GuestRestaurantService {
       },
       'access_token'
     )
+
+    this.socketGateway.handleEmitSocket({
+      to: `${KEY_SOCKET_GUEST_ORDER_DISH_SUMMARY_ID}:${decoded.order_id}`,
+      event: 'add_member',
+      data: {
+        guest_name: guest_name
+      }
+    })
 
     return {
       access_token_guest,

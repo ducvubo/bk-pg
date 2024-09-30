@@ -7,6 +7,9 @@ import { OrderDishService } from 'src/order-dish/order-dish.service'
 import { UpdateStatusOrderSummaryDto } from './dto/update-status-summary.dto'
 import { TableRepository } from 'src/tables/model/tables.repo'
 import { GuestRestaurantRepository } from 'src/guest-restaurant/model/guest-restaurant.repo'
+import { setCacheIOExpiration } from 'src/utils/cache'
+import { KEY_LOGOUT_TABLE_RESTAURANT } from 'src/constants/key.redis'
+import { SocketGateway } from 'src/socket/socket.gateway'
 
 @Injectable()
 export class OrderDishSummaryService {
@@ -16,7 +19,8 @@ export class OrderDishSummaryService {
     private readonly orderDishService: OrderDishService,
     @Inject(forwardRef(() => GuestRestaurantRepository))
     private readonly guestRestaurantRepository: GuestRestaurantRepository,
-    private readonly tableRepository: TableRepository
+    private readonly tableRepository: TableRepository,
+    private readonly socketGateway: SocketGateway
   ) {}
 
   async listOrderRestaurant(
@@ -81,8 +85,16 @@ export class OrderDishSummaryService {
       throw new BadRequestError('Đơn hàng đã được thanh toán, không thể cập nhật')
     if (order.od_dish_smr_status === 'refuse') throw new BadRequestError('Đơn hàng đã bị từ chối, không thể cập nhật')
     const update = this.orderDishSummaryRepository.updateStatusOrderDishSummary(updateStatusOrderSummaryDto, account)
-
-    await this.guestRestaurantRepository.logOutTable({ guest_table_id: String(order.od_dish_smr_table_id) })
+    if (!update) throw new BadRequestError('Cập nhật trạng thái đơn hàng thất bại, vui lòng thử lại sau ít phút')
+    this.socketGateway.server.emit('update_order_dish_summary', {
+      od_dish_smr_status: updateStatusOrderSummaryDto.od_dish_smr_status
+    })
+    const logout = await this.guestRestaurantRepository.logOutTable({
+      guest_table_id: String(order.od_dish_smr_table_id)
+    })
+    logout?.map(async (_id) => {
+      await setCacheIOExpiration(`${KEY_LOGOUT_TABLE_RESTAURANT}:${_id}`, 'hehehehehehehehe', 900)
+    })
     await this.tableRepository.updateStatus({ _id: String(order.od_dish_smr_table_id), tbl_status: 'enable' }, account)
     return update
   }

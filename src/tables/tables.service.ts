@@ -7,10 +7,18 @@ import aqp from 'api-query-params'
 import { UpdateTableDto } from './dto/update-table.dto'
 import { UpdateStatusTableDto } from './dto/update-status-table.dto'
 import mongoose from 'mongoose'
+import { GuestRestaurantRepository } from 'src/guest-restaurant/model/guest-restaurant.repo'
+import { OrderDishSummaryRepository } from 'src/order-dish-summary/model/order-dish-summary.repo'
+import { setCacheIOExpiration } from 'src/utils/cache'
+import { KEY_LOGOUT_TABLE_RESTAURANT } from 'src/constants/key.redis'
 
 @Injectable()
 export class TablesService {
-  constructor(private readonly tableRepository: TableRepository) {}
+  constructor(
+    private readonly tableRepository: TableRepository,
+    private readonly guestRestaurantRepository: GuestRestaurantRepository,
+    private readonly orderDishSummaryRepository: OrderDishSummaryRepository
+  ) {}
 
   async create(createTableDto: CreateTableDto, account: IAccount) {
     const { tbl_name } = createTableDto
@@ -171,6 +179,16 @@ export class TablesService {
     if (mongoose.Types.ObjectId.isValid(id) === false) throw new BadRequestError('Bàn này không tồn tại')
     const table = await this.tableRepository.findOne({ _id: id, account })
     if (!table) throw new BadRequestError('Bàn này không tồn tại')
+    await this.orderDishSummaryRepository.findTableStatusOrderById({
+      od_dish_smr_table_id: String(table._id),
+      od_dish_smr_status: 'ordering'
+    })
+    const logout = await this.guestRestaurantRepository.logOutTable({ guest_table_id: String(table._id) })
+    logout?.map(async (_id) => {
+      await setCacheIOExpiration(`${KEY_LOGOUT_TABLE_RESTAURANT}:${_id}`, 'hehehehehehehehe', 900)
+    })
+
+    await this.tableRepository.updateStatus({ _id: String(table._id), tbl_status: 'enable' }, account)
 
     return await this.tableRepository.updateToken(id, account)
   }

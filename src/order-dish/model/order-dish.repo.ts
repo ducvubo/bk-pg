@@ -62,4 +62,8 @@ export class OrderDishRepository {
       { new: true }
     )
   }
+
+  async findOneDishDuplicateById({ _id }: { _id: string }) {
+    return this.dishDuplicateModel.findOne({ _id }).lean()
+  }
 }

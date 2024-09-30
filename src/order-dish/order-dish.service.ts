@@ -9,6 +9,8 @@ import { InjectConnection } from '@nestjs/mongoose'
 import { OrderDishSummaryRepository } from 'src/order-dish-summary/model/order-dish-summary.repo'
 import { IAccount } from 'src/accounts/accounts.interface'
 import { UpdateStatusOrderDishDto } from './dto/update-status-order-dish.dto'
+import { SocketGateway } from 'src/socket/socket.gateway'
+import { KEY_SOCKET_GUEST_ORDER_DISH_SUMMARY_ID, KEY_SOCKET_RESTAURANT_ID } from 'src/constants/key.socket'
 
 @Injectable()
 export class OrderDishService {
@@ -17,7 +19,8 @@ export class OrderDishService {
     private readonly dishRepository: DishRepository,
     @Inject(forwardRef(() => OrderDishSummaryRepository))
     private readonly orderDishSummaryRepository: OrderDishSummaryRepository,
-    @InjectConnection() private readonly connection: Connection
+    @InjectConnection() private readonly connection: Connection,
+    private readonly socketGateway: SocketGateway
   ) {}
 
   transformToDishDuplicate(data: any[]) {
@@ -149,6 +152,11 @@ export class OrderDishService {
       await this.orderDishRepository.bulkCreateOrderDish(newListOrderDish, { session }) // Use session
 
       await session.commitTransaction() // Commit the transaction
+      this.socketGateway.handleEmitSocket({
+        event: 'order_dish_new',
+        data: null,
+        to: `${KEY_SOCKET_RESTAURANT_ID}:${String(orderSummary.od_dish_smr_restaurant_id)}`
+      })
       return null
     } catch (error) {
       await session.abortTransaction() // Abort the transaction in case of error
@@ -190,6 +198,18 @@ export class OrderDishService {
       throw new BadRequestError('Đơn hàng đã bị từ chối không thể cập nhật trạng thái')
     const order = await this.orderDishRepository.findOneById({ _id })
     if (!order) throw new BadRequestError('Đơn hàng không tồn tại, vui lòng thử lại sau ít phút')
-    return this.orderDishRepository.updateStatusOrderDish(updateStatusOrderDishDto, account)
+    const update = await this.orderDishRepository.updateStatusOrderDish(updateStatusOrderDishDto, account)
+    if (!update) throw new BadRequestError('Cập nhật trạng thái đơn hàng thất bại, vui lòng thử lại sau ít phút')
+    const dish = await this.orderDishRepository.findOneDishDuplicateById({ _id: String(order.od_dish_duplicate_id) })
+    this.socketGateway.handleEmitSocket({
+      event: 'update-status-order-dish',
+      data: {
+        dish_duplicate_name: dish.dish_duplicate_name,
+        od_dish_status: updateStatusOrderDishDto.od_dish_status
+      },
+      to: `${KEY_SOCKET_GUEST_ORDER_DISH_SUMMARY_ID}:${String(orderSummary._id)}`
+    })
+
+    return update
   }
 }

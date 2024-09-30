@@ -5,7 +5,7 @@ export class UpdateStatusOrderDishDto {
   @IsMongoId({ message: 'Id phải là một ObjectId hợp lệ' })
   _id: string
 
-  @IsNotEmpty({ message: 'Id món ăn không được để trống' })
+  @IsNotEmpty({ message: 'Id không được để trống' })
   @IsMongoId({ message: 'Id phải là một ObjectId hợp lệ' })
   od_dish_summary_id: string
 
@@ -13,5 +13,5 @@ export class UpdateStatusOrderDishDto {
   @IsIn(['processing', 'pending', 'delivered', 'refuse'], {
     message: 'Status phải là "processing", "pending", "delivered", "refuse" '
   })
-  od_dish_status: string
+  od_dish_status: 'processing' | 'pending' | 'delivered' | 'refuse'
 }

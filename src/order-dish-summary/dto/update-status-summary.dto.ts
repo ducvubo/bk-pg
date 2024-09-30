@@ -9,5 +9,5 @@ export class UpdateStatusOrderSummaryDto {
   @IsIn(['paid', 'refuse'], {
     message: 'Status phải là "paid", "refuse"'
   })
-  od_dish_smr_status: string
+  od_dish_smr_status: 'paid' | 'refuse'
 }
