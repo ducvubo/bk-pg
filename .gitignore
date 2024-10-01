@@ -59,5 +59,4 @@ public
 
 .vercel
 package-lock.json
-redis.config.ts
-/redis.config.ts
+

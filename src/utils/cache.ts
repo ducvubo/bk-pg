@@ -1,6 +1,6 @@
 'use strict'
 
-import { getRedis } from 'redis.config'
+import { getRedis } from '../config/redis.config'
 
 const redisCache = getRedis().instanceConnect
 

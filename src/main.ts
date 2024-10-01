@@ -5,7 +5,7 @@ import { ValidationPipe, VersioningType } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { TransformIntercaptor } from './interceptor/transform.interceptor'
 import { join } from 'path'
-import { initRedis } from '../redis.config'
+import { initRedis } from './config/redis.config'
 import { IdUserGuestInterceptor } from './interceptor/guestId.interceptor'
 
 export const redisConfig = {
