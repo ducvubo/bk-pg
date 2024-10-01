@@ -27,9 +27,9 @@ export const initRedis = () => {
   console.log(redisConfig)
 
   const instanceRedis = new redis({
-    host: config?.host,
-    port: config?.port,
-    password: config?.password
+    host: process.env.REDIS_HOST,
+    port: Number(process.env.REDIS_PORT),
+    password: process.env.REDIS_PASSWORD
   })
   const client = { instanceConnect: instanceRedis }
   handleEventConnection({ connectionRedis: instanceRedis })
