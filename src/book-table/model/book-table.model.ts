@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import mongoose, { HydratedDocument } from 'mongoose'
 import { Restaurant } from 'src/restaurants/model/restaurant.model'
-import { User } from 'src/users/model/User.model'
+import { User } from 'src/users/model/user.model'
 import { SampleSchema } from 'src/utils/sample.schema'
 
 export type BookTableDocument = HydratedDocument<BookTable>
