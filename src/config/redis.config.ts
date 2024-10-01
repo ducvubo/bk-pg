@@ -18,12 +18,10 @@ const handleEventConnection = ({ connectionRedis }: { connectionRedis: any }) =>
     console.log('connectionRedis - Connection status: reconnecting')
   })
   connectionRedis.on(statusConnectRedis.ERROR, (err) => {
-    console.log(redisConfig)
     console.log(`connectionRedis - Connection status: error ${err}`)
   })
 }
 export const initRedis = () => {
-  console.log('Connecting to Redis with config:', JSON.stringify(redisConfig, null, 2))
   const instanceRedis = new redis({
     host: redisConfig?.host,
     port: redisConfig?.port,
