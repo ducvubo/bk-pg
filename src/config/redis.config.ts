@@ -18,6 +18,7 @@ const handleEventConnection = ({ connectionRedis }: { connectionRedis: any }) =>
     console.log('connectionRedis - Connection status: reconnecting')
   })
   connectionRedis.on(statusConnectRedis.ERROR, (err) => {
+    console.log(redisConfig)
     console.log(`connectionRedis - Connection status: error ${err}`)
   })
 }
