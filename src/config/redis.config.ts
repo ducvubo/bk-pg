@@ -23,6 +23,7 @@ const handleEventConnection = ({ connectionRedis }: { connectionRedis: any }) =>
   })
 }
 export const initRedis = () => {
+  console.log('Connecting to Redis with config:', JSON.stringify(redisConfig, null, 2))
   const instanceRedis = new redis({
     host: redisConfig?.host,
     port: redisConfig?.port,
