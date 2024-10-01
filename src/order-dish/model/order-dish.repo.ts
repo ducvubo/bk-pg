@@ -13,18 +13,27 @@ export class OrderDishRepository {
     @InjectModel(DishDuplicate.name) private dishDuplicateModel: Model<DishDuplicateDocument>
   ) {}
 
-  async bulkCreateDishDuplicate(dishes: any[], options?: any) {
-    return await this.dishDuplicateModel.insertMany(dishes, options)
+  // async bulkCreateDishDuplicate(dishes: any[], options?: any) {
+  //   return await this.dishDuplicateModel.insertMany(dishes, options)
+  // }
+
+  // async bulkCreateOrderDish(orders: any[], options?: any) {
+  //   return await this.orderDishModel.insertMany(orders, options)
+  // }
+
+  async bulkCreateDishDuplicate(dishes: any[]) {
+    return await this.dishDuplicateModel.insertMany(dishes)
   }
 
-  async bulkCreateOrderDish(orders: any[], options?: any) {
-    return await this.orderDishModel.insertMany(orders, options)
+  async bulkCreateOrderDish(orders: any[]) {
+    return await this.orderDishModel.insertMany(orders)
   }
 
   async listOrderGuest({ od_dish_summary_id }: { od_dish_summary_id: string }) {
     return await this.orderDishModel
       .find({ od_dish_summary_id })
       .populate('od_dish_duplicate_id')
+      .populate('od_dish_guest_id')
       .sort({ createdAt: -1 })
       .lean()
   }

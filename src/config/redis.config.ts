@@ -1,10 +1,12 @@
 import redis from 'ioredis'
+import { redisConfig } from 'src/main'
 const statusConnectRedis = {
   CONNECT: 'connect',
   END: 'end',
   ERROR: 'error',
   RECONNECT: 'reconnecting'
 }
+
 const handleEventConnection = ({ connectionRedis }: { connectionRedis: any }) => {
   connectionRedis.on(statusConnectRedis.CONNECT, () => {
     console.log('connectionRedis - Connection status: connected')
@@ -21,8 +23,9 @@ const handleEventConnection = ({ connectionRedis }: { connectionRedis: any }) =>
 }
 export const initRedis = () => {
   const instanceRedis = new redis({
-    host: 'localhost',
-    port: 6379
+    host: redisConfig?.host,
+    port: redisConfig?.port,
+    password: redisConfig?.password
   })
   const client = { instanceConnect: instanceRedis }
   handleEventConnection({ connectionRedis: instanceRedis })

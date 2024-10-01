@@ -34,17 +34,15 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   afterInit(socket: Socket): any {}
 
   async handleConnection(socket: Socket) {
-    console.log('connect', socket.id)
     const authHeader = socket.handshake.auth.authorization?.split(' ')[1]
     const type = socket.handshake.auth.type
 
     if (authHeader && type === 'guest') {
       try {
         socket.data = this.guestRestaurantService.verifyToken(authHeader, 'access_token')
-        console.log('socket.data.order_id', socket.data.order_id)
         socket.join(`${KEY_SOCKET_GUEST_ORDER_DISH_SUMMARY_ID}:${socket.data.order_id}`)
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
+        console.log(e)
         socket.disconnect()
       }
     }
@@ -73,7 +71,6 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
           if (!account) {
             socket.disconnect()
           }
-          console.log(account)
           socket.data = account
           socket.join(`${KEY_SOCKET_RESTAURANT_ID}:${String(socket.data.account_restaurant_id)}`)
         } catch (e) {

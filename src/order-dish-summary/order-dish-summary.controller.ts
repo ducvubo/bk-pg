@@ -33,4 +33,11 @@ export class OrderDishSummaryController {
   ) {
     return this.orderDishSummaryService.updateStatusOrderDishSummay(updateStatusOrderSummaryDto, account)
   }
+
+  @Get('/list-ordering')
+  @ResponseMessage('Danh sách đang order')
+  @UseGuards(AccountAuthGuard)
+  async listOrdering(@Acccount() account: IAccount) {
+    return await this.orderDishSummaryService.listOrdering(account)
+  }
 }

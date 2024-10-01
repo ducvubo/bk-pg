@@ -26,18 +26,6 @@ export class OrderDishController {
     return this.orderDishService.listOrderGuest(guest)
   }
 
-  // @Get('/list-order-restaurant')
-  // @ResponseMessage('Danh sách món ăn đã đặt')
-  // @UseGuards(AccountAuthGuard)
-  // async listOrderRestaurant(
-  //   @Query('current') currentPage: string,
-  //   @Query('pageSize') limit: string,
-  //   @Query() qs: string,
-  //   @Acccount() account: IAccount
-  // ) {
-  //   return await this.orderDishService.listOrderRestaurant({ currentPage: +currentPage, limit: +limit, qs }, account)
-  // }
-
   @Patch('/update-status')
   @ResponseMessage('Cập nhật trạng thái món ăn thành công')
   @UseGuards(AccountAuthGuard)
@@ -47,4 +35,11 @@ export class OrderDishController {
   ) {
     return this.orderDishService.updateStatusOrderDish(updateStatusOrderDishDto, account)
   }
+
+  // @Post('/restaurant-create-order-dish')
+  // @ResponseMessage('Tạo order thành công')
+  // @UseGuards(AccountAuthGuard)
+  // async restaurantCreateOrderDish(@Body() createOrderDishDto: CreateOrderDishDto[], @Acccount() account: IAccount) {
+  //   return this.orderDishService.restaurantCreateOrderDish(createOrderDishDto, account)
+  // }
 }

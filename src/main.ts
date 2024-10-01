@@ -8,6 +8,12 @@ import { join } from 'path'
 import { initRedis } from './config/redis.config'
 import { IdUserGuestInterceptor } from './interceptor/guestId.interceptor'
 
+export const redisConfig = {
+  host: String(process.env.REDIS_HOST),
+  port: Number(process.env.REDIS_PORT),
+  password: String(process.env.REDIS_PASSWORD)
+}
+
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule)
 

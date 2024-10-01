@@ -98,4 +98,8 @@ export class OrderDishSummaryService {
     await this.tableRepository.updateStatus({ _id: String(order.od_dish_smr_table_id), tbl_status: 'enable' }, account)
     return update
   }
+
+  async listOrdering(account: IAccount) {
+    return await this.orderDishSummaryRepository.listOrdering(account)
+  }
 }

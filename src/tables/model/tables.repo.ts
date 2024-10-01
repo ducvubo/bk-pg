@@ -153,4 +153,14 @@ export class TableRepository {
   async findOneById({ _id }: { _id: string }) {
     return await this.tableModel.findById({ _id })
   }
+
+  async getListTableOrder(account: IAccount) {
+    return await this.tableModel
+      .find({
+        tbl_status: 'enable',
+        tbl_restaurant_id: account.account_restaurant_id
+      })
+      .select('tbl_name _id')
+      .lean()
+  }
 }

@@ -152,11 +152,11 @@ export class DishRepository {
       .lean()
   }
 
-  // async findOne({ _id }: { _id: string }) {
-  //   return await this.DishModel.findOne({ _id, dish_status: 'enable' }).lean()
+  // async findOne({ _id }: { _id: string }, session: any = null) {
+  //   return await this.DishModel.findOne({ _id, dish_status: 'enable' }).session(session).lean()
   // }
 
-  async findOne({ _id }: { _id: string }, session: any = null) {
-    return await this.DishModel.findOne({ _id, dish_status: 'enable' }).session(session).lean()
+  async findOne({ _id }: { _id: string }) {
+    return await this.DishModel.findOne({ _id, dish_status: 'enable' }).lean()
   }
 }

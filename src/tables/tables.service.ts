@@ -204,4 +204,8 @@ export class TablesService {
   async findOneById({ _id }: { _id: string }) {
     return await this.tableRepository.findOneById({ _id })
   }
+
+  async getListTableOrder(account: IAccount) {
+    return await this.tableRepository.getListTableOrder(account)
+  }
 }

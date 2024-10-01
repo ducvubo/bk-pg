@@ -37,6 +37,13 @@ export class TablesController {
     return await this.tablesService.update(updateTableDto, account)
   }
 
+  @Get('/list-table-order')
+  @ResponseMessage('Lấy danh sách bàn order thành công')
+  @UseGuards(AccountAuthGuard)
+  async getListTableOrder(@Acccount() account: IAccount) {
+    return await this.tablesService.getListTableOrder(account)
+  }
+
   @Get('/recycle')
   @ResponseMessage('Lấy danh sách bàn đã xóa thành công')
   @UseGuards(AccountAuthGuard)

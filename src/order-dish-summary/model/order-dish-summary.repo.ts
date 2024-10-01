@@ -200,6 +200,17 @@ export class OrderDishSummaryRepository {
   }) {
     return this.orderDishSumaryModel.find({ od_dish_smr_table_id, od_dish_smr_status })
   }
+
+  async listOrdering(account: IAccount) {
+    return this.orderDishSumaryModel
+      .find({
+        od_dish_smr_restaurant_id: account.account_restaurant_id,
+        od_dish_smr_status: 'ordering'
+      })
+      .populate('od_dish_smr_guest_id')
+      .populate('od_dish_smr_table_id')
+      .lean()
+  }
 }
 
 // ;[
