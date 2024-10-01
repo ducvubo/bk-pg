@@ -41,9 +41,11 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       try {
         socket.data = this.guestRestaurantService.verifyToken(authHeader, 'access_token')
         socket.join(`${KEY_SOCKET_GUEST_ORDER_DISH_SUMMARY_ID}:${socket.data.order_id}`)
+        return
       } catch (e) {
         console.log(e)
         socket.disconnect()
+        return
       }
     }
     if (authHeader && type === 'restaurant') {
@@ -73,9 +75,11 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
           }
           socket.data = account
           socket.join(`${KEY_SOCKET_RESTAURANT_ID}:${String(socket.data.account_restaurant_id)}`)
+          return
         } catch (e) {
           console.log(e)
           socket.disconnect()
+          return
         }
       } else {
         socket.disconnect()

@@ -7,8 +7,6 @@ const statusConnectRedis = {
   RECONNECT: 'reconnecting'
 }
 
-const config = redisConfig
-
 const handleEventConnection = ({ connectionRedis }: { connectionRedis: any }) => {
   connectionRedis.on(statusConnectRedis.CONNECT, () => {
     console.log('connectionRedis - Connection status: connected')
@@ -30,7 +28,10 @@ export const initRedis = () => {
     host: process.env.REDIS_HOST,
     port: Number(process.env.REDIS_PORT),
     password: process.env.REDIS_PASSWORD
+    // host: 'localhost',
+    // port: 6379
   })
+
   const client = { instanceConnect: instanceRedis }
   handleEventConnection({ connectionRedis: instanceRedis })
   return client
