@@ -43,7 +43,7 @@ export class OrderDishRepository {
       .find({ od_dish_summary_id: { $in: listId } })
       .populate({
         path: 'od_dish_guest_id',
-        select: 'guest_name _id guest_owner'
+        select: 'guest_name _id guest_owner guest_type'
       })
       .populate({
         path: 'od_dish_duplicate_id',

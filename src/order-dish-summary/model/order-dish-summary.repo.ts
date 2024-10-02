@@ -41,7 +41,7 @@ export class OrderDishSummaryRepository {
   }
 
   async findOneById({ _id }: { _id: string }) {
-    return this.orderDishSumaryModel.findOne({ _id })
+    return this.orderDishSumaryModel.findOne({ _id }).populate('od_dish_smr_guest_id').lean()
   }
 
   async totalItemsListOrderRestaurant(filter, account: IAccount) {
@@ -151,7 +151,7 @@ export class OrderDishSummaryRepository {
       .sort({ updatedAt: -1, ...sort })
       .populate({
         path: 'od_dish_smr_guest_id',
-        select: 'guest_name _id'
+        select: 'guest_name _id guest_type'
       })
       .populate({
         path: 'od_dish_smr_table_id',
@@ -211,46 +211,27 @@ export class OrderDishSummaryRepository {
       .populate('od_dish_smr_table_id')
       .lean()
   }
-}
 
-// ;[
-//   {
-//     _id: '66f77798796e497294b22735',
-//     isDeleted: false,
-//     od_dish_smr_restaurant_id: '66eaf2dc05ffc35f26f62eb4',
-//     od_dish_smr_guest_id: '66f77798796e497294b22733',
-//     od_dish_smr_table_id: '66f4e998a9133fcfb3ac7e1f',
-//     od_dish_smr_status: 'ordering',
-//     or_dish: [
-//          ....
-//     ],
-//     createdAt: '2024-09-28T03:27:20.387Z',
-//     updatedAt: '2024-09-28T03:27:20.387Z'
-//   },
-//   {
-//     _id: '66f77483606fc00d63b91bc7',
-//     isDeleted: false,
-//     od_dish_smr_restaurant_id: '66eaf2dc05ffc35f26f62eb4',
-//     od_dish_smr_guest_id: '66f77483606fc00d63b91bc5',
-//     od_dish_smr_table_id: '66f6608d411b83da205de7a3',
-//     od_dish_smr_status: 'ordering',
-//     or_dish: [
-//          ....
-//     ],
-//     createdAt: '2024-09-28T03:14:11.287Z',
-//     updatedAt: '2024-09-28T03:14:11.287Z'
-//   },
-//   {
-//     _id: '66f6ef493c4b63f4eb2e2206',
-//     isDeleted: false,
-//     od_dish_smr_restaurant_id: '66eaf2dc05ffc35f26f62eb4',
-//     od_dish_smr_guest_id: '66f6ef493c4b63f4eb2e2204',
-//     od_dish_smr_table_id: '66f4e990a9133fcfb3ac7e0a',
-//     od_dish_smr_status: 'ordering',
-//     or_dish: [
-//          ....
-//     ],
-//     createdAt: '2024-09-27T17:45:45.200Z',
-//     updatedAt: '2024-09-27T17:45:45.200Z'
-//   }
-// ]
+  async restaurantCreayeOrderDishSummary({
+    od_dish_smr_restaurant_id,
+    od_dish_smr_guest_id,
+    od_dish_smr_table_id,
+    createdBy
+  }: {
+    od_dish_smr_guest_id: string
+    od_dish_smr_restaurant_id: string
+    od_dish_smr_table_id: string
+    createdBy: {
+      _id: string
+      email: string
+    }
+  }) {
+    return this.orderDishSumaryModel.create({
+      od_dish_smr_restaurant_id,
+      od_dish_smr_guest_id,
+      od_dish_smr_table_id,
+      od_dish_smr_status: 'ordering',
+      createdBy
+    })
+  }
+}

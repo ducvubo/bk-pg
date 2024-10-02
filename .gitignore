@@ -60,3 +60,5 @@ public
 .vercel
 package-lock.json
 
+redis.config.ts
+/src/config/redis.config.ts

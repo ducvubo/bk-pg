@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Query, Patch, Body } from '@nestjs/common'
+import { Controller, Get, UseGuards, Query, Patch, Body, Post } from '@nestjs/common'
 import { OrderDishSummaryService } from './order-dish-summary.service'
 import { Acccount, ResponseMessage } from 'src/decorator/customize'
 import { AccountAuthGuard } from 'src/guard/accounts.guard'
@@ -39,5 +39,15 @@ export class OrderDishSummaryController {
   @UseGuards(AccountAuthGuard)
   async listOrdering(@Acccount() account: IAccount) {
     return await this.orderDishSummaryService.listOrdering(account)
+  }
+
+  @Post('/create-order-dish-summary')
+  @ResponseMessage('Tạo đơn hàng mới thành công')
+  @UseGuards(AccountAuthGuard)
+  async createOrderDishSummary(
+    @Body('od_dish_smr_table_id') od_dish_smr_table_id: string,
+    @Acccount() account: IAccount
+  ) {
+    return await this.orderDishSummaryService.createOrderDishSummary(od_dish_smr_table_id, account)
   }
 }

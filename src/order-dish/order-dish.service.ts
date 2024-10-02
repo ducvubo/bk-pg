@@ -1,6 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common'
 import { OrderDishRepository } from './model/order-dish.repo'
-import { CreateOrderDishDto } from './dto/create-order-dish.dto'
+import { CreateOrderDishDto, RestaurantCreateOrderDishDto } from './dto/create-order-dish.dto'
 import { IGuest } from 'src/guest-restaurant/guest.interface'
 import { DishRepository } from 'src/dishes/model/dishes.repo'
 import { BadRequestError } from 'src/utils/errorResponse'
@@ -11,6 +11,7 @@ import { IAccount } from 'src/accounts/accounts.interface'
 import { UpdateStatusOrderDishDto } from './dto/update-status-order-dish.dto'
 import { SocketGateway } from 'src/socket/socket.gateway'
 import { KEY_SOCKET_GUEST_ORDER_DISH_SUMMARY_ID, KEY_SOCKET_RESTAURANT_ID } from 'src/constants/key.socket'
+import { GuestRestaurantRepository } from 'src/guest-restaurant/model/guest-restaurant.repo'
 
 @Injectable()
 export class OrderDishService {
@@ -19,6 +20,7 @@ export class OrderDishService {
     private readonly dishRepository: DishRepository,
     @Inject(forwardRef(() => OrderDishSummaryRepository))
     private readonly orderDishSummaryRepository: OrderDishSummaryRepository,
+    private readonly guestRestaurantRepository: GuestRestaurantRepository,
     @InjectConnection() private readonly connection: Connection,
     private readonly socketGateway: SocketGateway
   ) {}
@@ -202,5 +204,74 @@ export class OrderDishService {
     })
 
     return update
+  }
+
+  async restaurantCreateOrderDish(restaurantCreateOrderDishDto: RestaurantCreateOrderDishDto, account: IAccount) {
+    const orderSummary: any = await this.orderDishSummaryRepository.findOneById({
+      _id: restaurantCreateOrderDishDto.od_dish_summary_id
+    })
+    if (!orderSummary) throw new BadRequestError('Đơn hàng không tồn tại, vui lòng thử lại sau ít phút')
+    if (orderSummary.od_dish_smr_status === 'paid')
+      throw new BadRequestError(
+        'Đơn hàng đã thanh toán không thể order thêm, vui lòng liên hệ nhân viên để được hỗ trợ'
+      )
+    if (orderSummary.od_dish_smr_status === 'refuse')
+      throw new BadRequestError(
+        'Đơn hàng đã bị từ chối không thể order thêm, vui lòng liên hệ nhân viên để được hỗ trợ'
+      )
+
+    const listDish = await Promise.all(
+      restaurantCreateOrderDishDto.order_dish.map(async (item: CreateOrderDishDto) => {
+        const dish = await this.dishRepository.findOne({ _id: item.od_dish_id })
+        if (!dish) {
+          throw new BadRequestError('Món ăn không tồn tại, vui lòng thử lại sau ít phút')
+        }
+        return dish
+      })
+    )
+
+    const listDishDuplicate = this.transformToDishDuplicate(listDish)
+
+    const newListDishDuplicate = await this.orderDishRepository.bulkCreateDishDuplicate(listDishDuplicate)
+
+    const newGuest = await this.guestRestaurantRepository.createGuestRestaurant({
+      guest_restaurant_id: String(orderSummary.od_dish_smr_restaurant_id),
+      guest_table_id: String(orderSummary.od_dish_smr_table_id),
+      owner_id: String(orderSummary.od_dish_smr_guest_id._id),
+      owner_name: orderSummary.od_dish_smr_guest_id.guest_name,
+      createdBy: {
+        _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
+        email: account.account_email
+      }
+    })
+
+    const newListOrderDish = restaurantCreateOrderDishDto.order_dish.map((item1) => {
+      const duplicateDish = newListDishDuplicate.find(
+        (item2) => item2.dish_duplicate_dish_id.toString() === item1.od_dish_id
+      )
+      if (!duplicateDish) {
+        throw new BadRequestError('Món ăn không tồn tại, vui lòng thử lại sau ít phút')
+      }
+      return {
+        od_dish_summary_id: orderSummary._id,
+        od_dish_guest_id: newGuest._id,
+        od_dish_duplicate_id: duplicateDish._id,
+        od_dish_quantity: item1.od_dish_quantity,
+        od_dish_status: 'pending',
+        createdBy: {
+          _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
+          email: account.account_email
+        }
+      }
+    })
+
+    await this.orderDishRepository.bulkCreateOrderDish(newListOrderDish)
+
+    this.socketGateway.handleEmitSocket({
+      event: 'order_dish_new_restaurant',
+      data: null,
+      to: `${KEY_SOCKET_GUEST_ORDER_DISH_SUMMARY_ID}:${String(orderSummary._id)}`
+    })
+    return null
   }
 }

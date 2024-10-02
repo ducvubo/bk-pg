@@ -2,7 +2,7 @@ import { Body, Controller, Get, Patch, Post, UseGuards } from '@nestjs/common'
 import { OrderDishService } from './order-dish.service'
 import { Acccount, GuestRestaurant, ResponseMessage } from 'src/decorator/customize'
 import { GuestRestaurantAuthGuard } from 'src/guard/guest.guard'
-import { CreateOrderDishDto } from './dto/create-order-dish.dto'
+import { CreateOrderDishDto, RestaurantCreateOrderDishDto } from './dto/create-order-dish.dto'
 import { IGuest } from 'src/guest-restaurant/guest.interface'
 import { UpdateStatusOrderDishDto } from './dto/update-status-order-dish.dto'
 import { IAccount } from 'src/accounts/accounts.interface'
@@ -36,10 +36,13 @@ export class OrderDishController {
     return this.orderDishService.updateStatusOrderDish(updateStatusOrderDishDto, account)
   }
 
-  // @Post('/restaurant-create-order-dish')
-  // @ResponseMessage('Tạo order thành công')
-  // @UseGuards(AccountAuthGuard)
-  // async restaurantCreateOrderDish(@Body() createOrderDishDto: CreateOrderDishDto[], @Acccount() account: IAccount) {
-  //   return this.orderDishService.restaurantCreateOrderDish(createOrderDishDto, account)
-  // }
+  @Post('/restaurant-create-order-dish')
+  @ResponseMessage('Tạo order thành công')
+  @UseGuards(AccountAuthGuard)
+  async restaurantCreateOrderDish(
+    @Body() restaurantCreateOrderDishDto: RestaurantCreateOrderDishDto,
+    @Acccount() account: IAccount
+  ) {
+    return this.orderDishService.restaurantCreateOrderDish(restaurantCreateOrderDishDto, account)
+  }
 }

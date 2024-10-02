@@ -10,6 +10,7 @@ import { GuestRestaurantRepository } from 'src/guest-restaurant/model/guest-rest
 import { setCacheIOExpiration } from 'src/utils/cache'
 import { KEY_LOGOUT_TABLE_RESTAURANT } from 'src/constants/key.redis'
 import { SocketGateway } from 'src/socket/socket.gateway'
+import mongoose from 'mongoose'
 
 @Injectable()
 export class OrderDishSummaryService {
@@ -101,5 +102,38 @@ export class OrderDishSummaryService {
 
   async listOrdering(account: IAccount) {
     return await this.orderDishSummaryRepository.listOrdering(account)
+  }
+
+  async createOrderDishSummary(od_dish_smr_table_id: string, account: IAccount) {
+    if (!od_dish_smr_table_id) throw new BadRequestError('Bàn không tồn tại, vui lòng thử lại sau ít phút')
+    if (mongoose.Types.ObjectId.isValid(od_dish_smr_table_id) === false)
+      throw new BadRequestError('Bàn không tồn tại, vui lòng thử lại sau ít phút')
+    const table = await this.tableRepository.findOneById({ _id: od_dish_smr_table_id })
+    if (!table) throw new BadRequestError('Bàn không tồn tại, vui lòng thử lại sau ít phút')
+    if (table.tbl_status === 'disable') throw new BadRequestError('Bàn không tồn tại, vui lòng thử lại sau ít phút')
+    if (table.tbl_status === 'serving') throw new BadRequestError('Bàn đã được đặt trước, vui lòng thử lại sau ít phút')
+    if (table.tbl_status === 'reserve') throw new BadRequestError('Bàn đang phục vụ, vui lòng thử lại sau ít phút')
+
+    const newGuest = await this.guestRestaurantRepository.createGuestRestaurant({
+      guest_restaurant_id: account.account_restaurant_id,
+      guest_table_id: od_dish_smr_table_id,
+      createdBy: {
+        _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
+        email: account.account_email
+      }
+    })
+
+    const order = await this.orderDishSummaryRepository.restaurantCreayeOrderDishSummary({
+      od_dish_smr_restaurant_id: account.account_restaurant_id,
+      od_dish_smr_guest_id: String(newGuest._id),
+      od_dish_smr_table_id,
+      createdBy: {
+        _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
+        email: account.account_email
+      }
+    })
+
+    await this.tableRepository.updateStatus({ _id: od_dish_smr_table_id, tbl_status: 'reserve' }, account)
+    return order
   }
 }

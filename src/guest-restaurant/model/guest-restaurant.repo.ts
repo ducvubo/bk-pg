@@ -75,8 +75,35 @@ export class GuestRestaurantRepository {
   async logOutTable({ guest_table_id }: { guest_table_id: string }) {
     const updatedRecords = await this.guestRestaurantModel.find({ guest_table_id }).select('_id')
 
-    await this.guestRestaurantModel.updateMany({ guest_table_id }, { guest_refresh_token: null })
+    await this.guestRestaurantModel.updateMany({ guest_table_id }, { guest_refresh_token: 'null' })
 
     return updatedRecords.map((record) => record._id)
+  }
+
+  async createGuestRestaurant({
+    guest_restaurant_id,
+    guest_table_id,
+    owner_id,
+    owner_name,
+    createdBy
+  }: {
+    guest_restaurant_id: string
+    guest_table_id: string
+    owner_id?: string
+    owner_name?: string
+    createdBy: {
+      _id: string
+      email: string
+    }
+  }) {
+    return await this.guestRestaurantModel.create({
+      guest_name: 'Nhân viên order',
+      guest_restaurant_id,
+      guest_table_id,
+      guest_refresh_token: 'null',
+      guest_owner: { owner_id, owner_name },
+      guest_type: 'member',
+      createdBy
+    })
   }
 }
