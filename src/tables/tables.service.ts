@@ -9,8 +9,8 @@ import { UpdateStatusTableDto } from './dto/update-status-table.dto'
 import mongoose from 'mongoose'
 import { GuestRestaurantRepository } from 'src/guest-restaurant/model/guest-restaurant.repo'
 import { OrderDishSummaryRepository } from 'src/order-dish-summary/model/order-dish-summary.repo'
-import { setCacheIOExpiration } from 'src/utils/cache'
-import { KEY_LOGOUT_TABLE_RESTAURANT } from 'src/constants/key.redis'
+import { deleteCacheIO } from 'src/utils/cache'
+import { KEY_ACCESS_TOKEN_GUEST_RESTAURANT } from 'src/constants/key.redis'
 
 @Injectable()
 export class TablesService {
@@ -185,7 +185,7 @@ export class TablesService {
     })
     const logout = await this.guestRestaurantRepository.logOutTable({ guest_table_id: String(table._id) })
     logout?.map(async (_id) => {
-      await setCacheIOExpiration(`${KEY_LOGOUT_TABLE_RESTAURANT}:${_id}`, 'hehehehehehehehe', 900)
+      await deleteCacheIO(`${KEY_ACCESS_TOKEN_GUEST_RESTAURANT}:${_id}`)
     })
 
     await this.tableRepository.updateStatus({ _id: String(table._id), tbl_status: 'enable' }, account)

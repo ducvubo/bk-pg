@@ -5,6 +5,7 @@ import { LoginGuestRestaurantDto } from './dto/login-guest.dto'
 import { GuestRestaurantAuthGuard } from 'src/guard/guest.guard'
 import { IGuest } from './guest.interface'
 import { AddMemberDto } from './dto/add-member.dto'
+import { AccountAuthGuard } from 'src/guard/accounts.guard'
 
 @Controller('guest-restaurant')
 export class GuestRestaurantController {
@@ -41,5 +42,12 @@ export class GuestRestaurantController {
   @ResponseMessage('Thêm thành viên vào thành công')
   async addMember(@Body() addMemberDto: AddMemberDto) {
     return this.guestRestaurantService.addMember(addMemberDto)
+  }
+
+  @Post('/get-token')
+  @ResponseMessage('Lấy token thành công')
+  @UseGuards(AccountAuthGuard)
+  async getToken(@Body('_id') _id: string) {
+    return this.guestRestaurantService.getToken({ _id })
   }
 }

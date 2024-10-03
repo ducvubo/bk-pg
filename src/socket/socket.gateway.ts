@@ -90,6 +90,6 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
-    console.log('disconnect', socket.id, socket.data?.email)
+    console.log('disconnect', socket.id)
   }
 }

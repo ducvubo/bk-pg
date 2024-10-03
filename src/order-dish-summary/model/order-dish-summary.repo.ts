@@ -110,6 +110,65 @@ export class OrderDishSummaryRepository {
       count: statusCountsMap[status] || 0 // Gán giá trị 0 nếu không có
     }))
 
+    // Thêm điều kiện loại trừ các OrderDishSummary có trạng thái 'refuse'
+    const summaries = await this.orderDishSumaryModel
+      .find({
+        isDeleted: false,
+        od_dish_smr_restaurant_id: account.account_restaurant_id,
+        od_dish_smr_status: { $ne: 'refuse' }, // Loại trừ 'refuse'
+        createdAt: {
+          $gte: toDate,
+          $lte: fromDate
+        },
+        ...cloneFilter
+      })
+      .lean()
+
+    // Bước 1: Tính tổng cho từng OrderDish trong mỗi OrderDishSummary
+    const summaryTotals = await Promise.all(
+      summaries.map(async (summary) => {
+        const orderDishes = await this.orderDishRepository.findByIdOrderSummary({
+          od_dish_summary_id: String(summary._id)
+        })
+
+        const orderTotalPromises = orderDishes.map(async (dish) => {
+          const dishData = await this.orderDishRepository.findOneDishDuplicateById({
+            _id: String(dish.od_dish_duplicate_id)
+          })
+          let dishPrice = dishData.dish_duplicate_price
+
+          // Áp dụng giảm giá nếu có
+          if (dishData.dish_duplicate_sale) {
+            const { sale_type, sale_value } = dishData.dish_duplicate_sale
+            if (sale_type === 'percentage') {
+              dishPrice -= (dishPrice * sale_value) / 100
+            } else if (sale_type === 'fixed') {
+              dishPrice -= sale_value
+            }
+          }
+
+          // Tính tổng giá của món ăn dựa trên số lượng
+          return dishPrice * dish.od_dish_quantity
+        }, 0)
+
+        // Chờ tất cả các promise trong orderDishes hoàn thành
+        const orderTotalArray = await Promise.all(orderTotalPromises)
+
+        // Tính tổng cho các món ăn trong OrderDish
+        const orderTotal = orderTotalArray.reduce((total, price) => total + price, 0)
+
+        return {
+          summaryId: summary._id,
+          total: orderTotal
+        }
+      })
+    )
+
+    // Bước 2: Tính tổng cho tất cả OrderDishSummary
+    const totalOfAllSummaries = summaryTotals.reduce((acc, curr) => acc + curr.total, 0)
+
+    statusCounts[3] = { status: 'total', count: totalOfAllSummaries } // Thêm tổng số tiền vào cuối danh sách
+
     return {
       totalItems, // Tổng số item
       statusCounts // Số lượng mỗi trạng thái

@@ -75,4 +75,12 @@ export class OrderDishRepository {
   async findOneDishDuplicateById({ _id }: { _id: string }) {
     return this.dishDuplicateModel.findOne({ _id }).lean()
   }
+
+  async findByIdDishDuplicate({ _id }: { _id: string }) {
+    return this.dishDuplicateModel.findById(_id).lean()
+  }
+
+  async findByIdOrderSummary({ od_dish_summary_id }: { od_dish_summary_id: string }) {
+    return this.orderDishModel.find({ od_dish_summary_id, od_dish_status: { $ne: 'refuse' } }).lean()
+  }
 }

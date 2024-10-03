@@ -11,6 +11,9 @@ import { AddMemberDto } from './dto/add-member.dto'
 import { OrderDishSummaryRepository } from 'src/order-dish-summary/model/order-dish-summary.repo'
 import { SocketGateway } from 'src/socket/socket.gateway'
 import { KEY_SOCKET_GUEST_ORDER_DISH_SUMMARY_ID, KEY_SOCKET_RESTAURANT_ID } from 'src/constants/key.socket'
+import { setCacheIOExpiration } from 'src/utils/cache'
+import { KEY_ACCESS_TOKEN_GUEST_RESTAURANT } from 'src/constants/key.redis'
+import mongoose from 'mongoose'
 
 @Injectable()
 export class GuestRestaurantService {
@@ -75,7 +78,8 @@ export class GuestRestaurantService {
   }
 
   async loginGuestRestaurant(loginGuestRestaurantDto: LoginGuestRestaurantDto) {
-    const { guest_restaurant_id, guest_table_id } = loginGuestRestaurantDto
+    const { guest_restaurant_id, guest_table_id, guest_name } = loginGuestRestaurantDto
+    if (guest_name === 'Nhân viên order') throw new BadRequestError('Vui lòng nhập tên khác')
     const restaurant = await this.restaurantsService.findOneById({ _id: guest_restaurant_id })
     if (!restaurant)
       throw new NotFoundError('Nhà hàng không tồn tại, vui lòng kiểm tra lại hoặc thông báo với nhân viên quán')
@@ -121,6 +125,8 @@ export class GuestRestaurantService {
       'access_token'
     )
 
+    await setCacheIOExpiration(`${KEY_ACCESS_TOKEN_GUEST_RESTAURANT}:${newGuest._id}`, access_token_guest, 900)
+
     this.socketGateway.handleEmitSocket({
       to: `${KEY_SOCKET_RESTAURANT_ID}:${guest_restaurant_id}`,
       event: 'login_guest_table',
@@ -156,6 +162,7 @@ export class GuestRestaurantService {
 
     const access_token_guest = this.signToken({ ...guest, order_id: order._id }, 'access_token')
     delete guest.guest_refresh_token
+    await setCacheIOExpiration(`${KEY_ACCESS_TOKEN_GUEST_RESTAURANT}:${guest._id}`, access_token_guest, 900)
 
     return { access_token_guest, refresh_token_guest: refresh_token, infor: guest }
   }
@@ -183,6 +190,7 @@ export class GuestRestaurantService {
 
   async addMember(addMemberDto: AddMemberDto) {
     const { token, guest_name } = addMemberDto
+    if (guest_name === 'Nhân viên order') throw new BadRequestError('Vui lòng nhập tên khác')
     const decoded = this.verifyTokenAdd(token)
     if (!decoded) throw new BadRequestError('Vui lòng quét lại qr code để thêm thành viên1')
 
@@ -249,6 +257,8 @@ export class GuestRestaurantService {
       'access_token'
     )
 
+    await setCacheIOExpiration(`${KEY_ACCESS_TOKEN_GUEST_RESTAURANT}:${newGuest._id}`, access_token_guest, 900)
+
     this.socketGateway.handleEmitSocket({
       to: `${KEY_SOCKET_GUEST_ORDER_DISH_SUMMARY_ID}:${decoded.order_id}`,
       event: 'add_member',
@@ -260,6 +270,46 @@ export class GuestRestaurantService {
     return {
       access_token_guest,
       refresh_token_guest
+    }
+  }
+
+  async getToken({ _id }: { _id: string }) {
+    if (!_id) throw new BadRequestError('Vị khách này không tồn tại, vui lòng thử lại sau ít phút')
+    if (mongoose.Types.ObjectId.isValid(_id) === false)
+      throw new BadRequestError('Vị khách này không tồn tại, vui lòng thử lại sau ít phút')
+
+    const orderSummary = await this.orderDishSummaryRepository.findOneByGuestId({ od_dish_smr_guest_id: _id })
+    if (!orderSummary) throw new BadRequestError('Vị khách này không tồn tại, vui lòng thử lại sau ít phút')
+    if (orderSummary.od_dish_smr_status === 'paid')
+      throw new BadRequestError('Đơn hàng đã thanh toán không thể lấy qr code')
+    if (orderSummary.od_dish_smr_status === 'refuse')
+      throw new BadRequestError('Đơn hàng đã từ chối không thể lấy qr code')
+
+    const guest = await this.guestRestaurantRepository.findOneById({ _id })
+    if (!guest) throw new BadRequestError('Vị khách này không tồn tại, vui lòng thử lại sau ít phút')
+    if (guest.guest_name === 'Nhân viên order')
+      throw new BadRequestError('Hóa đơn này dó nhân viên order tạo ra, không thể lấy qr code')
+
+    if (guest.guest_refresh_token) {
+      return {
+        refresh_token: guest.guest_refresh_token
+      }
+    } else {
+      const refresh_token_guest = this.signToken(
+        {
+          guest_name: guest.guest_name,
+          guest_table_id: guest.guest_table_id,
+          guest_restaurant_id: guest.guest_restaurant_id
+        },
+        'refresh_token'
+      )
+      await this.guestRestaurantRepository.updateRefreshToken({
+        _id: _id,
+        guest_refresh_token: refresh_token_guest
+      })
+      return {
+        refresh_token: refresh_token_guest
+      }
     }
   }
 }

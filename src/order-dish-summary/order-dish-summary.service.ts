@@ -7,8 +7,8 @@ import { OrderDishService } from 'src/order-dish/order-dish.service'
 import { UpdateStatusOrderSummaryDto } from './dto/update-status-summary.dto'
 import { TableRepository } from 'src/tables/model/tables.repo'
 import { GuestRestaurantRepository } from 'src/guest-restaurant/model/guest-restaurant.repo'
-import { setCacheIOExpiration } from 'src/utils/cache'
-import { KEY_LOGOUT_TABLE_RESTAURANT } from 'src/constants/key.redis'
+import { deleteCacheIO } from 'src/utils/cache'
+import { KEY_ACCESS_TOKEN_GUEST_RESTAURANT } from 'src/constants/key.redis'
 import { SocketGateway } from 'src/socket/socket.gateway'
 import mongoose from 'mongoose'
 
@@ -94,7 +94,7 @@ export class OrderDishSummaryService {
       guest_table_id: String(order.od_dish_smr_table_id)
     })
     logout?.map(async (_id) => {
-      await setCacheIOExpiration(`${KEY_LOGOUT_TABLE_RESTAURANT}:${_id}`, 'hehehehehehehehe', 900)
+      await deleteCacheIO(`${KEY_ACCESS_TOKEN_GUEST_RESTAURANT}:${_id}`)
     })
     await this.tableRepository.updateStatus({ _id: String(order.od_dish_smr_table_id), tbl_status: 'enable' }, account)
     return update
