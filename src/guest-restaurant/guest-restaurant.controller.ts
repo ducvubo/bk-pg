@@ -1,15 +1,28 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common'
 import { GuestRestaurantService } from './guest-restaurant.service'
-import { GuestRestaurant, ResponseMessage } from 'src/decorator/customize'
+import { Acccount, GuestRestaurant, ResponseMessage } from 'src/decorator/customize'
 import { LoginGuestRestaurantDto } from './dto/login-guest.dto'
 import { GuestRestaurantAuthGuard } from 'src/guard/guest.guard'
 import { IGuest } from './guest.interface'
 import { AddMemberDto } from './dto/add-member.dto'
 import { AccountAuthGuard } from 'src/guard/accounts.guard'
+import { IAccount } from 'src/accounts/accounts.interface'
 
 @Controller('guest-restaurant')
 export class GuestRestaurantController {
   constructor(private readonly guestRestaurantService: GuestRestaurantService) {}
+
+  @Get()
+  @ResponseMessage('Lấy danh sách guest của nhà hàng thành công')
+  @UseGuards(AccountAuthGuard)
+  async listGuestRestaurant(
+    @Query('current') currentPage: string,
+    @Query('pageSize') limit: string,
+    @Query() qs: string,
+    @Acccount() account: IAccount
+  ) {
+    return this.guestRestaurantService.listGuestRestaurant({ currentPage: +currentPage, limit: +limit, qs }, account)
+  }
 
   @Post('/login')
   @ResponseMessage('Đăng nhập thành công')

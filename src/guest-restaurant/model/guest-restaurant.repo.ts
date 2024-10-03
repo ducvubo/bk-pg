@@ -3,6 +3,7 @@ import { Model } from 'mongoose'
 import { Injectable } from '@nestjs/common'
 import { GuestRestaurant, GuestRestaurantDocument } from './guest-restaurant.model'
 import { LoginGuestRestaurantDto } from '../dto/login-guest.dto'
+import { IAccount } from 'src/accounts/accounts.interface'
 
 @Injectable()
 export class GuestRestaurantRepository {
@@ -105,5 +106,30 @@ export class GuestRestaurantRepository {
       guest_type: 'member',
       createdBy
     })
+  }
+
+  async totalItems(account: IAccount) {
+    return await this.guestRestaurantModel
+      .countDocuments({
+        guest_restaurant_id: account.account_restaurant_id
+      })
+      .lean()
+  }
+
+  async findAllPagination({ offset, defaultLimit, sort, population }, account: IAccount) {
+    return this.guestRestaurantModel
+      .find({
+        guest_restaurant_id: account.account_restaurant_id
+      })
+      .select('-updatedAt -createdAt -__v -createdBy -updatedBy -isDeleted -deletedAt -deletedBy -guest_refresh_token')
+      .skip(offset)
+      .limit(defaultLimit)
+      .sort(sort as any) //ep kieu du lieu
+      .populate({
+        path: 'guest_table_id',
+        select: 'tbl_name'
+      })
+      .populate(population)
+      .exec()
   }
 }

@@ -14,6 +14,8 @@ import { KEY_SOCKET_GUEST_ORDER_DISH_SUMMARY_ID, KEY_SOCKET_RESTAURANT_ID } from
 import { setCacheIOExpiration } from 'src/utils/cache'
 import { KEY_ACCESS_TOKEN_GUEST_RESTAURANT } from 'src/constants/key.redis'
 import mongoose from 'mongoose'
+import { IAccount } from 'src/accounts/accounts.interface'
+import aqp from 'api-query-params'
 
 @Injectable()
 export class GuestRestaurantService {
@@ -310,6 +312,51 @@ export class GuestRestaurantService {
       return {
         refresh_token: refresh_token_guest
       }
+    }
+  }
+
+  async listGuestRestaurant(
+    { currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string },
+    account: IAccount
+  ) {
+    currentPage = isNaN(currentPage) ? 1 : currentPage
+    limit = isNaN(limit) ? 10 : limit
+
+    if (currentPage <= 0 || limit <= 0) {
+      throw new BadRequestError('Trang hiện tại và số record phải lớn hơn 0')
+    }
+
+    const { filter, sort, population } = aqp(qs)
+
+    delete filter.current
+    delete filter.pageSize
+
+    const offset = (+currentPage - 1) * +limit
+    const defaultLimit = +limit ? +limit : 10
+
+    const totalItems = await this.guestRestaurantRepository.totalItems(account)
+    const totalPages = Math.ceil(totalItems / defaultLimit)
+
+    // const population = 'restaurant_category'
+
+    const result = await this.guestRestaurantRepository.findAllPagination(
+      {
+        offset,
+        defaultLimit,
+        sort,
+        population
+      },
+      account
+    )
+
+    return {
+      meta: {
+        current: currentPage,
+        pageSize: limit,
+        totalPage: totalPages,
+        totalItem: totalItems
+      },
+      result
     }
   }
 }
