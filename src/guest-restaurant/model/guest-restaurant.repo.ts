@@ -132,4 +132,13 @@ export class GuestRestaurantRepository {
       .populate(population)
       .exec()
   }
+
+  async findGuestByOwnerId({ owner_id }: { owner_id: string }) {
+    // Đếm số lượng documents thỏa mãn điều kiện
+    const count = await this.guestRestaurantModel.countDocuments({
+      'guest_owner.owner_id': owner_id
+    })
+
+    return count
+  }
 }

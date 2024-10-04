@@ -43,8 +43,14 @@ export class OrderDishSummaryService {
     const offset = (+currentPage - 1) * +limit
     const defaultLimit = +limit ? +limit : 10
 
-    filter.guest_name = filter.guest_name ? filter.guest_name : undefined
-    filter.tbl_name = filter.tbl_name ? filter.tbl_name : undefined
+    // Kiểm tra và xoá các trường nếu không có giá trị hợp lệ
+    if (!filter.guest_name || typeof filter.guest_name !== 'string') {
+      delete filter.guest_name
+    }
+
+    if (!filter.tbl_name || typeof filter.tbl_name !== 'string') {
+      delete filter.tbl_name
+    }
 
     //'processing' | 'pending' | 'paid' | 'delivered' | 'refuse'
     const validStatuses = ['paid', 'ordering', 'refuse']
@@ -135,5 +141,58 @@ export class OrderDishSummaryService {
 
     await this.tableRepository.updateStatus({ _id: od_dish_smr_table_id, tbl_status: 'reserve' }, account)
     return order
+  }
+
+  async listOrderSummaryByTable(
+    { currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string },
+    od_dish_smr_table_id: string,
+    account: IAccount
+  ) {
+    if (!od_dish_smr_table_id || typeof od_dish_smr_table_id !== 'string') {
+      throw new BadRequestError('Bàn không tồn tại, vui lòng thử lại sau ít phút')
+    }
+    if (!od_dish_smr_table_id) throw new BadRequestError('Bàn không tồn tại, vui lòng thử lại sau ít phút')
+    if (mongoose.Types.ObjectId.isValid(od_dish_smr_table_id) === false)
+      throw new BadRequestError('Bàn không tồn tại, vui lòng thử lại sau ít phút')
+
+    currentPage = isNaN(currentPage) ? 1 : currentPage
+    limit = isNaN(limit) ? 8 : limit
+
+    if (currentPage <= 0 || limit <= 0) {
+      throw new BadRequestError('Trang hiện tại và số record phải lớn hơn 0')
+    }
+
+    const { filter, sort } = aqp(qs)
+
+    delete filter.od_dish_smr_table_id
+    delete filter.current
+    delete filter.pageSize
+
+    const offset = (+currentPage - 1) * +limit
+    const defaultLimit = +limit ? +limit : 10
+    filter.od_dish_smr_table_id = od_dish_smr_table_id
+
+    const totalItems = await this.orderDishSummaryRepository.totalItemsListOrderSummary(filter, account)
+    const totalPages = Math.ceil(totalItems / defaultLimit)
+
+    const result = await this.orderDishSummaryRepository.findPaginationListOrderSummary(
+      {
+        offset,
+        defaultLimit,
+        sort,
+        filter
+      },
+      account
+    )
+
+    return {
+      meta: {
+        current: currentPage,
+        pageSize: limit,
+        totalPage: totalPages,
+        totalItem: totalItems
+      },
+      result
+    }
   }
 }

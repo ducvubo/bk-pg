@@ -37,11 +37,16 @@ export class TablesController {
     return await this.tablesService.update(updateTableDto, account)
   }
 
-  @Get('/list-table-order')
-  @ResponseMessage('Lấy danh sách bàn order thành công')
+  @Get('/get-list-table-order')
+  @ResponseMessage('Lấy danh sách bàn thành công')
   @UseGuards(AccountAuthGuard)
-  async getListTableOrder(@Acccount() account: IAccount) {
-    return await this.tablesService.getListTableOrder(account)
+  async getListTableOrder(
+    @Query('current') currentPage: string,
+    @Query('pageSize') limit: string,
+    @Query() qs: string,
+    @Acccount() account: IAccount
+  ) {
+    return await this.tablesService.getListTableOrder({ currentPage: +currentPage, limit: +limit, qs }, account)
   }
 
   @Get('/recycle')

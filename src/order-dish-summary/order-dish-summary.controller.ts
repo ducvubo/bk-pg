@@ -50,4 +50,21 @@ export class OrderDishSummaryController {
   ) {
     return await this.orderDishSummaryService.createOrderDishSummary(od_dish_smr_table_id, account)
   }
+
+  @Get('/list-order-summary-by-table')
+  @ResponseMessage('Danh sách đơn hàng theo bàn')
+  @UseGuards(AccountAuthGuard)
+  async listOrderSummaryByTable(
+    @Query('od_dish_smr_table_id') od_dish_smr_table_id: string,
+    @Query('current') currentPage: string,
+    @Query('pageSize') limit: string,
+    @Query() qs: string,
+    @Acccount() account: IAccount
+  ) {
+    return await this.orderDishSummaryService.listOrderSummaryByTable(
+      { currentPage: +currentPage, limit: +limit, qs },
+      od_dish_smr_table_id,
+      account
+    )
+  }
 }

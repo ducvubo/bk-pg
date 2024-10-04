@@ -293,4 +293,77 @@ export class OrderDishSummaryRepository {
       createdBy
     })
   }
+
+  async findOrderSummaryByTableId({ od_dish_smr_table_id }: { od_dish_smr_table_id: string }) {
+    // Tìm tất cả các OrderDishSummary có cùng od_dish_smr_table_id
+    const orders = await this.orderDishSumaryModel.find({
+      od_dish_smr_table_id: od_dish_smr_table_id
+    })
+
+    // Đếm số lượng các trạng thái
+    const paidCount = orders.filter((order) => order.od_dish_smr_status === 'paid').length
+    const refuseCount = orders.filter((order) => order.od_dish_smr_status === 'refuse').length
+    const orderingCount = orders.filter((order) => order.od_dish_smr_status === 'ordering').length
+    let totalGuest = 0
+
+    const orderSummaryOrdering = await this.orderDishSumaryModel
+      .findOne({
+        od_dish_smr_table_id,
+        od_dish_smr_status: 'ordering'
+      })
+      .lean()
+
+    if (orderSummaryOrdering) {
+      const countGuest = await this.guestRestaurantRepository.findGuestByOwnerId({
+        owner_id: String(orderSummaryOrdering.od_dish_smr_guest_id)
+      })
+      totalGuest = countGuest + 1
+    }
+
+    return {
+      paidCount,
+      refuseCount,
+      orderingCount,
+      totalGuest
+    }
+  }
+
+  async totalItemsListOrderSummary(filter, account: IAccount) {
+    return await this.orderDishSumaryModel.countDocuments({
+      od_dish_smr_restaurant_id: account.account_restaurant_id,
+      ...filter
+    })
+  }
+  async findPaginationListOrderSummary({ offset, defaultLimit, sort, filter }, account: IAccount) {
+    const result = await this.orderDishSumaryModel
+      .find({
+        od_dish_smr_restaurant_id: account.account_restaurant_id,
+        ...filter
+      })
+      .select('-updatedAt -__v -createdBy -updatedBy -isDeleted -deletedAt -deletedBy')
+      .skip(offset)
+      .limit(defaultLimit)
+      .sort({ updatedAt: -1, ...sort })
+      .populate({
+        path: 'od_dish_smr_guest_id',
+        select: 'guest_name _id guest_type'
+      })
+      .exec()
+
+    const orderDishSummaryIds: any = result.map((summary) => summary._id)
+
+    // Truy vấn các món ăn dựa trên danh sách ID
+    const listOrder = await this.orderDishRepository.findListOrderByListIdOrderSummary(orderDishSummaryIds)
+
+    // Ánh xạ dữ liệu để thêm chi tiết món ăn vào orderDishSummary
+    const orderSummariesWithDishes = result.map((summary) => {
+      const dishes = listOrder.filter((dish) => dish.od_dish_summary_id.toString() === summary._id.toString())
+      return {
+        ...summary.toObject(), // chuyển đổi từ MongoDB document sang plain object nếu cần
+        or_dish: dishes // ghi đè lại trường or_dish bằng dữ liệu chi tiết
+      }
+    })
+
+    return orderSummariesWithDishes
+  }
 }

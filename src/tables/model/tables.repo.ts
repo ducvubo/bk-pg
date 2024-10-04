@@ -154,13 +154,38 @@ export class TableRepository {
     return await this.tableModel.findById({ _id })
   }
 
-  async getListTableOrder(account: IAccount) {
-    return await this.tableModel
-      .find({
-        tbl_status: 'enable',
-        tbl_restaurant_id: account.account_restaurant_id
-      })
-      .select('tbl_name _id')
-      .lean()
+  async totalItemsTableListOrder(filter, account: IAccount) {
+    const query: any = {
+      tbl_restaurant_id: account.account_restaurant_id,
+      ...filter
+    }
+
+    // Nếu filter.tbl_name có giá trị, thêm điều kiện vào query
+    if (filter?.tbl_name) {
+      query.tbl_name = { $regex: filter.tbl_name, $options: 'i' }
+    }
+    const totalItems = await this.tableModel.countDocuments(query).lean()
+    return totalItems
+  }
+
+  async findPaginationTableListOrder({ offset, defaultLimit, sort, filter }, account: IAccount) {
+    const query: any = {
+      tbl_restaurant_id: account.account_restaurant_id,
+      ...filter
+    }
+
+    // Nếu filter.tbl_name có giá trị, thêm điều kiện vào query
+    if (filter?.tbl_name) {
+      query.tbl_name = { $regex: filter.tbl_name, $options: 'i' }
+    }
+    const listTable = await this.tableModel
+      .find(query)
+      .select(' -__v -createdBy -updatedBy -deletedAt -deletedBy -createdAt -updatedAt')
+      .skip(offset)
+      .limit(defaultLimit)
+      .sort(sort)
+      .exec()
+
+    return listTable
   }
 }

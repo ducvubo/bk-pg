@@ -23,7 +23,6 @@ export class GuestRestaurantAuthGuard implements CanActivate {
       ])
 
       const cacheExist = await getCacheIO(`${KEY_ACCESS_TOKEN_GUEST_RESTAURANT}:${dataToken[0]._id}`)
-      console.log('cacheExist', cacheExist)
 
       if (!cacheExist) throw new UnauthorizedCodeError('Token không hợp lệ3', -10)
 

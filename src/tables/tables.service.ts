@@ -55,8 +55,6 @@ export class TablesService {
     const totalItems = await this.tableRepository.totalItems(account, false)
     const totalPages = Math.ceil(totalItems / defaultLimit)
 
-    // const population = 'restaurant_category'
-
     const result = await this.tableRepository.findAllPagination(
       {
         offset,
@@ -205,7 +203,75 @@ export class TablesService {
     return await this.tableRepository.findOneById({ _id })
   }
 
-  async getListTableOrder(account: IAccount) {
-    return await this.tableRepository.getListTableOrder(account)
+  async getListTableOrder(
+    { currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string },
+    account: IAccount
+  ) {
+    currentPage = isNaN(currentPage) ? 1 : currentPage
+    limit = isNaN(limit) ? 8 : limit
+
+    if (currentPage <= 0 || limit <= 0) {
+      throw new BadRequestError('Trang hiện tại và số record phải lớn hơn 0')
+    }
+
+    const { filter, sort } = aqp(qs)
+
+    delete filter.current
+    delete filter.pageSize
+
+    const offset = (+currentPage - 1) * +limit
+    const defaultLimit = +limit ? +limit : 10
+
+    if (!filter.tbl_name || typeof filter.tbl_name !== 'string') {
+      delete filter.tbl_name
+    }
+
+    const validStatuses = ['enable', 'disable', 'serving', 'reserve']
+
+    if (!validStatuses.includes(filter.tbl_status)) {
+      delete filter.tbl_status
+    }
+
+    const totalItems = await this.tableRepository.totalItemsTableListOrder(filter, account)
+    const totalPages = Math.ceil(totalItems / defaultLimit)
+
+    const listTable = await this.tableRepository.findPaginationTableListOrder(
+      {
+        offset,
+        defaultLimit,
+        sort,
+        filter
+      },
+      account
+    )
+
+    const result = await Promise.all(
+      listTable.map(async (table) => {
+        // Gọi phương thức đếm cho từng table._id riêng biệt
+        const orderSummaryCount = await this.orderDishSummaryRepository.findOrderSummaryByTableId({
+          od_dish_smr_table_id: table._id.toString() // Truyền riêng từng tableId
+        })
+
+        return {
+          ...table.toObject(),
+          od_dish_smr_count: {
+            paid: orderSummaryCount ? orderSummaryCount.paidCount : 0,
+            refuse: orderSummaryCount ? orderSummaryCount.refuseCount : 0,
+            ordering: orderSummaryCount ? orderSummaryCount.orderingCount : 0,
+            guest: orderSummaryCount ? orderSummaryCount.totalGuest : 0
+          }
+        }
+      })
+    )
+
+    return {
+      meta: {
+        current: currentPage,
+        pageSize: limit,
+        totalPage: totalPages,
+        totalItem: totalItems
+      },
+      result
+    }
   }
 }
