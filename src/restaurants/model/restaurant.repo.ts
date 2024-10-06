@@ -25,11 +25,7 @@ export class RestaurantRepository {
       restaurant_type,
       restaurant_price,
       restaurant_hours,
-      restaurant_propose,
       restaurant_overview,
-      // restaurant_price_menu,
-      restaurant_regulation,
-      restaurant_parking_area,
       restaurant_amenity,
       restaurant_image,
       restaurant_description
@@ -48,11 +44,7 @@ export class RestaurantRepository {
       restaurant_type,
       restaurant_price,
       restaurant_hours,
-      restaurant_propose,
       restaurant_overview,
-      // restaurant_price_menu,
-      restaurant_regulation,
-      restaurant_parking_area,
       restaurant_amenity,
       restaurant_image,
       restaurant_description,
@@ -113,11 +105,7 @@ export class RestaurantRepository {
       restaurant_type,
       restaurant_price,
       restaurant_hours,
-      restaurant_propose,
       restaurant_overview,
-      // restaurant_price_menu,
-      restaurant_regulation,
-      restaurant_parking_area,
       restaurant_amenity,
       restaurant_image,
       restaurant_description
@@ -135,11 +123,8 @@ export class RestaurantRepository {
           restaurant_type,
           restaurant_price,
           restaurant_hours,
-          restaurant_propose,
           restaurant_overview,
           // restaurant_price_menu,
-          restaurant_regulation,
-          restaurant_parking_area,
           restaurant_amenity,
           restaurant_image,
           restaurant_description,
@@ -256,7 +241,7 @@ export class RestaurantRepository {
     return await this.restaurantModel
       .find({
         isDeleted: false,
-        restaurant_status: 'active',
+        restaurant_status: 'inactive',
         restaurant_state: true
       })
       .select('restaurant_name restaurant_banner restaurant_price restaurant_slug')
@@ -269,7 +254,7 @@ export class RestaurantRepository {
       .findOne({
         restaurant_slug,
         isDeleted: false,
-        restaurant_status: 'active',
+        restaurant_status: 'inactive',
         restaurant_state: true
       })
       .select(

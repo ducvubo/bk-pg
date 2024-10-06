@@ -124,25 +124,9 @@ export class Restaurant extends SampleSchema {
   @Prop({ type: Array, required: true })
   restaurant_hours: RestaurantHours[]
 
-  //Đề xuất
-  @Prop({ type: String, required: true })
-  restaurant_propose: string
-
   //Tóm tắt
   @Prop({ type: String, required: true })
   restaurant_overview: string
-
-  // //Bảng giá
-  // @Prop({ type: Array, required: true })
-  // restaurant_price_menu: RestaurantPriceMenu
-
-  //Quy định
-  @Prop({ type: String, required: true })
-  restaurant_regulation: string
-
-  //Chỗ để xe
-  @Prop({ type: String, required: true })
-  restaurant_parking_area: string
 
   //Mô tả nhà hàng
   @Prop({ type: String, required: true })

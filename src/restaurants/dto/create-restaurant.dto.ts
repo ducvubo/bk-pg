@@ -264,32 +264,10 @@ export class CreateRestaurantDto {
   @Type(() => RestaurantHours)
   restaurant_hours: RestaurantHours[]
 
-  //Đề xuất
-  @IsNotEmpty({ message: 'Đề xuất không được để trống' })
-  @IsString({ message: 'Đề xuất phải là chuỗi' })
-  restaurant_propose: string
-
   //Tóm tắt
   @IsNotEmpty({ message: 'Tóm tắt không được để trống' })
   @IsString({ message: 'Tóm tắt phải là chuỗi' })
   restaurant_overview: string
-
-  // //Bảng giá
-  // @IsNotEmpty({ message: 'Bảng giá không được để trống' })
-  // @MinLength(1, { message: 'Bảng giá phải có ít nhất 1 mục' })
-  // @ValidateNested()
-  // @Type(() => RestaurantPriceMenu)
-  // restaurant_price_menu: RestaurantPriceMenu[]
-
-  //Quy định
-  @IsNotEmpty({ message: 'Quy định không được để trống' })
-  @IsString({ message: 'Quy định phải là chuỗi' })
-  restaurant_regulation: string
-
-  //Chỗ để xe
-  @IsNotEmpty({ message: 'Chỗ để xe không được để trống' })
-  @IsString({ message: 'Chỗ để xe phải là chuỗi' })
-  restaurant_parking_area: string
 
   // Tiện ích
   @IsNotEmpty({ message: 'Tiện ích không được để trống' })

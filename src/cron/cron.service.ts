@@ -6,7 +6,7 @@ import { BookTableRepository } from 'src/book-table/model/book-table.repo'
 export class CronService {
   constructor(private readonly bookTableRepository: BookTableRepository) {}
 
-  @Cron('* * * * *')
+  @Cron('* * * * *') // 1 phut chay 1 lan
   async checkCancelBookTable() {
     const allBookTableNoVerify = await this.bookTableRepository.findBookTableNoVerify()
 
