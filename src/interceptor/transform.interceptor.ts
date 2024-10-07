@@ -12,7 +12,7 @@ export interface Response<T> {
   tacgia: string
 }
 
-interface ResponseMessage {
+export interface ResponseMessage {
   message?: string
   statusCode?: number
 }

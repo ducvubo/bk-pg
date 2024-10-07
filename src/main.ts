@@ -19,12 +19,11 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService)
 
+  app.useGlobalPipes(new ValidationPipe())
   const reflector = app.get(Reflector)
 
   app.useGlobalInterceptors(new TransformIntercaptor(reflector))
-  app.useGlobalInterceptors(new IdUserGuestInterceptor())
-
-  app.useGlobalPipes(new ValidationPipe())
+  app.useGlobalInterceptors(new IdUserGuestInterceptor(reflector))
 
   app.useStaticAssets(join(__dirname, '..', 'public'))
   app.setBaseViewsDir(join(__dirname, '..', 'views'))
