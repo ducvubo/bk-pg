@@ -3,6 +3,8 @@ import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { BookTable, BookTableDocument } from './book-table.model'
 import { CreateBookTableDto } from '../dto/create-book-table.dto'
+import { IAccount } from 'src/accounts/accounts.interface'
+import { UpdateStatusBookTableDto } from '../dto/update-status-book-table.dto'
 
 @Injectable()
 export class BookTableRepository {
@@ -99,5 +101,58 @@ export class BookTableRepository {
 
   async updateBookTableGuestOfUser({ _id, book_tb_user_id }) {
     return await this.bookTableModel.findByIdAndUpdate(_id, { book_tb_user_id }, { new: true })
+  }
+
+  async totalItemsBooTableRestaurant(filter, account: IAccount) {
+    const toDate = new Date(filter.toDate) // Chuyển đổi thành Date
+    const fromDate = new Date(filter.fromDate)
+    return await this.bookTableModel
+      .countDocuments({
+        book_tb_restaurant_id: account.account_restaurant_id,
+        book_tb_date: {
+          $gte: toDate,
+          $lte: fromDate
+        }
+      })
+      .lean()
+  }
+
+  async findPaginationBooTableRestaurant({ offset, defaultLimit, sort, filter }, account: IAccount) {
+    const toDate = new Date(filter.toDate) // Chuyển đổi thành Date
+    const fromDate = new Date(filter.fromDate)
+    return await this.bookTableModel
+      .find({
+        book_tb_restaurant_id: account.account_restaurant_id,
+        book_tb_date: {
+          $gte: toDate,
+          $lte: fromDate
+        }
+      })
+      .select(' -__v')
+      .skip(offset)
+      .limit(defaultLimit)
+      .sort({ updatedAt: -1, ...sort })
+      .exec()
+  }
+
+  async findOneById({ _id }: { _id: string }) {
+    return await this.bookTableModel.findOne({ _id }).lean()
+  }
+
+  async updateStatusBookTable(updateStatusBookTableDto: UpdateStatusBookTableDto, account: IAccount) {
+    const { _id, book_tb_status } = updateStatusBookTableDto
+    return await this.bookTableModel
+      .findByIdAndUpdate(
+        _id,
+        {
+          book_tb_status,
+          updatedBy: {
+            _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
+            email: account.account_email
+          }
+        },
+        { new: true }
+      )
+      .lean()
   }
 }

@@ -9,6 +9,8 @@ import { JwtModule } from '@nestjs/jwt'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { MailModule } from 'src/mail/mail.module'
 import { UsersModule } from 'src/users/users.module'
+import { AccountsModule } from 'src/accounts/accounts.module'
+import { EmployeesModule } from 'src/employees/employees.module'
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { UsersModule } from 'src/users/users.module'
     }),
     forwardRef(() => RestaurantsModule),
     forwardRef(() => UsersModule),
+    AccountsModule,
+    EmployeesModule,
     MailModule
   ],
   controllers: [BookTableController],

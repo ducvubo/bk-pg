@@ -246,6 +246,7 @@ export class RestaurantRepository {
       })
       .select('restaurant_name restaurant_banner restaurant_price restaurant_slug')
       .limit(10)
+      .sort({ updatedAt: -1 })
       .exec()
   }
 

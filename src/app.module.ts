@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { ConfigModule, ConfigService } from '@nestjs/config'
@@ -22,6 +22,9 @@ import { GuestRestaurantModule } from './guest-restaurant/guest-restaurant.modul
 import { OrderDishModule } from './order-dish/order-dish.module'
 import { OrderDishSummaryModule } from './order-dish-summary/order-dish-summary.module'
 import { SocketModule } from './socket/socket.module'
+import { BlogModule } from './blog/blog.module'
+import { TagBlogModule } from './tag-blog/tag-blog.module'
+import { CheckSignMiddleware } from './middleware/checkSign.middleware'
 
 @Module({
   imports: [
@@ -53,9 +56,16 @@ import { SocketModule } from './socket/socket.module'
     GuestRestaurantModule,
     OrderDishModule,
     OrderDishSummaryModule,
-    SocketModule
+    SocketModule,
+    BlogModule,
+    TagBlogModule
   ],
   controllers: [AppController],
   providers: [AppService]
 })
-export class AppModule {}
+// export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CheckSignMiddleware).forRoutes({ path: '*', method: RequestMethod.ALL })
+  }
+}

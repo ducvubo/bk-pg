@@ -1,9 +1,12 @@
-import { Body, Controller, Patch, Post, Req } from '@nestjs/common'
+import { Body, Controller, Get, Patch, Post, Query, Req, UseGuards } from '@nestjs/common'
 import { BookTableService } from './book-table.service'
-import { ResponseMessage } from 'src/decorator/customize'
+import { Acccount, ResponseMessage } from 'src/decorator/customize'
 import { CreateBookTableDto } from './dto/create-book-table.dto'
 import { Request } from 'express'
 import { ConfirmBookTableDto } from './dto/confirm-book-table.dto'
+import { AccountAuthGuard } from 'src/guard/accounts.guard'
+import { IAccount } from 'src/accounts/accounts.interface'
+import { UpdateStatusBookTableDto } from './dto/update-status-book-table.dto'
 
 @Controller('book-table')
 export class BookTableController {
@@ -20,5 +23,30 @@ export class BookTableController {
   @ResponseMessage('Xác nhận đặt bàn thành công')
   async confirmBookTable(@Body() confirmBookTableDto: ConfirmBookTableDto) {
     return await this.bookTableService.confirmBookTable(confirmBookTableDto)
+  }
+
+  @Get('/list-book-table-restaurant')
+  @ResponseMessage('Lấy danh sách đặt bàn thành công')
+  @UseGuards(AccountAuthGuard)
+  async listBookTableRestaurant(
+    @Query('current') currentPage: string,
+    @Query('pageSize') limit: string,
+    @Query() qs: string,
+    @Acccount() account: IAccount
+  ) {
+    return await this.bookTableService.listBookTableRestaurant(
+      { currentPage: +currentPage, limit: +limit, qs },
+      account
+    )
+  }
+
+  @Patch('/update-status')
+  @ResponseMessage('Cập nhật trạng thái đặt bàn thành công')
+  @UseGuards(AccountAuthGuard)
+  async updateStatusBookTable(
+    @Body() updateStatusBookTableDto: UpdateStatusBookTableDto,
+    @Acccount() account: IAccount
+  ) {
+    return await this.bookTableService.updateStatusBookTable(updateStatusBookTableDto, account)
   }
 }

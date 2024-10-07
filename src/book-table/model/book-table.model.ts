@@ -78,7 +78,7 @@ export class BookTable extends SampleSchema {
   //trạng thái
   @Prop({
     type: String,
-    enum: ['Chờ người đặt xác nhận', 'Chờ nhà hàng xác nhận', 'Nhà hàng đã tiếp nhận', 'Đã hoàn thành', 'Hủy'],
+    enum: ['Chờ người đặt xác nhận', 'Chờ nhà hàng xác nhận', 'Đã hoàn thành', 'Hủy'],
     required: true
   })
   book_tb_status: 'Chờ người đặt xác nhận' | 'Chờ nhà hàng xác nhận' | 'Nhà hàng đã tiếp nhận' | 'Đã hoàn thành' | 'Hủy'

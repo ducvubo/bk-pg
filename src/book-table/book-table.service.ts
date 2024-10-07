@@ -9,6 +9,10 @@ import * as moment from 'moment'
 import { dayOfWeekMap, daysOfWeekMapping } from './book-table.interface'
 import 'dayjs/locale/vi' // Import ngôn ngữ tiếng Việt cho dayjs
 import { ConfirmBookTableDto } from './dto/confirm-book-table.dto'
+import { IAccount } from 'src/accounts/accounts.interface'
+import aqp from 'api-query-params'
+import mongoose from 'mongoose'
+import { UpdateStatusBookTableDto } from './dto/update-status-book-table.dto'
 @Injectable()
 export class BookTableService {
   constructor(
@@ -128,5 +132,56 @@ export class BookTableService {
       )
     }
     return await this.bookTableRepository.confirmBookTable({ _id })
+  }
+
+  async listBookTableRestaurant(
+    { currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string },
+    account: IAccount
+  ) {
+    currentPage = isNaN(currentPage) ? 1 : currentPage
+    limit = isNaN(limit) ? 8 : limit
+
+    if (currentPage <= 0 || limit <= 0) {
+      throw new BadRequestError('Trang hiện tại và số record phải lớn hơn 0')
+    }
+
+    const { filter, sort } = aqp(qs)
+
+    delete filter.current
+    delete filter.pageSize
+
+    const offset = (+currentPage - 1) * +limit
+    const defaultLimit = +limit ? +limit : 10
+
+    const totalItems = await this.bookTableRepository.totalItemsBooTableRestaurant(filter, account)
+    const totalPages = Math.ceil(totalItems / defaultLimit)
+
+    const result = await this.bookTableRepository.findPaginationBooTableRestaurant(
+      {
+        offset,
+        defaultLimit,
+        sort,
+        filter
+      },
+      account
+    )
+
+    return {
+      meta: {
+        current: currentPage,
+        pageSize: limit,
+        totalPage: totalPages,
+        totalItem: totalItems
+      },
+      result
+    }
+  }
+
+  async updateStatusBookTable(updateStatusBookTableDto: UpdateStatusBookTableDto, account: IAccount) {
+    const { _id } = updateStatusBookTableDto
+    if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Đơn đặt bàn không tồn tại')
+    const bookTable = await this.bookTableRepository.findOneById({ _id })
+    if (!bookTable) throw new NotFoundError('Danh mục không tồn tại')
+    return await this.bookTableRepository.updateStatusBookTable(updateStatusBookTableDto, account)
   }
 }

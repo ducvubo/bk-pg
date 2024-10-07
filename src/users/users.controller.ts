@@ -46,7 +46,7 @@ export class UsersController {
 
   @Get('/recycle')
   @UseGuards(UserAuthGuard)
-  @ResponseMessage('Lấy tất cả nhà hàng đã xóa thành công')
+  @ResponseMessage('Lấy tất cả người dùng đã xóa thành công')
   async findAllRecycle(@Query('current') currentPage: string, @Query('pageSize') limit: string, @Query() qs: string) {
     return await this.usersService.findAllUserRecycle({ currentPage: +currentPage, limit: +limit, qs })
   }
@@ -98,7 +98,7 @@ export class UsersController {
 
   @Patch('/status')
   @UseGuards(UserAuthGuard)
-  @ResponseMessage('Cập nhật trạng thái hoạt động của nhà hàng thành công')
+  @ResponseMessage('Cập nhật trạng thái hoạt động của người dùng thành công')
   async updateStatus(@Body() updateStatusUser: UpdateStatusUser, @User() user: IUser) {
     return await this.usersService.updateStatus(updateStatusUser, user)
   }
