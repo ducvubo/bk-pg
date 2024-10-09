@@ -16,10 +16,10 @@ export class IdUserGuestInterceptor implements NestInterceptor {
     const response = context.switchToHttp().getResponse()
     const id_user_guest = request.headers['id_user_guest']
     const id_user_guest_new = `Guest-${uuidv4()}`
-    const handler = context.getHandler()
-    const messageRes = this.reflector.get<ResponseMessage>(RESPONSE_MESSAGE, handler).message || ''
-    const codeHeader = context.switchToHttp().getResponse().statusCode
-    const startTime = Date.now()
+    // const handler = context.getHandler()
+    // const messageRes = this.reflector.get<ResponseMessage>(RESPONSE_MESSAGE, handler).message || ''
+    // const codeHeader = context.switchToHttp().getResponse().statusCode
+    // const startTime = Date.now()
 
     if (id_user_guest && id_user_guest !== 'undefined') {
       response.setHeader('id_user_guest', id_user_guest)
@@ -27,34 +27,36 @@ export class IdUserGuestInterceptor implements NestInterceptor {
       request.headers['id_user_guest'] = id_user_guest_new
       response.setHeader('id_user_guest', id_user_guest_new)
     }
-    return next.handle().pipe(
-      tap((data) => {
-        const duration = Date.now() - startTime
-        const message = ` \n - path: ${request.path} \n - statusCode: ${codeHeader} \n - message: ${messageRes} \n - METHOD: ${request.method} \n - id_user_guest: ${id_user_guest ? id_user_guest : id_user_guest_new} \n - time: ${formatDate(new Date())} \n - duration: ${duration}ms`
-        loggerService.sendLog({
-          message: message,
-          params: request.query,
-          bodyRequest: request.body,
-          headerResponse: {
-            id_user_guest: id_user_guest ? id_user_guest : id_user_guest_new
-          },
-          bodyResponse: data
-        })
-      }),
-      catchError((error: any) => {
-        const duration = Date.now() - startTime
-        const message = ` \n - path: ${request.path} \n - statusCode: ${codeHeader} \n - METHOD: ${request.method} \n - id_user_guest: ${id_user_guest ? id_user_guest : id_user_guest_new} \n - time: ${formatDate(new Date())} \n - duration: ${duration}ms`
-        loggerService.sendLog({
-          message: message,
-          params: request.query,
-          bodyRequest: request.body,
-          bodyResponse: {
-            message: error.response.message
-          }
-        })
+    return next
+      .handle()
+      .pipe
+      // tap((data) => {
+      //   const duration = Date.now() - startTime
+      //   const message = ` \n - path: ${request.path} \n - statusCode: ${codeHeader} \n - message: ${messageRes} \n - METHOD: ${request.method} \n - id_user_guest: ${id_user_guest ? id_user_guest : id_user_guest_new} \n - time: ${formatDate(new Date())} \n - duration: ${duration}ms`
+      //   loggerService.sendLog({
+      //     message: message,
+      //     params: request.query,
+      //     bodyRequest: request.body,
+      //     headerResponse: {
+      //       id_user_guest: id_user_guest ? id_user_guest : id_user_guest_new
+      //     },
+      //     bodyResponse: data
+      //   })
+      // }),
+      // catchError((error: any) => {
+      //   const duration = Date.now() - startTime
+      //   const message = ` \n - path: ${request.path} \n - statusCode: ${codeHeader} \n - METHOD: ${request.method} \n - id_user_guest: ${id_user_guest ? id_user_guest : id_user_guest_new} \n - time: ${formatDate(new Date())} \n - duration: ${duration}ms`
+      //   loggerService.sendLog({
+      //     message: message,
+      //     params: request.query,
+      //     bodyRequest: request.body,
+      //     bodyResponse: {
+      //       message: error.response.message
+      //     }
+      //   })
 
-        return throwError(error)
-      })
-    )
+      //   return throwError(error)
+      // })
+      ()
   }
 }

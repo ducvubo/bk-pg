@@ -27,6 +27,9 @@ export class Blog extends SampleSchema {
   })
   blg_tag: mongoose.Schema.Types.ObjectId[]
 
+  @Prop({ type: Number, default: 10 })
+  blg_priority: number
+
   //like mảng guest_id
   @Prop({ type: [String], default: [] })
   blg_like: string[]
