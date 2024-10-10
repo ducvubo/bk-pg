@@ -49,7 +49,7 @@ export class IdUserGuestInterceptor implements NestInterceptor {
           params: request.query,
           bodyRequest: request.body,
           bodyResponse: {
-            message: error.response.message
+            message: error?.response?.message || error.message || 'Unknown error'
           }
         })
 
