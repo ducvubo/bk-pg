@@ -23,10 +23,7 @@ export class UploadController {
 
   @Post()
   @ResponseMessage('Upload image')
-  // @UseInterceptors(FileInterceptor('file'))
-  @UseInterceptors(
-    FileInterceptor('file', new MulterConfigService().createMulterOptions()) // Sử dụng cấu hình Multer từ service
-  )
+  @UseInterceptors(FileInterceptor('file', new MulterConfigService().createMulterOptions()))
   async uploadImageFromLocal(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
     if (!file) {
       throw new Error('No file provided')
@@ -34,6 +31,16 @@ export class UploadController {
 
     // Upload file to Cloudinary directly
     return await this.uploadService.uploadImageToCloudinay(file, req.headers.folder_type || 'default')
+  }
+
+  @Post('/bucket')
+  @ResponseMessage('Upload image')
+  @UseInterceptors(FileInterceptor('file', new MulterConfigService().createMulterOptions()))
+  async uploadImageFromS3(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new Error('No file provided')
+    }
+    return await this.uploadService.uploadImageToS3(file)
   }
 
   // @Post('/blog')

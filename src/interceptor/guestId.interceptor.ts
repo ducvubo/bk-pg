@@ -34,7 +34,7 @@ export class IdUserGuestInterceptor implements NestInterceptor {
         loggerService.sendLog({
           message: message,
           params: request.query,
-          bodyRequest: request.body,
+          bodyRequest: JSON.stringify(request.body).length > 6000 ? 'Data too long' : request.body,
           headerResponse: {
             id_user_guest: id_user_guest ? id_user_guest : id_user_guest_new
           },

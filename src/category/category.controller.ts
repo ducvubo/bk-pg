@@ -33,8 +33,15 @@ export class CategoryController {
     return this.categoryService.updateCategory(updateCategoryDto, user)
   }
 
+  @Get('/home')
+  @ResponseMessage('Lấy danh mục trang chủ thành công')
+  async findCategoryHome(@Query('limit') limit: number) {
+    return this.categoryService.findCategoryHome({ limit })
+  }
+
   @Get('/pagination')
   @ResponseMessage('Lấy tất cả danh mục thành công')
+  @UseGuards(UserAuthGuard)
   findAllPagination(@Query('current') currentPage: string, @Query('pageSize') limit: string, @Query() qs: string) {
     return this.categoryService.findAllPagination({ currentPage: +currentPage, limit: +limit, qs })
   }

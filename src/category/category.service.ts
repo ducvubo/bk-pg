@@ -140,4 +140,8 @@ export class CategoryService {
     if (!category) throw new NotFoundError('Danh mục không tồn tại')
     return await this.categoryRepository.updateStatus(updateStatusCategoryDto, user)
   }
+
+  async findCategoryHome({ limit = 10 }: { limit: number }) {
+    return await this.categoryRepository.findCategoryHome({ limit })
+  }
 }

@@ -153,4 +153,15 @@ export class CategoryRepository {
       }
     )
   }
+
+  async findCategoryHome({ limit }) {
+    return await this.categoryModel
+      .find({
+        isDeleted: false,
+        category_status: 'enable'
+      })
+      .select('category_name _id category_parent_id category_image')
+      .limit(limit)
+      .exec()
+  }
 }

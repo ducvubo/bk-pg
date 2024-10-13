@@ -14,6 +14,9 @@ export class Blog extends SampleSchema {
   @Prop({ type: String, required: true })
   blg_title: string
 
+  @Prop({ type: String, required: true })
+  blg_slug: string
+
   @Prop({ type: Object, required: true })
   blg_thumbnail: ImageUrl
 

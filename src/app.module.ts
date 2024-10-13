@@ -25,7 +25,7 @@ import { SocketModule } from './socket/socket.module'
 import { BlogModule } from './blog/blog.module'
 import { TagBlogModule } from './tag-blog/tag-blog.module'
 import { CheckSignMiddleware } from './middleware/checkSign.middleware'
-import { CommentBlogModule } from './comment-blog/comment-blog.module';
+import { CommentBlogModule } from './comment-blog/comment-blog.module'
 
 @Module({
   imports: [
