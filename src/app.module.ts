@@ -11,9 +11,7 @@ import { UploadModule } from './upload/upload.module'
 import { UsersModule } from './users/users.module'
 import { MailModule } from './mail/mail.module'
 import { RoleModule } from './role/role.module'
-import { BookTableModule } from './book-table/book-table.module'
 import { ScheduleModule } from '@nestjs/schedule'
-import { CronModule } from './cron/cron.module'
 import { EmployeesModule } from './employees/employees.module'
 import { AccountsModule } from './accounts/accounts.module'
 import { TablesModule } from './tables/tables.module'
@@ -45,8 +43,6 @@ import { CheckSignMiddleware } from './middleware/checkSign.middleware'
     UsersModule,
     MailModule,
     RoleModule,
-    BookTableModule,
-    CronModule,
     EmployeesModule,
     AccountsModule,
     TablesModule,
