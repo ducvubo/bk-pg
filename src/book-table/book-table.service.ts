@@ -7,7 +7,6 @@ import { JwtService } from '@nestjs/jwt'
 import { MailService } from 'src/mail/mail.service'
 import * as moment from 'moment'
 import { dayOfWeekMap, daysOfWeekMapping } from './book-table.interface'
-import 'dayjs/locale/vi' // Import ngôn ngữ tiếng Việt cho dayjs
 import { ConfirmBookTableDto } from './dto/confirm-book-table.dto'
 import { IAccount } from 'src/accounts/accounts.interface'
 import aqp from 'api-query-params'
