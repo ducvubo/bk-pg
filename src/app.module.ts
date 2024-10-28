@@ -25,7 +25,6 @@ import { SocketModule } from './socket/socket.module'
 import { BlogModule } from './blog/blog.module'
 import { TagBlogModule } from './tag-blog/tag-blog.module'
 import { CheckSignMiddleware } from './middleware/checkSign.middleware'
-import { CommentBlogModule } from './comment-blog/comment-blog.module'
 
 @Module({
   imports: [
@@ -59,8 +58,7 @@ import { CommentBlogModule } from './comment-blog/comment-blog.module'
     OrderDishSummaryModule,
     SocketModule,
     BlogModule,
-    TagBlogModule,
-    CommentBlogModule
+    TagBlogModule
   ],
   controllers: [AppController],
   providers: [AppService]
