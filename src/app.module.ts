@@ -22,10 +22,7 @@ import { GuestRestaurantModule } from './guest-restaurant/guest-restaurant.modul
 import { OrderDishModule } from './order-dish/order-dish.module'
 import { OrderDishSummaryModule } from './order-dish-summary/order-dish-summary.module'
 import { SocketModule } from './socket/socket.module'
-import { BlogModule } from './blog/blog.module'
-import { TagBlogModule } from './tag-blog/tag-blog.module'
 import { CheckSignMiddleware } from './middleware/checkSign.middleware'
-import { CommentBlogModule } from './comment-blog/comment-blog.module';
 
 @Module({
   imports: [
@@ -57,10 +54,7 @@ import { CommentBlogModule } from './comment-blog/comment-blog.module';
     GuestRestaurantModule,
     OrderDishModule,
     OrderDishSummaryModule,
-    SocketModule,
-    BlogModule,
-    TagBlogModule,
-    CommentBlogModule
+    SocketModule
   ],
   controllers: [AppController],
   providers: [AppService]

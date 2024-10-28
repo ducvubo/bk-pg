@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common'
 import { CreateRestaurantDto } from './dto/create-restaurant.dto'
 import { RestaurantRepository } from './model/restaurant.repo'
 import { BadRequestError, ConflictError, NotFoundError, UnauthorizedCodeError } from 'src/utils/errorResponse'
-import { faker } from '@faker-js/faker'
 import aqp from 'api-query-params'
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto'
 import { checkDuplicateDays, decodeJwt, isValidPassword } from 'src/utils'
@@ -28,8 +27,6 @@ export class RestaurantsService {
 
   async create(createRestaurantDto: CreateRestaurantDto, user: IUser) {
     checkDuplicateDays(createRestaurantDto.restaurant_hours)
-    createRestaurantDto.restaurant_email = faker.internet.email()
-    createRestaurantDto.restaurant_phone = faker.phone.number()
     const { restaurant_password } = createRestaurantDto
     const isEmailExist = await this.restaurantRepository.findRestaurantByEmail({
       restaurant_email: createRestaurantDto.restaurant_email
