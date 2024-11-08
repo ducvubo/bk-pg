@@ -24,6 +24,7 @@ export const initRedis = () => {
   const instanceRedis = new redis({
     host: process.env.REDIS_HOST,
     port: Number(process.env.REDIS_PORT),
+    username: 'default',
     password: process.env.REDIS_PASSWORD
   })
 
