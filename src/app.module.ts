@@ -59,9 +59,9 @@ import { CheckSignMiddleware } from './middleware/checkSign.middleware'
   controllers: [AppController],
   providers: [AppService]
 })
-// export class AppModule {}
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(CheckSignMiddleware).forRoutes({ path: '*', method: RequestMethod.ALL })
-  }
-}
+export class AppModule {}
+// export class AppModule implements NestModule {
+//   configure(consumer: MiddlewareConsumer) {
+//     consumer.apply(CheckSignMiddleware).forRoutes({ path: '*', method: RequestMethod.ALL })
+//   }
+// }

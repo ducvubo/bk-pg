@@ -14,6 +14,8 @@ export class IdUserGuestInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest()
     const response = context.switchToHttp().getResponse()
+    const method = request.method 
+
     const id_user_guest = request.headers['id_user_guest']
     const id_user_guest_new = `Guest-${uuidv4()}`
     const handler = context.getHandler()
@@ -29,17 +31,19 @@ export class IdUserGuestInterceptor implements NestInterceptor {
     }
     return next.handle().pipe(
       tap((data) => {
-        const duration = Date.now() - startTime
-        const message = ` \n - path: ${request.path} \n - statusCode: ${codeHeader} \n - message: ${messageRes} \n - METHOD: ${request.method} \n - id_user_guest: ${id_user_guest ? id_user_guest : id_user_guest_new} \n - time: ${formatDate(new Date())} \n - duration: ${duration}ms`
-        loggerService.sendLog({
-          message: message,
-          params: request.query,
-          bodyRequest: JSON.stringify(request.body).length > 6000 ? 'Data too long' : request.body,
-          headerResponse: {
-            id_user_guest: id_user_guest ? id_user_guest : id_user_guest_new
-          },
-          bodyResponse: JSON.stringify(data).length > 6000 ? 'Data too long' : data
-        })
+        if (method !== 'GET') {
+          const duration = Date.now() - startTime
+          const message = ` \n - path: ${request.path} \n - statusCode: ${codeHeader} \n - message: ${messageRes} \n - METHOD: ${request.method} \n - id_user_guest: ${id_user_guest ? id_user_guest : id_user_guest_new} \n - time: ${formatDate(new Date())} \n - duration: ${duration}ms`
+          loggerService.sendLog({
+            message: message,
+            params: request.query,
+            bodyRequest: JSON.stringify(request.body).length > 6000 ? 'Data too long' : request.body,
+            headerResponse: {
+              id_user_guest: id_user_guest ? id_user_guest : id_user_guest_new
+            },
+            bodyResponse: JSON.stringify(data).length > 6000 ? 'Data too long' : data
+          })
+        }
       }),
       catchError((error: any) => {
         const duration = Date.now() - startTime

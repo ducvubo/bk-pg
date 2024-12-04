@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config'
 import { TransformIntercaptor } from './interceptor/transform.interceptor'
 import { join } from 'path'
 import { initRedis } from './config/redis.config'
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import { IdUserGuestInterceptor } from './interceptor/guestId.interceptor'
 
 export const redisConfig = {
@@ -37,6 +38,15 @@ async function bootstrap() {
     type: VersioningType.URI,
     defaultVersion: ['1', '2']
   })
+
+  const config = new DocumentBuilder()
+    .setTitle('Cats example')
+    .setDescription('The cats API description')
+    .setVersion('1.0')
+    .addTag('cats')
+    .build()
+  const documentFactory = () => SwaggerModule.createDocument(app, config)
+  SwaggerModule.setup('api', app, documentFactory)
 
   // app.useGlobalFilters(new AllExceptionsFilter())
   await app.listen(configService.get<string>('PORT'))
