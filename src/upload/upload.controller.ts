@@ -33,15 +33,15 @@ export class UploadController {
     return await this.uploadService.uploadImageToCloudinay(file, req.headers.folder_type || 'default')
   }
 
-  @Post('/bucket')
-  @ResponseMessage('Upload image')
-  @UseInterceptors(FileInterceptor('file', new MulterConfigService().createMulterOptions()))
-  async uploadImageFromS3(@UploadedFile() file: Express.Multer.File) {
-    if (!file) {
-      throw new Error('No file provided')
-    }
-    return await this.uploadService.uploadImageToS3(file)
-  }
+  // @Post('/bucket')
+  // @ResponseMessage('Upload image')
+  // @UseInterceptors(FileInterceptor('file', new MulterConfigService().createMulterOptions()))
+  // async uploadImageFromS3(@UploadedFile() file: Express.Multer.File) {
+  //   if (!file) {
+  //     throw new Error('No file provided')
+  //   }
+  //   return await this.uploadService.uploadImageToS3(file)
+  // }
 
   // @Post('/blog')
   // @ResponseMessage('Upload image from local')
