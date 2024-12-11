@@ -24,7 +24,13 @@ export class UploadController {
   @Post()
   @ResponseMessage('Upload image')
   @UseInterceptors(FileInterceptor('file', new MulterConfigService().createMulterOptions()))
-  async uploadImageFromLocal(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
+  async uploadImageFromLocal(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: any
+  ): Promise<{
+    image_cloud: string
+    image_custom: string
+  }> {
     if (!file) {
       throw new Error('No file provided')
     }

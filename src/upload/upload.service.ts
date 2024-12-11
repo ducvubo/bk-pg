@@ -7,7 +7,10 @@ import { ServerError } from 'src/utils/errorResponse'
 export class UploadService {
   constructor(private readonly configService: ConfigService) {}
 
-  async uploadImageFromLocal({ path, folderName }) {
+  async uploadImageFromLocal({ path, folderName }: { path: string; folderName: string }): Promise<{
+    image_cloud: string
+    image_custom: string
+  }> {
     try {
       const result = await cloudinary.uploader.upload(path, {
         folder: folderName
@@ -26,7 +29,13 @@ export class UploadService {
     }
   }
 
-  async uploadImageToCloudinay(file: Express.Multer.File, folderName: string) {
+  async uploadImageToCloudinay(
+    file: Express.Multer.File,
+    folderName: string
+  ): Promise<{
+    image_cloud: string
+    image_custom: string
+  }> {
     try {
       const result = await new Promise<any>((resolve, reject) => {
         cloudinary.uploader

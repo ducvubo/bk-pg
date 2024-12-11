@@ -7,11 +7,11 @@ import { TagBlog, TagBlogDocument } from './tag-blog.model'
 export class TagBlogRepository {
   constructor(@InjectModel(TagBlog.name) private tagBlogModel: Model<TagBlogDocument>) {}
 
-  async findTagsByName(tagNames: string[]) {
+  async findTagsByName(tagNames: string[]): Promise<TagBlogDocument[]> {
     return this.tagBlogModel.find({ tag_name: { $in: tagNames } })
   }
 
-  async createTags(tagNames: string[]) {
+  async createTags(tagNames: string[]): Promise<TagBlogDocument[]> {
     const newTags = tagNames.map((tag_name) => ({ tag_name }))
     return this.tagBlogModel.insertMany(newTags)
   }

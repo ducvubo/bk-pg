@@ -7,7 +7,7 @@ export class CronService {
   constructor(private readonly bookTableRepository: BookTableRepository) {}
 
   @Cron('* * * * *') // 1 phut chay 1 lan
-  async checkCancelBookTable() {
+  async checkCancelBookTable(): Promise<void> {
     const allBookTableNoVerify = await this.bookTableRepository.findBookTableNoVerify()
 
     const oneMinuteAgo = new Date(Date.now() - 60 * 1000 * 10) // thời gian 1 phút trước

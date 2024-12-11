@@ -12,15 +12,15 @@ import { UpdateStatusUser } from '../dto/update-status.dto'
 export class UserRepository {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
-  async findUserByEmail({ us_email }: { us_email: string }) {
-    return await this.userModel.findOne({ us_email, us_type: 'local' }).lean()
+  async findUserByEmail({ us_email }: { us_email: string }): Promise<UserDocument> {
+    return await this.userModel.findOne({ us_email, us_type: 'local' })
   }
 
-  async findUserLoginByEmail({ us_email }: { us_email: string }) {
-    return await this.userModel.findOne({ us_email, us_type: 'local' }).lean()
+  async findUserLoginByEmail({ us_email }: { us_email: string }): Promise<UserDocument> {
+    return await this.userModel.findOne({ us_email, us_type: 'local' })
   }
 
-  async registerUser({ us_email, us_password }: { us_email: string; us_password: string }) {
+  async registerUser({ us_email, us_password }: { us_email: string; us_password: string }): Promise<UserDocument> {
     return await this.userModel.create({
       us_email,
       us_password,
@@ -30,26 +30,26 @@ export class UserRepository {
     })
   }
 
-  async findOneById({ _id }) {
+  async findOneById({ _id }): Promise<UserDocument> {
     return await this.userModel
       .findById(_id)
       .populate({
         path: 'us_role', // Tên trường cần populate
         select: 'rl_name rl_description'
       })
-      .lean()
+
       .select('us_email us_name us_address us_phone us_gender us_avatar')
   }
 
-  async verifyAccount({ us_email }) {
+  async verifyAccount({ us_email }): Promise<UserDocument> {
     return await this.userModel.findOneAndUpdate({ us_email }, { us_verify: true }, { new: true })
   }
 
-  async changePassword({ us_email, us_password }) {
+  async changePassword({ us_email, us_password }): Promise<UserDocument> {
     return await this.userModel.findOneAndUpdate({ us_email }, { us_password }, { new: true })
   }
 
-  async create(createUserDto: CreateUserDto, user: IUser) {
+  async create(createUserDto: CreateUserDto, user: IUser): Promise<UserDocument> {
     const { us_address, us_email, us_gender, us_name, us_password, us_phone, us_role, us_avatar } = createUserDto
     return await this.userModel.create({
       us_address,
@@ -69,15 +69,13 @@ export class UserRepository {
     })
   }
 
-  async totalItems(type: boolean) {
-    return await this.userModel
-      .countDocuments({
-        isDeleted: type
-      })
-      .lean()
+  async totalItems(type: boolean): Promise<number> {
+    return await this.userModel.countDocuments({
+      isDeleted: type
+    })
   }
 
-  async findAllPagination({ offset, defaultLimit, sort, population }, type: boolean) {
+  async findAllPagination({ offset, defaultLimit, sort, population }, type: boolean): Promise<UserDocument[]> {
     return this.userModel
       .find({
         isDeleted: type
@@ -90,11 +88,11 @@ export class UserRepository {
       .exec()
   }
 
-  async findOne({ _id }: { _id: string }) {
-    return await this.userModel.findById(_id).select('-us_password').lean() // Populate role
+  async findOne({ _id }: { _id: string }): Promise<UserDocument> {
+    return await this.userModel.findById(_id).select('-us_password') // Populate role
   }
 
-  async updateUser(updateUserDto: UpdateUserDto, user: IUser) {
+  async updateUser(updateUserDto: UpdateUserDto, user: IUser): Promise<UserDocument> {
     const { us_address, us_email, us_gender, us_name, us_phone, us_role, us_avatar, _id } = updateUserDto
     return await this.userModel.findByIdAndUpdate(
       _id,
@@ -115,7 +113,7 @@ export class UserRepository {
     )
   }
 
-  async removeUser({ _id }: { _id: string }, user: IUser) {
+  async removeUser({ _id }: { _id: string }, user: IUser): Promise<UserDocument> {
     return await this.userModel.findByIdAndUpdate(
       _id,
       {
@@ -130,23 +128,21 @@ export class UserRepository {
     )
   }
 
-  async restore({ _id }, user: IUser) {
-    return await this.userModel
-      .findByIdAndUpdate(
-        _id,
-        {
-          isDeleted: false,
-          updatedBy: {
-            email: user.us_email,
-            _id: user._id
-          }
-        },
-        { new: true }
-      )
-      .lean()
+  async restore({ _id }, user: IUser): Promise<UserDocument> {
+    return await this.userModel.findByIdAndUpdate(
+      _id,
+      {
+        isDeleted: false,
+        updatedBy: {
+          email: user.us_email,
+          _id: user._id
+        }
+      },
+      { new: true }
+    )
   }
 
-  async updateStatus(updateStatusUser: UpdateStatusUser, user: IUser) {
+  async updateStatus(updateStatusUser: UpdateStatusUser, user: IUser): Promise<UserDocument> {
     return await this.userModel.findByIdAndUpdate(
       updateStatusUser._id,
       {

@@ -17,7 +17,7 @@ export class RefreshTokenAccountRepository {
     rf_refresh_token: string
     rf_public_key_refresh_token: string
     rf_public_key_access_token: string
-  }) {
+  }): Promise<RefreshTokenAccountDocument> {
     return await this.refreshTokenAccount.create({
       rf_cp_epl_id,
       rf_refresh_token,
@@ -26,14 +26,20 @@ export class RefreshTokenAccountRepository {
     })
   }
 
-  async findRefreshToken({ rf_refresh_token }: { rf_refresh_token: string }) {
-    return await this.refreshTokenAccount.findOne({ rf_refresh_token }).lean()
+  async findRefreshToken({ rf_refresh_token }: { rf_refresh_token: string }): Promise<RefreshTokenAccountDocument> {
+    return await this.refreshTokenAccount.findOne({ rf_refresh_token })
   }
 
-  async logoutAll({ rf_cp_epl_id }: { rf_cp_epl_id: string }) {
+  async logoutAll({ rf_cp_epl_id }: { rf_cp_epl_id: string }): Promise<{ deletedCount: number }> {
     return await this.refreshTokenAccount.deleteMany({ rf_cp_epl_id })
   }
-  async deleteToken({ rf_refresh_token, rf_cp_epl_id }: { rf_refresh_token: string; rf_cp_epl_id: string }) {
+  async deleteToken({
+    rf_refresh_token,
+    rf_cp_epl_id
+  }: {
+    rf_refresh_token: string
+    rf_cp_epl_id: string
+  }): Promise<{ deletedCount: number }> {
     return await this.refreshTokenAccount.deleteOne({ rf_refresh_token, rf_cp_epl_id })
   }
 }

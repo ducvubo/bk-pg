@@ -11,7 +11,7 @@ import { UpdateStatusBlogDto } from '../dto/update-status-blog.dto'
 export class BlogRepository {
   constructor(@InjectModel(Blog.name) private blogModel: Model<BlogDocument>) {}
 
-  async createBlog(createBlogDto: CreateBlogDto, account: IAccount) {
+  async createBlog(createBlogDto: CreateBlogDto, account: IAccount): Promise<BlogDocument> {
     const { blg_title, blg_content, blg_tag, blg_thumbnail } = createBlogDto
     return await this.blogModel.create({
       blg_title,
@@ -28,7 +28,7 @@ export class BlogRepository {
     })
   }
 
-  async totalItems(account: IAccount, isDeleted) {
+  async totalItems(account: IAccount, isDeleted: boolean): Promise<number> {
     return await this.blogModel
       .countDocuments({
         isDeleted,
@@ -37,7 +37,11 @@ export class BlogRepository {
       .lean()
   }
 
-  async findAllPagination({ offset, defaultLimit, sort, population }, account: IAccount, isDeleted) {
+  async findAllPagination(
+    { offset, defaultLimit, sort, population },
+    account: IAccount,
+    isDeleted: boolean
+  ): Promise<BlogDocument[]> {
     return this.blogModel
       .find({
         isDeleted,
@@ -55,7 +59,7 @@ export class BlogRepository {
       .exec()
   }
 
-  async getBlogById(_id: string, account: IAccount) {
+  async getBlogById(_id: string, account: IAccount): Promise<BlogDocument> {
     return await this.blogModel
       .findOne({
         _id,
@@ -69,7 +73,7 @@ export class BlogRepository {
       .exec()
   }
 
-  async updateBlog(updateBlogDto: UpdateBlogDto, account: IAccount) {
+  async updateBlog(updateBlogDto: UpdateBlogDto, account: IAccount): Promise<BlogDocument> {
     const { _id, blg_content, blg_tag, blg_thumbnail, blg_title } = updateBlogDto
     return await this.blogModel.findOneAndUpdate(
       {
@@ -90,7 +94,7 @@ export class BlogRepository {
     )
   }
 
-  async updateStatusBlog(updateStatusBlogDto: UpdateStatusBlogDto, account: IAccount) {
+  async updateStatusBlog(updateStatusBlogDto: UpdateStatusBlogDto, account: IAccount): Promise<BlogDocument> {
     const { _id, blg_status } = updateStatusBlogDto
     return await this.blogModel.findOneAndUpdate(
       {
@@ -108,7 +112,7 @@ export class BlogRepository {
     )
   }
 
-  async deleteBlog(_id: string, account: IAccount) {
+  async deleteBlog(_id: string, account: IAccount): Promise<BlogDocument> {
     return await this.blogModel.findOneAndUpdate(
       {
         _id,
@@ -126,7 +130,7 @@ export class BlogRepository {
     )
   }
 
-  async restoreBlog(_id: string, account: IAccount) {
+  async restoreBlog(_id: string, account: IAccount): Promise<BlogDocument> {
     return await this.blogModel.findOneAndUpdate(
       {
         _id,

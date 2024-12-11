@@ -13,6 +13,7 @@ import { ConfigService } from '@nestjs/config'
 import { decodeJwt, isValidPassword } from 'src/utils'
 import { getCacheIO, setCacheIOExpiration } from 'src/utils/cache'
 import { KEY_BLACK_LIST_TOKEN_EMPLOYEE } from 'src/constants/key.redis'
+import { EmployeeDocument } from './model/employees.model'
 
 @Injectable()
 export class EmployeesService {
@@ -22,7 +23,7 @@ export class EmployeesService {
     private readonly configService: ConfigService
   ) {}
 
-  async create(createEmployeeDto: CreateEmployeeDto, account: IAccount) {
+  async create(createEmployeeDto: CreateEmployeeDto, account: IAccount): Promise<EmployeeDocument> {
     const employeeExist = await this.emloyeeRepository.findOneByCreate({
       epl_email: createEmployeeDto.epl_email,
       epl_restaurant_id: account.account_restaurant_id
@@ -47,7 +48,10 @@ export class EmployeesService {
   async findAllPagination(
     { currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string },
     account: IAccount
-  ) {
+  ): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: EmployeeDocument[]
+  }> {
     currentPage = isNaN(currentPage) ? 1 : currentPage
     limit = isNaN(limit) ? 10 : limit
 
@@ -90,7 +94,7 @@ export class EmployeesService {
     }
   }
 
-  async findOneById({ _id, account }: { _id: string; account: IAccount }) {
+  async findOneById({ _id, account }: { _id: string; account: IAccount }): Promise<EmployeeDocument> {
     if (!_id) throw new BadRequestError('Nhân viên này không tồn tại')
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Nhân viên không tồn tại')
     const employee = await this.emloyeeRepository.findOneById({ _id, account })
@@ -98,7 +102,7 @@ export class EmployeesService {
     return employee
   }
 
-  async update(updateEmployeeDto: UpdateEmployeeDto, account: IAccount) {
+  async update(updateEmployeeDto: UpdateEmployeeDto, account: IAccount): Promise<EmployeeDocument> {
     const { _id } = updateEmployeeDto
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Nhân viên không tồn tại')
     const employee = await this.emloyeeRepository.findOneById({ _id, account })
@@ -106,7 +110,7 @@ export class EmployeesService {
     return await this.emloyeeRepository.update(updateEmployeeDto, account)
   }
 
-  async delete({ _id, account }: { _id: string; account: IAccount }) {
+  async delete({ _id, account }: { _id: string; account: IAccount }): Promise<EmployeeDocument> {
     if (!_id) throw new BadRequestError('Nhân viên này không tồn tại')
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Nhân viên không tồn tại')
     const employee = await this.emloyeeRepository.findOneById({ _id, account })
@@ -117,7 +121,10 @@ export class EmployeesService {
   async findAllRecycle(
     { currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string },
     account: IAccount
-  ) {
+  ): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: EmployeeDocument[]
+  }> {
     currentPage = isNaN(currentPage) ? 1 : currentPage
     limit = isNaN(limit) ? 10 : limit
 
@@ -158,7 +165,7 @@ export class EmployeesService {
     }
   }
 
-  async restore({ _id, account }: { _id: string; account: IAccount }) {
+  async restore({ _id, account }: { _id: string; account: IAccount }): Promise<EmployeeDocument> {
     if (!_id) throw new BadRequestError('Nhân viên này không tồn tại')
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Nhân viên không tồn tại1')
     const employee = await this.emloyeeRepository.findOneById({ _id, account })
@@ -166,7 +173,7 @@ export class EmployeesService {
     return await this.emloyeeRepository.restore({ _id, account })
   }
 
-  async updateStatus(updateStatusEmployeeDto: UpdateStatusEmployeeDto, account: IAccount) {
+  async updateStatus(updateStatusEmployeeDto: UpdateStatusEmployeeDto, account: IAccount): Promise<EmployeeDocument> {
     const { _id } = updateStatusEmployeeDto
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Nhân viên không tồn tại')
     const employee = await this.emloyeeRepository.findOneById({ _id, account })
@@ -174,7 +181,7 @@ export class EmployeesService {
     return await this.emloyeeRepository.updateStatus(updateStatusEmployeeDto, account)
   }
 
-  async login(loginEmployeeDto: LoginEmployeeDto) {
+  async login(loginEmployeeDto: LoginEmployeeDto): Promise<{ access_token_epl: string; refresh_token_epl: string }> {
     const { epl_email, epl_password, epl_restaurant_id } = loginEmployeeDto
 
     const employee = await this.emloyeeRepository.findOneByEmailWithLogin({ epl_email, epl_restaurant_id })
@@ -197,11 +204,11 @@ export class EmployeesService {
     }
   }
 
-  async findOneByIdOfToken({ _id }) {
+  async findOneByIdOfToken({ _id }): Promise<EmployeeDocument> {
     return await this.emloyeeRepository.findOneByIdOfToken({ _id })
   }
 
-  async getInforEmployee(account: IAccount) {
+  async getInforEmployee(account: IAccount): Promise<EmployeeDocument> {
     return await this.emloyeeRepository.getInfor({
       _id: account.account_employee_id,
       epl_restaurant_id: account.account_restaurant_id
@@ -212,7 +219,11 @@ export class EmployeesService {
     return await this.accountsService.findRefreshToken({ rf_refresh_token })
   }
 
-  async refreshToken({ refresh_token }: { refresh_token: string }) {
+  async refreshToken({
+    refresh_token
+  }: {
+    refresh_token: string
+  }): Promise<{ access_token_epl: string; refresh_token_epl: string }> {
     if (refresh_token) {
       const isBlackList = await getCacheIO(`${KEY_BLACK_LIST_TOKEN_EMPLOYEE}:${refresh_token}`)
       if (isBlackList) {

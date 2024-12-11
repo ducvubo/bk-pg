@@ -12,7 +12,7 @@ import { UpdateStatusCategoryDto } from '../dto/update-status-category.dto'
 export class CategoryRepository {
   constructor(@InjectModel(Category.name) private categoryModel: Model<CategoryDocument>) {}
 
-  async create(createCategoryDto: CreateCategoryDto, user: IUser) {
+  async create(createCategoryDto: CreateCategoryDto, user: IUser): Promise<CategoryDocument> {
     const { category_name, category_description, category_image, category_parent_id } = createCategoryDto
     const category_slug = generateSlug(category_name)
     return await this.categoryModel.create({
@@ -29,7 +29,7 @@ export class CategoryRepository {
     })
   }
 
-  async findAll() {
+  async findAll(): Promise<CategoryDocument[]> {
     return await this.categoryModel
       .find({
         isDeleted: false,
@@ -39,11 +39,11 @@ export class CategoryRepository {
       .exec()
   }
 
-  async findOneByName({ category_name }: { category_name: string }) {
-    return await this.categoryModel.findOne({ category_name }).lean()
+  async findOneByName({ category_name }: { category_name: string }): Promise<CategoryDocument> {
+    return await this.categoryModel.findOne({ category_name })
   }
 
-  async totalItems(isDeleted) {
+  async totalItems(isDeleted: boolean): Promise<number> {
     return await this.categoryModel
       .countDocuments({
         isDeleted
@@ -51,7 +51,7 @@ export class CategoryRepository {
       .lean()
   }
 
-  async findAllPagination({ offset, defaultLimit, sort, population }, isDeleted) {
+  async findAllPagination({ offset, defaultLimit, sort, population }, isDeleted: boolean): Promise<CategoryDocument[]> {
     return this.categoryModel
       .find({
         isDeleted
@@ -65,16 +65,15 @@ export class CategoryRepository {
       .exec()
   }
 
-  async findOneById({ _id }: { _id: string }) {
+  async findOneById({ _id }: { _id: string }): Promise<CategoryDocument> {
     return await this.categoryModel
       .findOne({
         _id
       })
       .populate('category_parent_id')
-      .lean()
   }
 
-  async updateCategory(updateCategoryDto: UpdateCategoryDto, user: IUser) {
+  async updateCategory(updateCategoryDto: UpdateCategoryDto, user: IUser): Promise<CategoryDocument> {
     const { _id, category_description, category_image, category_name, category_parent_id } = updateCategoryDto
     return await this.categoryModel.findOneAndUpdate(
       {
@@ -96,7 +95,7 @@ export class CategoryRepository {
     )
   }
 
-  async remove({ _id, user }: { _id: string; user: IUser }) {
+  async remove({ _id, user }: { _id: string; user: IUser }): Promise<CategoryDocument> {
     return await this.categoryModel.findOneAndUpdate(
       {
         _id
@@ -115,7 +114,7 @@ export class CategoryRepository {
     )
   }
 
-  async restore({ _id, user }: { _id: string; user: IUser }) {
+  async restore({ _id, user }: { _id: string; user: IUser }): Promise<CategoryDocument> {
     return await this.categoryModel.findOneAndUpdate(
       {
         _id
@@ -135,7 +134,7 @@ export class CategoryRepository {
     )
   }
 
-  async updateStatus(updateStatusCategoryDto: UpdateStatusCategoryDto, user: IUser) {
+  async updateStatus(updateStatusCategoryDto: UpdateStatusCategoryDto, user: IUser): Promise<CategoryDocument> {
     const { _id, category_status } = updateStatusCategoryDto
     return await this.categoryModel.findOneAndUpdate(
       {

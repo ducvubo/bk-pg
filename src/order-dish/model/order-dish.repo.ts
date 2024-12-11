@@ -21,24 +21,23 @@ export class OrderDishRepository {
   //   return await this.orderDishModel.insertMany(orders, options)
   // }
 
-  async bulkCreateDishDuplicate(dishes: any[]) {
+  async bulkCreateDishDuplicate(dishes: any): Promise<any> {
     return await this.dishDuplicateModel.insertMany(dishes)
   }
 
-  async bulkCreateOrderDish(orders: any[]) {
+  async bulkCreateOrderDish(orders: any): Promise<any> {
     return await this.orderDishModel.insertMany(orders)
   }
 
-  async listOrderGuest({ od_dish_summary_id }: { od_dish_summary_id: string }) {
+  async listOrderGuest({ od_dish_summary_id }: { od_dish_summary_id: string }): Promise<OrderDishDocument[]> {
     return await this.orderDishModel
       .find({ od_dish_summary_id })
       .populate('od_dish_duplicate_id')
       .populate('od_dish_guest_id')
       .sort({ createdAt: -1 })
-      .lean()
   }
 
-  async findListOrderByListIdOrderSummary(listId: string[]) {
+  async findListOrderByListIdOrderSummary(listId: string[]): Promise<OrderDishDocument[]> {
     return await this.orderDishModel
       .find({ od_dish_summary_id: { $in: listId } })
       .populate({
@@ -50,14 +49,16 @@ export class OrderDishRepository {
         select: 'dish_duplicate_name _id dish_duplicate_image dish_duplicate_price dish_duplicate_sale'
       })
       .sort({ createdAt: -1 })
-      .lean()
       .exec()
   }
 
-  async findOneById({ _id }: { _id: string }) {
-    return this.orderDishModel.findOne({ _id }).lean()
+  async findOneById({ _id }: { _id: string }): Promise<OrderDishDocument> {
+    return this.orderDishModel.findOne({ _id })
   }
-  async updateStatusOrderDish(updateStatusOrderDishDto: UpdateStatusOrderDishDto, account: IAccount) {
+  async updateStatusOrderDish(
+    updateStatusOrderDishDto: UpdateStatusOrderDishDto,
+    account: IAccount
+  ): Promise<OrderDishDocument> {
     const { _id, od_dish_status, od_dish_summary_id } = updateStatusOrderDishDto
     return this.orderDishModel.findOneAndUpdate(
       { _id, od_dish_summary_id: od_dish_summary_id },
@@ -72,15 +73,15 @@ export class OrderDishRepository {
     )
   }
 
-  async findOneDishDuplicateById({ _id }: { _id: string }) {
-    return this.dishDuplicateModel.findOne({ _id }).lean()
+  async findOneDishDuplicateById({ _id }: { _id: string }): Promise<DishDuplicateDocument> {
+    return this.dishDuplicateModel.findOne({ _id })
   }
 
-  async findByIdDishDuplicate({ _id }: { _id: string }) {
-    return this.dishDuplicateModel.findById(_id).lean()
+  async findByIdDishDuplicate({ _id }: { _id: string }): Promise<DishDuplicateDocument> {
+    return this.dishDuplicateModel.findById(_id)
   }
 
-  async findByIdOrderSummary({ od_dish_summary_id }: { od_dish_summary_id: string }) {
-    return this.orderDishModel.find({ od_dish_summary_id, od_dish_status: { $ne: 'refuse' } }).lean()
+  async findByIdOrderSummary({ od_dish_summary_id }: { od_dish_summary_id: string }): Promise<OrderDishDocument[]> {
+    return this.orderDishModel.find({ od_dish_summary_id, od_dish_status: { $ne: 'refuse' } })
   }
 }

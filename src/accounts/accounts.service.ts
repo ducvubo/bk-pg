@@ -6,6 +6,8 @@ import { ConfigService } from '@nestjs/config'
 import { UnauthorizedError } from 'src/utils/errorResponse'
 import * as crypto from 'crypto'
 import { getHashPassword } from 'src/utils'
+import { AccountsDocument } from './model/accounts.model'
+import { RefreshTokenAccountDocument } from './model/refresh-token.model'
 
 @Injectable()
 export class AccountsService {
@@ -16,7 +18,13 @@ export class AccountsService {
     private readonly configService: ConfigService
   ) {}
 
-  signToken = (_id: string, type: string) => {
+  signToken = (
+    _id: string,
+    type: string
+  ): {
+    publicKey: crypto.KeyObject
+    token: string
+  } => {
     const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
       modulusLength: 2048
     })
@@ -38,7 +46,12 @@ export class AccountsService {
     }
   }
 
-  verifyToken = (token: string, publicKey: string) => {
+  verifyToken = (
+    token: string,
+    publicKey: string
+  ): {
+    _id: string
+  } => {
     try {
       const decoded = this.jwtService.verify(token, {
         secret: publicKey
@@ -62,7 +75,7 @@ export class AccountsService {
     account_type: 'restaurant' | 'employee'
     account_restaurant_id: string
     account_employee_id?: string
-  }) {
+  }): Promise<AccountsDocument> {
     return await this.accountRepository.createAccount({
       account_email,
       account_password: getHashPassword(account_password),
@@ -72,15 +85,19 @@ export class AccountsService {
     })
   }
 
-  async findAccountByIdRestaurant({ account_restaurant_id }: { account_restaurant_id: string }) {
+  async findAccountByIdRestaurant({
+    account_restaurant_id
+  }: {
+    account_restaurant_id: string
+  }): Promise<AccountsDocument> {
     return await this.accountRepository.findAccountByIdRestaurant({ account_restaurant_id })
   }
 
-  async findAccountByIdEmployee({ account_employee_id, account_restaurant_id }) {
+  async findAccountByIdEmployee({ account_employee_id, account_restaurant_id }): Promise<AccountsDocument> {
     return await this.accountRepository.findAccountByIdEmployee({ account_employee_id, account_restaurant_id })
   }
 
-  async generateRefreshTokenCP({ _id }: { _id: string }) {
+  async generateRefreshTokenCP({ _id }: { _id: string }): Promise<{ access_token: string; refresh_token: string }> {
     const token = await Promise.all([
       this.signToken(String(_id), 'access_token'),
       this.signToken(String(_id), 'refresh_token')
@@ -102,19 +119,25 @@ export class AccountsService {
     }
   }
 
-  async findAccoutById({ _id }: { _id: string }) {
+  async findAccoutById({ _id }: { _id: string }): Promise<AccountsDocument> {
     return await this.accountRepository.findAccoutById({ _id })
   }
 
-  async findRefreshToken({ rf_refresh_token }: { rf_refresh_token: string }) {
+  async findRefreshToken({ rf_refresh_token }: { rf_refresh_token: string }): Promise<RefreshTokenAccountDocument> {
     return await this.refreshTokenAccountRepository.findRefreshToken({ rf_refresh_token })
   }
 
-  async logoutAll({ rf_cp_epl_id }: { rf_cp_epl_id: string }) {
+  async logoutAll({ rf_cp_epl_id }: { rf_cp_epl_id: string }): Promise<{ deletedCount: number }> {
     return await this.refreshTokenAccountRepository.logoutAll({ rf_cp_epl_id })
   }
 
-  async deleteToken({ rf_refresh_token, rf_cp_epl_id }: { rf_refresh_token: string; rf_cp_epl_id: string }) {
+  async deleteToken({
+    rf_refresh_token,
+    rf_cp_epl_id
+  }: {
+    rf_refresh_token: string
+    rf_cp_epl_id: string
+  }): Promise<{ deletedCount: number }> {
     return await this.refreshTokenAccountRepository.deleteToken({ rf_refresh_token, rf_cp_epl_id })
   }
 }

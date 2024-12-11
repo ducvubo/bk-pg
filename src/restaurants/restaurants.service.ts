@@ -17,6 +17,8 @@ import { getCacheIO, setCacheIOExpiration } from 'src/utils/cache'
 import { ConfigService } from '@nestjs/config'
 import { AccountsService } from 'src/accounts/accounts.service'
 import { IAccount } from 'src/accounts/accounts.interface'
+import { RestaurantDocument } from './model/restaurant.model'
+import { RefreshTokenAccountDocument } from 'src/accounts/model/refresh-token.model'
 
 @Injectable()
 export class RestaurantsService {
@@ -26,7 +28,15 @@ export class RestaurantsService {
     private readonly accountsService: AccountsService
   ) {}
 
-  async create(createRestaurantDto: CreateRestaurantDto, user: IUser) {
+  async create(
+    createRestaurantDto: CreateRestaurantDto,
+    user: IUser
+  ): Promise<{
+    _id: string
+    restaurant_name: string
+    restaurant_email: string
+    restaurant_phone: string
+  }> {
     checkDuplicateDays(createRestaurantDto.restaurant_hours)
     createRestaurantDto.restaurant_email = faker.internet.email()
     createRestaurantDto.restaurant_phone = faker.phone.number()
@@ -51,7 +61,7 @@ export class RestaurantsService {
 
     if (newRestaurant) {
       return {
-        _id: newRestaurant._id,
+        _id: newRestaurant._id.toString(),
         restaurant_name: newRestaurant.restaurant_name,
         restaurant_email: newRestaurant.restaurant_email,
         restaurant_phone: newRestaurant.restaurant_phone
@@ -59,11 +69,14 @@ export class RestaurantsService {
     }
   }
 
-  async findRestaurantByEmail({ restaurant_email }: { restaurant_email: string }) {
+  async findRestaurantByEmail({ restaurant_email }: { restaurant_email: string }): Promise<RestaurantDocument> {
     return await this.restaurantRepository.findRestaurantByEmail({ restaurant_email })
   }
 
-  async findAll({ currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string }) {
+  async findAll({ currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string }): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: RestaurantDocument[]
+  }> {
     currentPage = isNaN(currentPage) ? 1 : currentPage
     limit = isNaN(limit) ? 8 : limit
 
@@ -102,14 +115,22 @@ export class RestaurantsService {
     }
   }
 
-  async findOne({ _id }: { _id: string }) {
+  async findOne({ _id }: { _id: string }): Promise<RestaurantDocument> {
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Nhà hàng không tồn tại')
     const restaurant = await this.restaurantRepository.findOne({ _id })
     if (!restaurant) throw new NotFoundError('Nhà hàng không tồn tại')
     return restaurant
   }
 
-  async update(updateRestaurantDto: UpdateRestaurantDto, user: IUser) {
+  async update(
+    updateRestaurantDto: UpdateRestaurantDto,
+    user: IUser
+  ): Promise<{
+    _id: string
+    restaurant_name: string
+    restaurant_email: string
+    restaurant_phone: string
+  }> {
     checkDuplicateDays(updateRestaurantDto.restaurant_hours)
     const { _id } = updateRestaurantDto
     const restaurantExist = await this.restaurantRepository.findOne({ _id })
@@ -117,28 +138,45 @@ export class RestaurantsService {
     const updated = await this.restaurantRepository.update(updateRestaurantDto, user)
 
     return {
-      _id: updated._id,
+      _id: updated._id.toString(),
       restaurant_name: updated.restaurant_name,
       restaurant_email: updated.restaurant_email,
       restaurant_phone: updated.restaurant_phone
     }
   }
 
-  async remove({ _id }, user: IUser) {
+  async remove(
+    { _id },
+    user: IUser
+  ): Promise<{
+    _id: string
+    restaurant_name: string
+    restaurant_email: string
+    restaurant_phone: string
+  }> {
     if (!_id) throw new NotFoundError('Nhà hàng không tồn tại')
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Nhà hàng không tồn tại')
     const restaurantExist = await this.restaurantRepository.findOne({ _id })
     if (!restaurantExist) throw new NotFoundError('Nhà hàng không tồn tại')
     const removed = await this.restaurantRepository.remove({ _id }, user)
     return {
-      _id: removed._id,
+      _id: removed._id.toString(),
       restaurant_name: removed.restaurant_name,
       restaurant_email: removed.restaurant_email,
       restaurant_phone: removed.restaurant_phone
     }
   }
 
-  async updateVerify(updatevVerify: UpdateVerify, user: IUser) {
+  async updateVerify(
+    updatevVerify: UpdateVerify,
+    user: IUser
+  ): Promise<{
+    _id: string
+    restaurant_name: string
+    restaurant_email: string
+    restaurant_phone: string
+    restaurant_verify: boolean
+  }> {
     const { _id } = updatevVerify
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Nhà hàng không tồn tại')
     const restaurantExist = await this.restaurantRepository.findOne({ _id })
@@ -146,7 +184,7 @@ export class RestaurantsService {
 
     const updated = await this.restaurantRepository.updateVerify(updatevVerify, user)
     return {
-      _id: updated._id,
+      _id: updated._id.toString(),
       restaurant_name: updated.restaurant_name,
       restaurant_email: updated.restaurant_email,
       restaurant_phone: updated.restaurant_phone,
@@ -154,7 +192,16 @@ export class RestaurantsService {
     }
   }
 
-  async updateState(updateState: UpdateState, user: IUser) {
+  async updateState(
+    updateState: UpdateState,
+    user: IUser
+  ): Promise<{
+    _id: string
+    restaurant_name: string
+    restaurant_email: string
+    restaurant_phone: string
+    restaurant_state: boolean
+  }> {
     const { _id } = updateState
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Nhà hàng không tồn tại')
     const restaurantExist = await this.restaurantRepository.findOne({ _id })
@@ -162,7 +209,7 @@ export class RestaurantsService {
 
     const updated = await this.restaurantRepository.updateState(updateState, user)
     return {
-      _id: updated._id,
+      _id: updated._id.toString(),
       restaurant_name: updated.restaurant_name,
       restaurant_email: updated.restaurant_email,
       restaurant_phone: updated.restaurant_phone,
@@ -170,7 +217,16 @@ export class RestaurantsService {
     }
   }
 
-  async updateStatus(updateStatus: UpdateStatus, user: IUser) {
+  async updateStatus(
+    updateStatus: UpdateStatus,
+    user: IUser
+  ): Promise<{
+    _id: string
+    restaurant_name: string
+    restaurant_email: string
+    restaurant_phone: string
+    restaurant_status: string
+  }> {
     const { _id } = updateStatus
 
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Nhà hàng không tồn tại')
@@ -178,7 +234,7 @@ export class RestaurantsService {
     if (!restaurantExist) throw new NotFoundError('Nhà hàng không tồn tại')
     const updated = await this.restaurantRepository.updateStatus(updateStatus, user)
     return {
-      _id: updated._id,
+      _id: updated._id.toString(),
       restaurant_name: updated.restaurant_name,
       restaurant_email: updated.restaurant_email,
       restaurant_phone: updated.restaurant_phone,
@@ -186,7 +242,18 @@ export class RestaurantsService {
     }
   }
 
-  async findAllRecycle({ currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string }) {
+  async findAllRecycle({
+    currentPage = 1,
+    limit = 10,
+    qs
+  }: {
+    currentPage: number
+    limit: number
+    qs: string
+  }): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: RestaurantDocument[]
+  }> {
     if (currentPage <= 0 || limit <= 0) {
       throw new BadRequestError('Trang hiện tại và số record phải lớn hơn 0')
     }
@@ -224,30 +291,41 @@ export class RestaurantsService {
     }
   }
 
-  async restore({ _id }, user: IUser) {
+  async restore(
+    { _id },
+    user: IUser
+  ): Promise<{
+    _id: string
+    restaurant_name: string
+    restaurant_email: string
+    restaurant_phone: string
+  }> {
     if (!_id) throw new NotFoundError('Nhà hàng không tồn tại')
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Nhà hàng không tồn tại')
     const restaurantExist = await this.restaurantRepository.findOne({ _id })
     if (!restaurantExist) throw new NotFoundError('Nhà hàng không tồn tại')
     const restore = await this.restaurantRepository.restore({ _id }, user)
     return {
-      _id: restore._id,
+      _id: restore._id.toString(),
       restaurant_name: restore.restaurant_name,
       restaurant_email: restore.restaurant_email,
       restaurant_phone: restore.restaurant_phone
     }
   }
 
-  async findRestaurantsHome() {
+  async findRestaurantsHome(): Promise<RestaurantDocument[]> {
     return await this.restaurantRepository.findRestaurantsHome()
   }
 
-  async findOneBySlug({ restaurant_slug }) {
+  async findOneBySlug({ restaurant_slug }): Promise<RestaurantDocument> {
     if (!restaurant_slug) throw new BadRequestError(`Slug ${restaurant_slug} không hợp lệ`)
     return await this.restaurantRepository.findOneBySlug({ restaurant_slug })
   }
 
-  async loginRestaurant(loginRestaurantDto: LoginRestaurantDto) {
+  async loginRestaurant(loginRestaurantDto: LoginRestaurantDto): Promise<{
+    access_token_rtr: string
+    refresh_token_rtr: string
+  }> {
     const { restaurant_email, restaurant_password } = loginRestaurantDto
 
     const restaurant = await this.restaurantRepository.findOneByEmailWithLogin({ restaurant_email })
@@ -278,15 +356,18 @@ export class RestaurantsService {
     }
   }
 
-  async findOneByIdOfToken({ _id }: { _id: string }) {
+  async findOneByIdOfToken({ _id }: { _id: string }): Promise<RestaurantDocument> {
     return await this.restaurantRepository.findOneByIdOfToken({ _id })
   }
 
-  async findRefreshToken({ rf_refresh_token }: { rf_refresh_token: string }) {
+  async findRefreshToken({ rf_refresh_token }: { rf_refresh_token: string }): Promise<RefreshTokenAccountDocument> {
     return await this.accountsService.findRefreshToken({ rf_refresh_token })
   }
 
-  async refreshToken({ refresh_token }: { refresh_token: string }) {
+  async refreshToken({ refresh_token }: { refresh_token: string }): Promise<{
+    access_token_rtr: string
+    refresh_token_rtr: string
+  }> {
     if (refresh_token) {
       const isBlackList = await getCacheIO(`${KEY_BLACK_LIST_TOKEN_RESTAURANT}:${refresh_token}`)
       if (isBlackList) {
@@ -332,16 +413,16 @@ export class RestaurantsService {
     }
   }
 
-  async getInforRestaurant(account: IAccount) {
+  async getInforRestaurant(account: IAccount): Promise<RestaurantDocument> {
     return this.restaurantRepository.findOneByIdOfToken({ _id: account.account_restaurant_id })
   }
 
-  async search({ q }) {
+  async search({ q }): Promise<RestaurantDocument[]> {
     if (!q) return []
     return await this.restaurantRepository.search({ q })
   }
 
-  async findOneById({ _id }) {
+  async findOneById({ _id }): Promise<RestaurantDocument> {
     return await this.restaurantRepository.findOneById({ _id })
   }
 }

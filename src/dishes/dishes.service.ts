@@ -7,12 +7,13 @@ import aqp from 'api-query-params'
 import mongoose from 'mongoose'
 import { UpdateDishDto } from './dto/update-dish.dto'
 import { UpdateStatusDishDto } from './dto/update-status-dish.dto'
+import { DishDocument } from './model/dishes.model'
 
 @Injectable()
 export class DishesService {
   constructor(private readonly dishRepository: DishRepository) {}
 
-  async createDish(createDishDto: CreateDishDto, account: IAccount) {
+  async createDish(createDishDto: CreateDishDto, account: IAccount): Promise<DishDocument> {
     const { dish_name } = createDishDto
     const { account_restaurant_id } = account
     const dish = await this.dishRepository.findOneByName({ dish_name, dish_restaurant_id: account_restaurant_id })
@@ -27,7 +28,10 @@ export class DishesService {
   async findAllPagination(
     { currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string },
     account: IAccount
-  ) {
+  ): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: DishDocument[]
+  }> {
     currentPage = isNaN(currentPage) ? 1 : currentPage
     limit = isNaN(limit) ? 10 : limit
 
@@ -70,7 +74,7 @@ export class DishesService {
     }
   }
 
-  async findOne(id: string, account: IAccount) {
+  async findOne(id: string, account: IAccount): Promise<DishDocument> {
     if (!id) throw new BadRequestError('Món ăn này không tồn tại')
     if (mongoose.Types.ObjectId.isValid(id) === false) throw new BadRequestError('Món ăn này không tồn tại')
     return await this.dishRepository.findOneById({ _id: id, account })
@@ -96,13 +100,13 @@ export class DishesService {
     return await this.dishRepository.update(updateDishDto, account)
   }
 
-  async remove(id: string, account: IAccount) {
+  async remove(id: string, account: IAccount): Promise<DishDocument> {
     if (!id) throw new BadRequestError('Món ăn này không tồn tại')
     if (mongoose.Types.ObjectId.isValid(id) === false) throw new BadRequestError('Món ăn này không tồn tại')
     return await this.dishRepository.remove(id, account)
   }
 
-  async restore(id: string, account: IAccount) {
+  async restore(id: string, account: IAccount): Promise<DishDocument> {
     if (!id) throw new BadRequestError('Món ăn này không tồn tại')
     if (mongoose.Types.ObjectId.isValid(id) === false) throw new BadRequestError('Món ăn này không tồn tại')
     return await this.dishRepository.restore(id, account)
@@ -111,7 +115,10 @@ export class DishesService {
   async findAllRecycle(
     { currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string },
     account: IAccount
-  ) {
+  ): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: DishDocument[]
+  }> {
     currentPage = isNaN(currentPage) ? 1 : currentPage
     limit = isNaN(limit) ? 10 : limit
 
@@ -154,7 +161,7 @@ export class DishesService {
     }
   }
 
-  async updateStatus(updateStatusDishDto: UpdateStatusDishDto, account: IAccount) {
+  async updateStatus(updateStatusDishDto: UpdateStatusDishDto, account: IAccount): Promise<DishDocument> {
     const { _id } = updateStatusDishDto
 
     const dish = await this.dishRepository.findOneById({ _id, account })
@@ -164,7 +171,7 @@ export class DishesService {
     return await this.dishRepository.updateStatus(updateStatusDishDto, account)
   }
 
-  async findAllDishOrder({ dish_restaurant_id }: { dish_restaurant_id: string }) {
+  async findAllDishOrder({ dish_restaurant_id }: { dish_restaurant_id: string }): Promise<DishDocument[]> {
     return await this.dishRepository.findAllDishOrder({ dish_restaurant_id })
   }
 }

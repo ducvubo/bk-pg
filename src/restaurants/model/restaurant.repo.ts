@@ -14,7 +14,7 @@ import { generateSlug } from 'src/utils'
 export class RestaurantRepository {
   constructor(@InjectModel(Restaurant.name) private restaurantModel: Model<RestaurantDocument>) {}
 
-  async create(createRestaurantDto: CreateRestaurantDto, user: IUser) {
+  async create(createRestaurantDto: CreateRestaurantDto, user: IUser): Promise<RestaurantDocument> {
     const {
       restaurant_email,
       restaurant_phone,
@@ -57,15 +57,15 @@ export class RestaurantRepository {
     })
   }
 
-  async findRestaurantByEmail({ restaurant_email }: { restaurant_email: string }) {
-    return await this.restaurantModel.findOne({ restaurant_email }).lean()
+  async findRestaurantByEmail({ restaurant_email }: { restaurant_email: string }): Promise<RestaurantDocument> {
+    return await this.restaurantModel.findOne({ restaurant_email })
   }
 
-  async findRestaurantByPhone({ restaurant_phone }: { restaurant_phone: string }) {
-    return await this.restaurantModel.findOne({ restaurant_phone }).lean()
+  async findRestaurantByPhone({ restaurant_phone }: { restaurant_phone: string }): Promise<RestaurantDocument> {
+    return await this.restaurantModel.findOne({ restaurant_phone })
   }
 
-  async totalItems() {
+  async totalItems(): Promise<number> {
     return await this.restaurantModel
       .countDocuments({
         isDeleted: false
@@ -73,7 +73,7 @@ export class RestaurantRepository {
       .lean()
   }
 
-  async findAllPagination({ offset, defaultLimit, sort, population }) {
+  async findAllPagination({ offset, defaultLimit, sort, population }): Promise<RestaurantDocument[]> {
     return this.restaurantModel
       .find({
         isDeleted: false
@@ -86,15 +86,14 @@ export class RestaurantRepository {
       .exec()
   }
 
-  async findOne({ _id }: { _id: string }) {
+  async findOne({ _id }: { _id: string }): Promise<RestaurantDocument> {
     return await this.restaurantModel
       .findById(_id)
-      .lean()
       .populate('restaurant_amenity') // Populate amenities
       .populate('restaurant_type') // Populate restaurant types
   }
 
-  async update(updateRestaurantDto: UpdateRestaurantDto, user: IUser) {
+  async update(updateRestaurantDto: UpdateRestaurantDto, user: IUser): Promise<RestaurantDocument> {
     const {
       _id,
       restaurant_phone,
@@ -111,96 +110,86 @@ export class RestaurantRepository {
       restaurant_description
     } = updateRestaurantDto
 
-    return await this.restaurantModel
-      .findByIdAndUpdate(
-        _id,
-        {
-          restaurant_phone,
-          restaurant_category,
-          restaurant_name,
-          restaurant_banner,
-          restaurant_address,
-          restaurant_type,
-          restaurant_price,
-          restaurant_hours,
-          restaurant_overview,
-          // restaurant_price_menu,
-          restaurant_amenity,
-          restaurant_image,
-          restaurant_description,
-          updatedBy: {
-            email: user.us_email,
-            _id: user._id
-          }
-        },
-        { new: true }
-      )
-      .lean()
+    return await this.restaurantModel.findByIdAndUpdate(
+      _id,
+      {
+        restaurant_phone,
+        restaurant_category,
+        restaurant_name,
+        restaurant_banner,
+        restaurant_address,
+        restaurant_type,
+        restaurant_price,
+        restaurant_hours,
+        restaurant_overview,
+        // restaurant_price_menu,
+        restaurant_amenity,
+        restaurant_image,
+        restaurant_description,
+        updatedBy: {
+          email: user.us_email,
+          _id: user._id
+        }
+      },
+      { new: true }
+    )
   }
 
-  async remove({ _id }, user: IUser) {
-    return await this.restaurantModel
-      .findByIdAndUpdate(
-        _id,
-        {
-          isDeleted: true,
-          deletedBy: {
-            email: user.us_email,
-            _id: user._id
-          },
-          deletedAt: new Date()
+  async remove({ _id }, user: IUser): Promise<RestaurantDocument> {
+    return await this.restaurantModel.findByIdAndUpdate(
+      _id,
+      {
+        isDeleted: true,
+        deletedBy: {
+          email: user.us_email,
+          _id: user._id
         },
-        { new: true }
-      )
-      .lean()
+        deletedAt: new Date()
+      },
+      { new: true }
+    )
   }
 
-  async updateVerify(updatevVerify: UpdateVerify, user: IUser) {
+  async updateVerify(updatevVerify: UpdateVerify, user: IUser): Promise<RestaurantDocument> {
     const { _id, status } = updatevVerify
-    return await this.restaurantModel
-      .findByIdAndUpdate(
-        _id,
-        {
-          restaurant_verify: status,
-          updatedBy: {
-            email: user.us_email,
-            _id: user._id
-          }
-        },
-        {
-          new: true
+    return await this.restaurantModel.findByIdAndUpdate(
+      _id,
+      {
+        restaurant_verify: status,
+        updatedBy: {
+          email: user.us_email,
+          _id: user._id
         }
-      )
-      .lean()
+      },
+      {
+        new: true
+      }
+    )
   }
 
-  async updateState(updateState: UpdateState, user: IUser) {
+  async updateState(updateState: UpdateState, user: IUser): Promise<RestaurantDocument> {
     const { _id, status } = updateState
-    return await this.restaurantModel
-      .findByIdAndUpdate(
-        _id,
-        { restaurant_state: status, updatedBy: { email: user.us_email, _id: user._id } },
-        {
-          new: true
-        }
-      )
-      .lean()
+    return await this.restaurantModel.findByIdAndUpdate(
+      _id,
+      { restaurant_state: status, updatedBy: { email: user.us_email, _id: user._id } },
+      {
+        new: true
+      }
+    )
   }
 
-  async updateStatus(updateStatus: UpdateStatus, user: IUser) {
+  async updateStatus(updateStatus: UpdateStatus, user: IUser): Promise<RestaurantDocument> {
     const { _id, status } = updateStatus
-    return await this.restaurantModel
-      .findByIdAndUpdate(
-        _id,
-        { restaurant_status: status, updatedBy: { email: user.us_email, _id: user._id } },
-        {
-          new: true
-        }
-      )
-      .lean()
+    return await this.restaurantModel.findByIdAndUpdate(
+      _id,
+      { restaurant_status: status, updatedBy: { email: user.us_email, _id: user._id } },
+      {
+        new: true
+      }
+    )
   }
 
-  async totalItemsRecycle() {
+  async totalItemsRecycle(): Promise<number> {
     return await this.restaurantModel
       .countDocuments({
         isDeleted: true
@@ -208,7 +197,7 @@ export class RestaurantRepository {
       .lean()
   }
 
-  async findAllPaginationRecycle({ offset, defaultLimit, sort, population }) {
+  async findAllPaginationRecycle({ offset, defaultLimit, sort, population }): Promise<RestaurantDocument[]> {
     return this.restaurantModel
       .find({
         isDeleted: true
@@ -221,23 +210,21 @@ export class RestaurantRepository {
       .exec()
   }
 
-  async restore({ _id }, user: IUser) {
-    return await this.restaurantModel
-      .findByIdAndUpdate(
-        _id,
-        {
-          isDeleted: false,
-          updatedBy: {
-            email: user.us_email,
-            _id: user._id
-          }
-        },
-        { new: true }
-      )
-      .lean()
+  async restore({ _id }, user: IUser): Promise<RestaurantDocument> {
+    return await this.restaurantModel.findByIdAndUpdate(
+      _id,
+      {
+        isDeleted: false,
+        updatedBy: {
+          email: user.us_email,
+          _id: user._id
+        }
+      },
+      { new: true }
+    )
   }
 
-  async findRestaurantsHome() {
+  async findRestaurantsHome(): Promise<RestaurantDocument[]> {
     return await this.restaurantModel
       .find({
         isDeleted: false,
@@ -250,7 +237,7 @@ export class RestaurantRepository {
       .exec()
   }
 
-  async findOneBySlug({ restaurant_slug }) {
+  async findOneBySlug({ restaurant_slug }): Promise<RestaurantDocument> {
     return await this.restaurantModel
       .findOne({
         restaurant_slug,
@@ -269,22 +256,19 @@ export class RestaurantRepository {
         path: 'restaurant_amenity', // Tên trường cần populate
         select: 'amenity_name _id'
       })
-      .lean()
       .exec()
   }
 
-  async findOneByIdOfBook({ id }: { id: string }) {
-    return await this.restaurantModel
-      .findOne({
-        _id: id,
-        isDeleted: false,
-        restaurant_status: 'inactive',
-        restaurant_state: true
-      })
-      .lean()
+  async findOneByIdOfBook({ id }: { id: string }): Promise<RestaurantDocument> {
+    return await this.restaurantModel.findOne({
+      _id: id,
+      isDeleted: false,
+      restaurant_status: 'inactive',
+      restaurant_state: true
+    })
   }
 
-  async findOneByIdOfToken({ _id }: { _id: string }) {
+  async findOneByIdOfToken({ _id }: { _id: string }): Promise<RestaurantDocument> {
     return await this.restaurantModel
       .findOne({
         _id,
@@ -292,18 +276,15 @@ export class RestaurantRepository {
         restaurant_status: 'inactive'
       })
       .select(' -restaurant_status -__v -updatedBy -updatedAt -createdAt -isDeleted -deletedBy -deletedAt')
-      .lean()
   }
 
-  async findOneByEmailWithLogin({ restaurant_email }) {
-    return await this.restaurantModel
-      .findOne({
-        restaurant_email
-      })
-      .lean()
+  async findOneByEmailWithLogin({ restaurant_email }): Promise<RestaurantDocument> {
+    return await this.restaurantModel.findOne({
+      restaurant_email
+    })
   }
 
-  async search({ q }) {
+  async search({ q }): Promise<RestaurantDocument[]> {
     return await this.restaurantModel
       .find({
         restaurant_name: { $regex: q, $options: 'i' },
@@ -315,15 +296,13 @@ export class RestaurantRepository {
       .exec()
   }
 
-  async findOneById({ _id }) {
-    return await this.restaurantModel
-      .findOne({
-        _id,
-        restaurant_verify: true,
-        restaurant_status: 'inactive',
-        restaurant_state: true,
-        isDeleted: false
-      })
-      .lean()
+  async findOneById({ _id }): Promise<RestaurantDocument> {
+    return await this.restaurantModel.findOne({
+      _id,
+      restaurant_verify: true,
+      restaurant_status: 'inactive',
+      restaurant_state: true,
+      isDeleted: false
+    })
   }
 }

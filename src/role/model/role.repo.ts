@@ -7,7 +7,7 @@ import { Role, RoleDocument } from './role.model'
 export class RoleRepository {
   constructor(@InjectModel(Role.name) private roleModel: Model<RoleDocument>) {}
 
-  async create(body: any) {
+  async create(body: { rl_name: string; rl_description: string }): Promise<RoleDocument> {
     const { rl_name, rl_description } = body
     return this.roleModel.create({
       rl_name,
@@ -15,7 +15,7 @@ export class RoleRepository {
     })
   }
 
-  async findAllRoleUser() {
-    return this.roleModel.find({ rl_type: 'user' }).select('_id rl_name').lean()
+  async findAllRoleUser(): Promise<RoleDocument[]> {
+    return this.roleModel.find({ rl_type: 'user' }).select('_id rl_name')
   }
 }

@@ -12,7 +12,7 @@ export class AccountAuthGuard implements CanActivate {
     private readonly employeesService: EmployeesService
   ) {}
 
-  async canActivate(context: ExecutionContext): Promise<any> {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest()
     // throw new ForbiddenError('Token không hợp lệ1')
     // throw new UnauthorizedCodeError('Token không hợp lệ1', -10)

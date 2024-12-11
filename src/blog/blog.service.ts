@@ -8,6 +8,7 @@ import aqp from 'api-query-params'
 import { UpdateBlogDto } from './dto/update-blog.dto'
 import { UpdateStatusBlogDto } from './dto/update-status-blog.dto'
 import mongoose from 'mongoose'
+import { BlogDocument } from './model/blog.model'
 
 @Injectable()
 export class BlogService {
@@ -16,7 +17,7 @@ export class BlogService {
     private readonly tagBlogRepository: TagBlogRepository
   ) {}
 
-  async createBlog(createBlogDto: CreateBlogDto, account: IAccount) {
+  async createBlog(createBlogDto: CreateBlogDto, account: IAccount): Promise<BlogDocument> {
     const { blg_tag } = createBlogDto
     // Tìm tất cả các tag đã tồn tại dựa trên tên
     const existingTags = await this.tagBlogRepository.findTagsByName(blg_tag)
@@ -36,7 +37,10 @@ export class BlogService {
   async getBlogByRestaurant(
     { currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string },
     account: IAccount
-  ) {
+  ): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: BlogDocument[]
+  }> {
     currentPage = isNaN(currentPage) ? 1 : currentPage
     limit = isNaN(limit) ? 10 : limit
 
@@ -79,13 +83,13 @@ export class BlogService {
     }
   }
 
-  async getBlogById(_id: string, account: IAccount) {
+  async getBlogById(_id: string, account: IAccount): Promise<BlogDocument> {
     if (!_id) throw new BadRequestError('Blog này không tồn tại')
     if (mongoose.Types.ObjectId.isValid(_id) === false) throw new BadRequestError('Blog này không tồn tại')
     return await this.blogRepository.getBlogById(_id, account)
   }
 
-  async updateBlog(updateBlogDto: UpdateBlogDto, account: IAccount) {
+  async updateBlog(updateBlogDto: UpdateBlogDto, account: IAccount): Promise<BlogDocument> {
     const { blg_tag } = updateBlogDto
     // Tìm tất cả các tag đã tồn tại dựa trên tên
     const existingTags = await this.tagBlogRepository.findTagsByName(blg_tag)
@@ -106,7 +110,7 @@ export class BlogService {
     return await this.blogRepository.updateBlog({ ...updateBlogDto, blg_tag: tagIds }, account)
   }
 
-  async updateStatusBlog(updateStatusBlogDto: UpdateStatusBlogDto, account: IAccount) {
+  async updateStatusBlog(updateStatusBlogDto: UpdateStatusBlogDto, account: IAccount): Promise<BlogDocument> {
     const blogExist = await this.blogRepository.getBlogById(updateStatusBlogDto._id, account)
     if (!blogExist) {
       throw new BadRequestError('Blog không tồn tại')
@@ -114,7 +118,7 @@ export class BlogService {
     return await this.blogRepository.updateStatusBlog(updateStatusBlogDto, account)
   }
 
-  async deleteBlog(_id: string, account: IAccount) {
+  async deleteBlog(_id: string, account: IAccount): Promise<BlogDocument> {
     if (!_id) throw new BadRequestError('Blog này không tồn tại')
     if (mongoose.Types.ObjectId.isValid(_id) === false) throw new BadRequestError('Blog này không tồn tại')
     const blogExist = await this.blogRepository.getBlogById(_id, account)
@@ -124,7 +128,7 @@ export class BlogService {
     return await this.blogRepository.deleteBlog(_id, account)
   }
 
-  async restoreBlog(_id: string, account: IAccount) {
+  async restoreBlog(_id: string, account: IAccount): Promise<BlogDocument> {
     if (!_id) throw new BadRequestError('Blog này không tồn tại')
     if (mongoose.Types.ObjectId.isValid(_id) === false) throw new BadRequestError('Blog này không tồn tại')
     const blogExist = await this.blogRepository.getBlogById(_id, account)
@@ -137,7 +141,10 @@ export class BlogService {
   async getBlogRecycle(
     { currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string },
     account: IAccount
-  ) {
+  ): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: BlogDocument[]
+  }> {
     currentPage = isNaN(currentPage) ? 1 : currentPage
     limit = isNaN(limit) ? 10 : limit
 

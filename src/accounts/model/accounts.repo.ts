@@ -18,7 +18,7 @@ export class AccountRepository {
     account_type: 'restaurant' | 'employee'
     account_restaurant_id: string
     account_employee_id?: string
-  }) {
+  }): Promise<AccountsDocument> {
     return await this.accountModel.create({
       account_email,
       account_password,
@@ -28,17 +28,19 @@ export class AccountRepository {
     })
   }
 
-  async findAccountByIdRestaurant({ account_restaurant_id }: { account_restaurant_id: string }) {
-    return await this.accountModel
-      .findOne({ account_restaurant_id, account_type: 'restaurant', isDeleted: false })
-      .lean()
+  async findAccountByIdRestaurant({
+    account_restaurant_id
+  }: {
+    account_restaurant_id: string
+  }): Promise<AccountsDocument> {
+    return await this.accountModel.findOne({ account_restaurant_id, account_type: 'restaurant', isDeleted: false })
   }
 
-  async findAccoutById({ _id }: { _id: string }) {
+  async findAccoutById({ _id }: { _id: string }): Promise<AccountsDocument> {
     return await this.accountModel.findOne({ _id, isDeleted: false })
   }
 
-  async findAccountByIdEmployee({ account_employee_id, account_restaurant_id }) {
+  async findAccountByIdEmployee({ account_employee_id, account_restaurant_id }): Promise<AccountsDocument> {
     return await this.accountModel.findOne({ account_employee_id, account_restaurant_id, isDeleted: false })
   }
 }

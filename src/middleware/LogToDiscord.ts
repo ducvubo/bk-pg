@@ -31,7 +31,7 @@ class LoggerService {
     headerResponse?: any
     bodyResponse?: any
     params?: any
-  }) {
+  }): void {
     const { message, bodyRequest, bodyResponse, params } = logData
 
     const formattedMessage = {

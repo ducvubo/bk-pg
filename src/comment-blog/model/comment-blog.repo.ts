@@ -21,7 +21,7 @@ export class CommentBlogRepository {
     cmt_blg_image?: ImageUrl[]
     cmt_blg_content: string
     cmt_blg_parentId?: string
-  }) {
+  }): Promise<CommentBlogDocument> {
     const newCommentBlog = new this.commentBlogModel({
       cmt_blg_blog_id,
       cmt_blg_user_id,
@@ -87,7 +87,7 @@ export class CommentBlogRepository {
     cmt_blg_parentId?: string
     limit?: number
     offset?: number
-  }) {
+  }): Promise<CommentBlogDocument[]> {
     if (cmt_blg_parentId) {
       const parentComment = await this.commentBlogModel.findById(cmt_blg_parentId)
       if (!parentComment) throw new NotFoundError('Comment không tồn tại')
@@ -128,7 +128,7 @@ export class CommentBlogRepository {
     return comments
   }
 
-  async deleteCommentBlog({ cmt_blg_id, _id }: { cmt_blg_id: string; _id: string }) {
+  async deleteCommentBlog({ cmt_blg_id, _id }: { cmt_blg_id: string; _id: string }): Promise<boolean> {
     //check blog...
 
     // xác định giá trị left và right của comment

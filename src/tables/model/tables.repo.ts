@@ -11,7 +11,7 @@ import { Injectable } from '@nestjs/common'
 export class TableRepository {
   constructor(@InjectModel(Table.name) private tableModel: Model<TableDocument>) {}
 
-  async create(createTableDto: CreateTableDto, account: IAccount) {
+  async create(createTableDto: CreateTableDto, account: IAccount): Promise<TableDocument> {
     const { tbl_capacity, tbl_description, tbl_name } = createTableDto
     const { account_restaurant_id, account_employee_id, account_email } = account
 
@@ -29,15 +29,29 @@ export class TableRepository {
     })
   }
 
-  async findOneByName({ tbl_name, tbl_restaurant_id }) {
-    return await this.tableModel.findOne({ tbl_name, tbl_restaurant_id }).lean()
+  async findOneByName({
+    tbl_name,
+    tbl_restaurant_id
+  }: {
+    tbl_name: string
+    tbl_restaurant_id: string
+  }): Promise<TableDocument> {
+    return await this.tableModel.findOne({ tbl_name, tbl_restaurant_id })
   }
 
-  async findAllByNames({ tbl_name, tbl_restaurant_id, _id }) {
-    return await this.tableModel.find({ tbl_name, tbl_restaurant_id, _id: { $ne: _id } }).lean()
+  async findAllByNames({
+    tbl_name,
+    tbl_restaurant_id,
+    _id
+  }: {
+    tbl_name: string
+    tbl_restaurant_id: string
+    _id: string
+  }): Promise<TableDocument[]> {
+    return await this.tableModel.find({ tbl_name, tbl_restaurant_id, _id: { $ne: _id } })
   }
 
-  async totalItems(account: IAccount, isDeleted) {
+  async totalItems(account: IAccount, isDeleted: boolean): Promise<number> {
     return await this.tableModel
       .countDocuments({
         isDeleted,
@@ -46,7 +60,21 @@ export class TableRepository {
       .lean()
   }
 
-  async findAllPagination({ offset, defaultLimit, sort, population }, account: IAccount, isDeleted) {
+  async findAllPagination(
+    {
+      offset,
+      defaultLimit,
+      sort,
+      population
+    }: {
+      offset: number
+      defaultLimit: number
+      sort: any
+      population: any
+    },
+    account: IAccount,
+    isDeleted: boolean
+  ): Promise<TableDocument[]> {
     return this.tableModel
       .find({
         isDeleted,
@@ -60,11 +88,11 @@ export class TableRepository {
       .exec()
   }
 
-  async findOne({ _id, account }: { _id: string; account: IAccount }) {
-    return await this.tableModel.findOne({ _id, tbl_restaurant_id: account.account_restaurant_id }).lean()
+  async findOne({ _id, account }: { _id: string; account: IAccount }): Promise<TableDocument> {
+    return await this.tableModel.findOne({ _id, tbl_restaurant_id: account.account_restaurant_id })
   }
 
-  async update(updateTableDto: UpdateTableDto, account: IAccount) {
+  async update(updateTableDto: UpdateTableDto, account: IAccount): Promise<TableDocument> {
     const { _id, tbl_capacity, tbl_description, tbl_name } = updateTableDto
     const { account_restaurant_id, account_email } = account
 
@@ -83,7 +111,7 @@ export class TableRepository {
     )
   }
 
-  async remove(id: string, account: IAccount) {
+  async remove(id: string, account: IAccount): Promise<TableDocument> {
     return await this.tableModel.findOneAndUpdate(
       { _id: id, tbl_restaurant_id: account.account_restaurant_id },
       {
@@ -98,7 +126,7 @@ export class TableRepository {
     )
   }
 
-  async restore(id: string, account: IAccount) {
+  async restore(id: string, account: IAccount): Promise<TableDocument> {
     return await this.tableModel.findOneAndUpdate(
       { _id: id, tbl_restaurant_id: account.account_restaurant_id },
       {
@@ -110,7 +138,10 @@ export class TableRepository {
     )
   }
 
-  async updateStatus({ _id, tbl_status }: { _id: string; tbl_status: string }, account: IAccount) {
+  async updateStatus(
+    { _id, tbl_status }: { _id: string; tbl_status: string },
+    account: IAccount
+  ): Promise<TableDocument> {
     return await this.tableModel.findOneAndUpdate(
       { _id, tbl_restaurant_id: account.account_restaurant_id },
       {
@@ -124,7 +155,7 @@ export class TableRepository {
     )
   }
 
-  async updateToken(id: string, account: IAccount) {
+  async updateToken(id: string, account: IAccount): Promise<TableDocument> {
     return await this.tableModel.findOneAndUpdate(
       { _id: id, tbl_restaurant_id: account.account_restaurant_id },
       {
@@ -138,23 +169,29 @@ export class TableRepository {
     )
   }
 
-  async findOneByToken({ tbl_token, tbl_restaurant_id }: { tbl_token: string; tbl_restaurant_id: string }) {
-    return await this.tableModel.findOne({ tbl_token, tbl_restaurant_id }).lean()
+  async findOneByToken({
+    tbl_token,
+    tbl_restaurant_id
+  }: {
+    tbl_token: string
+    tbl_restaurant_id: string
+  }): Promise<TableDocument> {
+    return await this.tableModel.findOne({ tbl_token, tbl_restaurant_id })
   }
 
-  async updateStatusById({ _id, tbl_status }: { _id: string; tbl_status: string }) {
+  async updateStatusById({ _id, tbl_status }: { _id: string; tbl_status: string }): Promise<TableDocument> {
     return await this.tableModel.findOneAndUpdate({ _id }, { tbl_status }, { new: true })
   }
 
-  async findByName({ tbl_name }: { tbl_name: string }) {
+  async findByName({ tbl_name }: { tbl_name: string }): Promise<TableDocument[]> {
     return await this.tableModel.find({ tbl_name: { $regex: tbl_name, $options: 'i' } }).select('_id')
   }
 
-  async findOneById({ _id }: { _id: string }) {
+  async findOneById({ _id }: { _id: string }): Promise<TableDocument> {
     return await this.tableModel.findById({ _id })
   }
 
-  async totalItemsTableListOrder(filter, account: IAccount) {
+  async totalItemsTableListOrder(filter: any, account: IAccount): Promise<number> {
     const query: any = {
       tbl_restaurant_id: account.account_restaurant_id,
       ...filter
@@ -168,7 +205,10 @@ export class TableRepository {
     return totalItems
   }
 
-  async findPaginationTableListOrder({ offset, defaultLimit, sort, filter }, account: IAccount) {
+  async findPaginationTableListOrder(
+    { offset, defaultLimit, sort, filter },
+    account: IAccount
+  ): Promise<TableDocument[]> {
     const query: any = {
       tbl_restaurant_id: account.account_restaurant_id,
       ...filter

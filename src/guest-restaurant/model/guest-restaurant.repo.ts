@@ -9,7 +9,10 @@ import { IAccount } from 'src/accounts/accounts.interface'
 export class GuestRestaurantRepository {
   constructor(@InjectModel(GuestRestaurant.name) private guestRestaurantModel: Model<GuestRestaurantDocument>) {}
 
-  async loginGuestRestaurant(loginGuestRestaurantDto: LoginGuestRestaurantDto, refresh_token: string) {
+  async loginGuestRestaurant(
+    loginGuestRestaurantDto: LoginGuestRestaurantDto,
+    refresh_token: string
+  ): Promise<GuestRestaurantDocument> {
     const { guest_name, guest_restaurant_id, guest_table_id } = loginGuestRestaurantDto
 
     return await this.guestRestaurantModel.create({
@@ -21,22 +24,31 @@ export class GuestRestaurantRepository {
     })
   }
 
-  async findOneByRefreshToken({ guest_refresh_token }: { guest_refresh_token: string }) {
+  async findOneByRefreshToken({
+    guest_refresh_token
+  }: {
+    guest_refresh_token: string
+  }): Promise<GuestRestaurantDocument> {
     return await this.guestRestaurantModel
       .findOne({ guest_refresh_token })
       .select('guest_name guest_restaurant_id guest_table_id _id guest_type guest_owner')
-      .lean()
   }
 
-  async updateRefreshToken({ _id, guest_refresh_token }: { _id: string; guest_refresh_token: string }) {
+  async updateRefreshToken({
+    _id,
+    guest_refresh_token
+  }: {
+    _id: string
+    guest_refresh_token: string
+  }): Promise<GuestRestaurantDocument> {
     return await this.guestRestaurantModel.findByIdAndUpdate({ _id }, { guest_refresh_token })
   }
 
-  async findByName({ guest_name }: { guest_name: string }) {
+  async findByName({ guest_name }: { guest_name: string }): Promise<GuestRestaurantDocument[]> {
     return await this.guestRestaurantModel.find({ guest_name: { $regex: guest_name, $options: 'i' } }).select('_id')
   }
 
-  async findOneById({ _id }: { _id: string }) {
+  async findOneById({ _id }: { _id: string }): Promise<GuestRestaurantDocument> {
     return await this.guestRestaurantModel.findById({ _id })
   }
 
@@ -54,7 +66,7 @@ export class GuestRestaurantRepository {
     guest_table_id: string
     owner_id: string
     owner_name: string
-  }) {
+  }): Promise<GuestRestaurantDocument> {
     return await this.guestRestaurantModel.create({
       guest_name,
       guest_restaurant_id,
@@ -65,7 +77,7 @@ export class GuestRestaurantRepository {
     })
   }
 
-  async findListMember({ owner_id }: { owner_id: string }) {
+  async findListMember({ owner_id }: { owner_id: string }): Promise<GuestRestaurantDocument[]> {
     return await this.guestRestaurantModel
       .find({
         'guest_owner.owner_id': owner_id
@@ -96,7 +108,7 @@ export class GuestRestaurantRepository {
       _id: string
       email: string
     }
-  }) {
+  }): Promise<GuestRestaurantDocument> {
     return await this.guestRestaurantModel.create({
       guest_name: 'Nhân viên order',
       guest_restaurant_id,
@@ -108,15 +120,16 @@ export class GuestRestaurantRepository {
     })
   }
 
-  async totalItems(account: IAccount) {
-    return await this.guestRestaurantModel
-      .countDocuments({
-        guest_restaurant_id: account.account_restaurant_id
-      })
-      .lean()
+  async totalItems(account: IAccount): Promise<number> {
+    return await this.guestRestaurantModel.countDocuments({
+      guest_restaurant_id: account.account_restaurant_id
+    })
   }
 
-  async findAllPagination({ offset, defaultLimit, sort, population }, account: IAccount) {
+  async findAllPagination(
+    { offset, defaultLimit, sort, population },
+    account: IAccount
+  ): Promise<GuestRestaurantDocument[]> {
     return this.guestRestaurantModel
       .find({
         guest_restaurant_id: account.account_restaurant_id

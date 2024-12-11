@@ -6,6 +6,7 @@ import { AccountAuthGuard } from 'src/guard/accounts.guard'
 import { IAccount } from 'src/accounts/accounts.interface'
 import { UpdateTableDto } from './dto/update-table.dto'
 import { UpdateStatusTableDto } from './dto/update-status-table.dto'
+import { TableDocument } from './model/tables.model'
 
 @Controller('tables')
 export class TablesController {
@@ -14,7 +15,7 @@ export class TablesController {
   @Post()
   @ResponseMessage('Thêm bàn mới thành công')
   @UseGuards(AccountAuthGuard)
-  async create(@Body() createTableDto: CreateTableDto, @Acccount() account: IAccount) {
+  async create(@Body() createTableDto: CreateTableDto, @Acccount() account: IAccount): Promise<TableDocument> {
     return await this.tablesService.create(createTableDto, account)
   }
 
@@ -26,14 +27,17 @@ export class TablesController {
     @Query('pageSize') limit: string,
     @Query() qs: string,
     @Acccount() account: IAccount
-  ) {
+  ): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: TableDocument[]
+  }> {
     return await this.tablesService.findAllPagination({ currentPage: +currentPage, limit: +limit, qs }, account)
   }
 
   @Patch()
   @ResponseMessage('Cập nhật thông tin bàn thành công')
   @UseGuards(AccountAuthGuard)
-  async update(@Body() updateTableDto: UpdateTableDto, @Acccount() account: IAccount) {
+  async update(@Body() updateTableDto: UpdateTableDto, @Acccount() account: IAccount): Promise<TableDocument> {
     return await this.tablesService.update(updateTableDto, account)
   }
 
@@ -45,7 +49,10 @@ export class TablesController {
     @Query('pageSize') limit: string,
     @Query() qs: string,
     @Acccount() account: IAccount
-  ) {
+  ): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: TableDocument[]
+  }> {
     return await this.tablesService.getListTableOrder({ currentPage: +currentPage, limit: +limit, qs }, account)
   }
 
@@ -57,42 +64,48 @@ export class TablesController {
     @Query('pageSize') limit: string,
     @Query() qs: string,
     @Acccount() account: IAccount
-  ) {
+  ): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: TableDocument[]
+  }> {
     return await this.tablesService.findAllRecycle({ currentPage: +currentPage, limit: +limit, qs }, account)
   }
 
   @Patch('/update-status')
   @ResponseMessage('Cập nhật trạng thái bàn thành công')
   @UseGuards(AccountAuthGuard)
-  async updateStatus(@Body() updateStatusTableDto: UpdateStatusTableDto, @Acccount() account: IAccount) {
+  async updateStatus(
+    @Body() updateStatusTableDto: UpdateStatusTableDto,
+    @Acccount() account: IAccount
+  ): Promise<TableDocument> {
     return await this.tablesService.updateStatus(updateStatusTableDto, account)
   }
 
   @Patch('/update-token/:id')
   @ResponseMessage('Cập nhật mã qr bàn thành công')
   @UseGuards(AccountAuthGuard)
-  async updateToken(@Param('id') id: string, @Acccount() account: IAccount) {
+  async updateToken(@Param('id') id: string, @Acccount() account: IAccount): Promise<TableDocument> {
     return await this.tablesService.updateToken(id, account)
   }
 
   @Patch('/restore/:id')
   @ResponseMessage('Khôi phục bàn thành công')
   @UseGuards(AccountAuthGuard)
-  async restore(@Param('id') id: string, @Acccount() account: IAccount) {
+  async restore(@Param('id') id: string, @Acccount() account: IAccount): Promise<TableDocument> {
     return await this.tablesService.restore(id, account)
   }
 
   @Get('/:id')
   @ResponseMessage('Lấy thông tin bàn thành công')
   @UseGuards(AccountAuthGuard)
-  async findOne(@Param('id') id: string, @Acccount() account: IAccount) {
+  async findOne(@Param('id') id: string, @Acccount() account: IAccount): Promise<TableDocument> {
     return await this.tablesService.findOne(id, account)
   }
 
   @Delete('/:id')
   @ResponseMessage('Xóa bàn thành công')
   @UseGuards(AccountAuthGuard)
-  async remove(@Param('id') id: string, @Acccount() account: IAccount) {
+  async remove(@Param('id') id: string, @Acccount() account: IAccount): Promise<TableDocument> {
     return await this.tablesService.remove(id, account)
   }
 }

@@ -16,6 +16,7 @@ import { KEY_ACCESS_TOKEN_GUEST_RESTAURANT } from 'src/constants/key.redis'
 import mongoose from 'mongoose'
 import { IAccount } from 'src/accounts/accounts.interface'
 import aqp from 'api-query-params'
+import { GuestRestaurantDocument } from './model/guest-restaurant.model'
 
 @Injectable()
 export class GuestRestaurantService {
@@ -30,7 +31,7 @@ export class GuestRestaurantService {
     private readonly socketGateway: SocketGateway
   ) {}
 
-  signToken(data: any, type: 'access_token' | 'refresh_token') {
+  signToken(data: any, type: 'access_token' | 'refresh_token'): string {
     const token = this.jwtService.sign(data, {
       secret:
         type === 'access_token'
@@ -45,7 +46,7 @@ export class GuestRestaurantService {
     return token
   }
 
-  verifyToken(token: string, type: 'access_token' | 'refresh_token') {
+  verifyToken(token: string, type: 'access_token' | 'refresh_token'): any {
     try {
       const decoded = this.jwtService.verify(token, {
         secret:
@@ -59,7 +60,7 @@ export class GuestRestaurantService {
     }
   }
 
-  signTokenAdd(data: any) {
+  signTokenAdd(data: IGuest): string {
     const token = this.jwtService.sign(data, {
       secret: this.configService.get<string>('JWT_TOKEN_GUEST_ADD_MEMBER_SECRET'),
       expiresIn: this.configService.get<string>('JWT_TOKEN_GUEST_ADD_MEMBER_EXPIRE')
@@ -68,7 +69,7 @@ export class GuestRestaurantService {
     return token
   }
 
-  verifyTokenAdd(token: string) {
+  verifyTokenAdd(token: string): IGuest {
     try {
       const decoded = this.jwtService.verify(token, {
         secret: this.configService.get<string>('JWT_TOKEN_GUEST_ADD_MEMBER_SECRET')
@@ -79,7 +80,10 @@ export class GuestRestaurantService {
     }
   }
 
-  async loginGuestRestaurant(loginGuestRestaurantDto: LoginGuestRestaurantDto) {
+  async loginGuestRestaurant(loginGuestRestaurantDto: LoginGuestRestaurantDto): Promise<{
+    access_token_guest: string
+    refresh_token_guest: string
+  }> {
     const { guest_restaurant_id, guest_table_id, guest_name } = loginGuestRestaurantDto
     if (guest_name === 'Nhân viên order') throw new BadRequestError('Vui lòng nhập tên khác')
     const restaurant = await this.restaurantsService.findOneById({ _id: guest_restaurant_id })
@@ -169,7 +173,7 @@ export class GuestRestaurantService {
     return { access_token_guest, refresh_token_guest: refresh_token, infor: guest }
   }
 
-  async generateTokenAddMember(guest: IGuest) {
+  async generateTokenAddMember(guest: IGuest): Promise<string> {
     if (guest.guest_type !== 'owner') throw new BadRequestError('Chỉ chủ bàn mới có quyền thêm thành viên')
 
     const order = await this.orderDishSummaryRepository.findOneById({ _id: guest.order_id })
@@ -181,16 +185,22 @@ export class GuestRestaurantService {
       throw new BadRequestError('Bàn này đã từ chối order không thể thêm thành viên')
 
     const token = this.signTokenAdd({
-      guest_owner_id: guest._id,
+      guest_owner_id: guest._id.toString(),
       guest_restaurant_id: guest.guest_restaurant_id,
       guest_table_id: guest.guest_table_id,
-      order_id: order._id
+      order_id: order._id.toString(),
+      _id: guest._id.toString(),
+      guest_name: guest.guest_name,
+      guest_type: guest.guest_type
     })
 
     return token
   }
 
-  async addMember(addMemberDto: AddMemberDto) {
+  async addMember(addMemberDto: AddMemberDto): Promise<{
+    access_token_guest: string
+    refresh_token_guest: string
+  }> {
     const { token, guest_name } = addMemberDto
     if (guest_name === 'Nhân viên order') throw new BadRequestError('Vui lòng nhập tên khác')
     const decoded = this.verifyTokenAdd(token)
@@ -275,7 +285,7 @@ export class GuestRestaurantService {
     }
   }
 
-  async getToken({ _id }: { _id: string }) {
+  async getToken({ _id }: { _id: string }): Promise<{ refresh_token: string }> {
     if (!_id) throw new BadRequestError('Vị khách này không tồn tại, vui lòng thử lại sau ít phút')
     if (mongoose.Types.ObjectId.isValid(_id) === false)
       throw new BadRequestError('Vị khách này không tồn tại, vui lòng thử lại sau ít phút')
@@ -318,7 +328,10 @@ export class GuestRestaurantService {
   async listGuestRestaurant(
     { currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string },
     account: IAccount
-  ) {
+  ): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: GuestRestaurantDocument[]
+  }> {
     currentPage = isNaN(currentPage) ? 1 : currentPage
     limit = isNaN(limit) ? 10 : limit
 

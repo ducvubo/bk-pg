@@ -8,7 +8,7 @@ import { getCacheIO, setCacheIOExpiration } from 'src/utils/cache'
 @Injectable()
 export class CheckSignMiddleware implements NestMiddleware {
   constructor(private configService: ConfigService) {}
-  genSign(headerKey) {
+  genSign(headerKey: any): string {
     const keyToken = this.configService.get('KEY_TOKEN')
     const sortKeys = []
     for (const key in headerKey) {
@@ -25,7 +25,7 @@ export class CheckSignMiddleware implements NestMiddleware {
     return md5(headersString + keyToken + 'v1').toString()
   }
 
-  async use(req: Request, res: Response, next: NextFunction) {
+  async use(req: Request, res: Response, next: NextFunction): Promise<void> {
     // const keyToken = 'vuducbokeytoken'
     const signClient = req.headers['sign']
     const nonce = req.headers['nonce']

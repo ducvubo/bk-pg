@@ -5,7 +5,7 @@ import { Injectable } from '@nestjs/common'
 export class MailService {
   constructor(private mailerService: MailerService) {}
 
-  async sendUserConfirmation(email: string, otp: string) {
+  async sendUserConfirmation(email: string, otp: string): Promise<void> {
     await this.mailerService.sendMail({
       to: email,
       from: 'PASSGO',
@@ -18,7 +18,7 @@ export class MailService {
     })
   }
 
-  async sendPassword(email: string, password: string) {
+  async sendPassword(email: string, password: string): Promise<void> {
     await this.mailerService.sendMail({
       to: email,
       from: 'PASSGO',
@@ -30,7 +30,7 @@ export class MailService {
     })
   }
 
-  async sendResetPassword(email: string, otp) {
+  async sendResetPassword(email: string, otp: number): Promise<void> {
     await this.mailerService.sendMail({
       to: email,
       from: 'PASSGO',

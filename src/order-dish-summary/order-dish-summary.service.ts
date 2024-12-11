@@ -11,6 +11,7 @@ import { deleteCacheIO } from 'src/utils/cache'
 import { KEY_ACCESS_TOKEN_GUEST_RESTAURANT } from 'src/constants/key.redis'
 import { SocketGateway } from 'src/socket/socket.gateway'
 import mongoose from 'mongoose'
+import { OrderDishSummaryDocument } from './model/order-dish-summary.model'
 
 @Injectable()
 export class OrderDishSummaryService {
@@ -27,7 +28,10 @@ export class OrderDishSummaryService {
   async listOrderRestaurant(
     { currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string },
     account: IAccount
-  ) {
+  ): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number; statusCount: any }
+    result: any[]
+  }> {
     currentPage = isNaN(currentPage) ? 1 : currentPage
     limit = isNaN(limit) ? 8 : limit
 
@@ -84,7 +88,10 @@ export class OrderDishSummaryService {
     }
   }
 
-  async updateStatusOrderDishSummay(updateStatusOrderSummaryDto: UpdateStatusOrderSummaryDto, account: IAccount) {
+  async updateStatusOrderDishSummay(
+    updateStatusOrderSummaryDto: UpdateStatusOrderSummaryDto,
+    account: IAccount
+  ): Promise<OrderDishSummaryDocument> {
     const { _id } = updateStatusOrderSummaryDto
     const order = await this.orderDishSummaryRepository.findOneById({ _id })
     if (!order) throw new BadRequestError('Đơn hàng không tồn tại, vui lòng thử lại sau ít phút')
@@ -106,11 +113,11 @@ export class OrderDishSummaryService {
     return update
   }
 
-  async listOrdering(account: IAccount) {
+  async listOrdering(account: IAccount): Promise<OrderDishSummaryDocument[]> {
     return await this.orderDishSummaryRepository.listOrdering(account)
   }
 
-  async createOrderDishSummary(od_dish_smr_table_id: string, account: IAccount) {
+  async createOrderDishSummary(od_dish_smr_table_id: string, account: IAccount): Promise<OrderDishSummaryDocument> {
     if (!od_dish_smr_table_id) throw new BadRequestError('Bàn không tồn tại, vui lòng thử lại sau ít phút')
     if (mongoose.Types.ObjectId.isValid(od_dish_smr_table_id) === false)
       throw new BadRequestError('Bàn không tồn tại, vui lòng thử lại sau ít phút')
@@ -147,7 +154,10 @@ export class OrderDishSummaryService {
     { currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string },
     od_dish_smr_table_id: string,
     account: IAccount
-  ) {
+  ): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: OrderDishSummaryDocument[]
+  }> {
     if (!od_dish_smr_table_id || typeof od_dish_smr_table_id !== 'string') {
       throw new BadRequestError('Bàn không tồn tại, vui lòng thử lại sau ít phút')
     }

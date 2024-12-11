@@ -6,7 +6,7 @@ import { ForbiddenError, UnauthorizedCodeError } from 'src/utils/errorResponse'
 export class UserAuthGuard implements CanActivate {
   constructor(private usersService: UsersService) {}
 
-  async canActivate(context: ExecutionContext): Promise<any> {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest()
     const access_token = request.headers['x-at-tk'] ? request.headers['x-at-tk'].split(' ')[1] : null
     const refresh_token = request.headers['x-rf-tk'] ? request.headers['x-rf-tk'].split(' ')[1] : null

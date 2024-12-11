@@ -4,6 +4,7 @@ import { Acccount, ResponseMessage } from 'src/decorator/customize'
 import { AccountAuthGuard } from 'src/guard/accounts.guard'
 import { IAccount } from 'src/accounts/accounts.interface'
 import { UpdateStatusOrderSummaryDto } from './dto/update-status-summary.dto'
+import { OrderDishSummaryDocument } from './model/order-dish-summary.model'
 
 @Controller('order-dish-summary')
 export class OrderDishSummaryController {
@@ -17,7 +18,10 @@ export class OrderDishSummaryController {
     @Query('pageSize') limit: string,
     @Query() qs: string,
     @Acccount() account: IAccount
-  ) {
+  ): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number; statusCount: any }
+    result: any[]
+  }> {
     return await this.orderDishSummaryService.listOrderRestaurant(
       { currentPage: +currentPage, limit: +limit, qs },
       account
@@ -30,14 +34,14 @@ export class OrderDishSummaryController {
   async updateStatusOrderDish(
     @Body() updateStatusOrderSummaryDto: UpdateStatusOrderSummaryDto,
     @Acccount() account: IAccount
-  ) {
+  ): Promise<OrderDishSummaryDocument> {
     return this.orderDishSummaryService.updateStatusOrderDishSummay(updateStatusOrderSummaryDto, account)
   }
 
   @Get('/list-ordering')
   @ResponseMessage('Danh sách đang order')
   @UseGuards(AccountAuthGuard)
-  async listOrdering(@Acccount() account: IAccount) {
+  async listOrdering(@Acccount() account: IAccount): Promise<OrderDishSummaryDocument[]> {
     return await this.orderDishSummaryService.listOrdering(account)
   }
 
@@ -47,7 +51,7 @@ export class OrderDishSummaryController {
   async createOrderDishSummary(
     @Body('od_dish_smr_table_id') od_dish_smr_table_id: string,
     @Acccount() account: IAccount
-  ) {
+  ): Promise<OrderDishSummaryDocument> {
     return await this.orderDishSummaryService.createOrderDishSummary(od_dish_smr_table_id, account)
   }
 
@@ -60,7 +64,10 @@ export class OrderDishSummaryController {
     @Query('pageSize') limit: string,
     @Query() qs: string,
     @Acccount() account: IAccount
-  ) {
+  ): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: OrderDishSummaryDocument[]
+  }> {
     return await this.orderDishSummaryService.listOrderSummaryByTable(
       { currentPage: +currentPage, limit: +limit, qs },
       od_dish_smr_table_id,

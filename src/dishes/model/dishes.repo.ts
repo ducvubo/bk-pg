@@ -8,15 +8,15 @@ import { UpdateDishDto } from '../dto/update-dish.dto'
 export class DishRepository {
   constructor(@InjectModel(Dish.name) private DishModel: Model<DishDocument>) {}
 
-  async findOneByName({ dish_name, dish_restaurant_id }) {
-    return await this.DishModel.findOne({ dish_name, dish_restaurant_id }).lean()
+  async findOneByName({ dish_name, dish_restaurant_id }): Promise<DishDocument> {
+    return await this.DishModel.findOne({ dish_name, dish_restaurant_id })
   }
 
-  async findAllByNames({ dish_name, dish_restaurant_id, _id }) {
-    return await this.DishModel.find({ dish_name, dish_restaurant_id, _id: { $ne: _id } }).lean()
+  async findAllByNames({ dish_name, dish_restaurant_id, _id }): Promise<DishDocument[]> {
+    return await this.DishModel.find({ dish_name, dish_restaurant_id, _id: { $ne: _id } })
   }
 
-  async createDish(createDishDto: CreateDishDto, account: IAccount) {
+  async createDish(createDishDto: CreateDishDto, account: IAccount): Promise<DishDocument> {
     const {
       dish_name,
       dish_description,
@@ -47,14 +47,18 @@ export class DishRepository {
     })
   }
 
-  async totalItems(account: IAccount, isDeleted) {
+  async totalItems(account: IAccount, isDeleted: boolean): Promise<number> {
     return await this.DishModel.countDocuments({
       isDeleted,
       dish_restaurant_id: account.account_restaurant_id
     }).lean()
   }
 
-  async findAllPagination({ offset, defaultLimit, sort, population }, account: IAccount, isDeleted) {
+  async findAllPagination(
+    { offset, defaultLimit, sort, population },
+    account: IAccount,
+    isDeleted: boolean
+  ): Promise<DishDocument[]> {
     return this.DishModel.find({
       isDeleted,
       dish_restaurant_id: account.account_restaurant_id
@@ -67,11 +71,11 @@ export class DishRepository {
       .exec()
   }
 
-  async findOneById({ _id, account }: { _id: string; account: IAccount }) {
-    return await this.DishModel.findOne({ _id, dish_restaurant_id: account.account_restaurant_id }).lean()
+  async findOneById({ _id, account }: { _id: string; account: IAccount }): Promise<DishDocument> {
+    return await this.DishModel.findOne({ _id, dish_restaurant_id: account.account_restaurant_id })
   }
 
-  async update(updateDishDto: UpdateDishDto, account: IAccount) {
+  async update(updateDishDto: UpdateDishDto, account: IAccount): Promise<DishDocument> {
     const {
       _id,
       dish_name,
@@ -105,7 +109,7 @@ export class DishRepository {
     )
   }
 
-  async remove(id: string, account: IAccount) {
+  async remove(id: string, account: IAccount): Promise<DishDocument> {
     return await this.DishModel.findOneAndUpdate(
       { _id: id, dish_restaurant_id: account.account_restaurant_id },
       {
@@ -120,7 +124,7 @@ export class DishRepository {
     )
   }
 
-  async restore(id: string, account: IAccount) {
+  async restore(id: string, account: IAccount): Promise<DishDocument> {
     return await this.DishModel.findOneAndUpdate(
       { _id: id, dish_restaurant_id: account.account_restaurant_id },
       {
@@ -132,7 +136,7 @@ export class DishRepository {
     )
   }
 
-  async updateStatus({ _id, dish_status }, account: IAccount) {
+  async updateStatus({ _id, dish_status }, account: IAccount): Promise<DishDocument> {
     return await this.DishModel.findOneAndUpdate(
       { _id, dish_restaurant_id: account.account_restaurant_id },
       {
@@ -146,17 +150,17 @@ export class DishRepository {
     )
   }
 
-  async findAllDishOrder({ dish_restaurant_id }: { dish_restaurant_id: string }) {
-    return await this.DishModel.find({ dish_restaurant_id, dish_status: 'enable', isDeleted: false })
-      .select('-updatedAt -createdAt -__v -createdBy -updatedBy -isDeleted -deletedAt -deletedBy -dish_status')
-      .lean()
+  async findAllDishOrder({ dish_restaurant_id }: { dish_restaurant_id: string }): Promise<DishDocument[]> {
+    return await this.DishModel.find({ dish_restaurant_id, dish_status: 'enable', isDeleted: false }).select(
+      '-updatedAt -createdAt -__v -createdBy -updatedBy -isDeleted -deletedAt -deletedBy -dish_status'
+    )
   }
 
   // async findOne({ _id }: { _id: string }, session: any = null) {
   //   return await this.DishModel.findOne({ _id, dish_status: 'enable' }).session(session).lean()
   // }
 
-  async findOne({ _id }: { _id: string }) {
-    return await this.DishModel.findOne({ _id, dish_status: 'enable' }).lean()
+  async findOne({ _id }: { _id: string }): Promise<DishDocument> {
+    return await this.DishModel.findOne({ _id, dish_status: 'enable' })
   }
 }

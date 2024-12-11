@@ -11,6 +11,7 @@ import { GuestRestaurantRepository } from 'src/guest-restaurant/model/guest-rest
 import { OrderDishSummaryRepository } from 'src/order-dish-summary/model/order-dish-summary.repo'
 import { deleteCacheIO } from 'src/utils/cache'
 import { KEY_ACCESS_TOKEN_GUEST_RESTAURANT } from 'src/constants/key.redis'
+import { TableDocument } from './model/tables.model'
 
 @Injectable()
 export class TablesService {
@@ -20,7 +21,7 @@ export class TablesService {
     private readonly orderDishSummaryRepository: OrderDishSummaryRepository
   ) {}
 
-  async create(createTableDto: CreateTableDto, account: IAccount) {
+  async create(createTableDto: CreateTableDto, account: IAccount): Promise<TableDocument> {
     const { tbl_name } = createTableDto
     const { account_restaurant_id } = account
     const table = await this.tableRepository.findOneByName({ tbl_name, tbl_restaurant_id: account_restaurant_id })
@@ -36,7 +37,10 @@ export class TablesService {
   async findAllPagination(
     { currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string },
     account: IAccount
-  ) {
+  ): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: TableDocument[]
+  }> {
     currentPage = isNaN(currentPage) ? 1 : currentPage
     limit = isNaN(limit) ? 10 : limit
 
@@ -77,13 +81,13 @@ export class TablesService {
     }
   }
 
-  async findOne(id: string, account: IAccount) {
+  async findOne(id: string, account: IAccount): Promise<TableDocument> {
     if (!id) throw new BadRequestError('Bàn này không tồn tại')
     if (mongoose.Types.ObjectId.isValid(id) === false) throw new BadRequestError('Bàn này không tồn tại')
     return await this.tableRepository.findOne({ _id: id, account })
   }
 
-  async update(updateTableDto: UpdateTableDto, account: IAccount) {
+  async update(updateTableDto: UpdateTableDto, account: IAccount): Promise<TableDocument> {
     const { _id } = updateTableDto
     const table = await this.tableRepository.findOne({ _id, account })
     if (!table) throw new BadRequestError('Bàn này không tồn tại')
@@ -100,7 +104,7 @@ export class TablesService {
     return await this.tableRepository.update(updateTableDto, account)
   }
 
-  async remove(id: string, account: IAccount) {
+  async remove(id: string, account: IAccount): Promise<TableDocument> {
     if (!id) throw new BadRequestError('Bàn này không tồn tại')
     if (mongoose.Types.ObjectId.isValid(id) === false) throw new BadRequestError('Bàn này không tồn tại')
     const table = await this.tableRepository.findOne({ _id: id, account })
@@ -112,7 +116,10 @@ export class TablesService {
   async findAllRecycle(
     { currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string },
     account: IAccount
-  ) {
+  ): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: TableDocument[]
+  }> {
     currentPage = isNaN(currentPage) ? 1 : currentPage
     limit = isNaN(limit) ? 10 : limit
 
@@ -153,7 +160,7 @@ export class TablesService {
     }
   }
 
-  async restore(id: string, account: IAccount) {
+  async restore(id: string, account: IAccount): Promise<TableDocument> {
     if (!id) throw new BadRequestError('Bàn này không tồn tại')
     if (mongoose.Types.ObjectId.isValid(id) === false) throw new BadRequestError('Bàn này không tồn tại')
     const table = await this.tableRepository.findOne({ _id: id, account })
@@ -162,7 +169,7 @@ export class TablesService {
     return await this.tableRepository.restore(id, account)
   }
 
-  async updateStatus(updateStatusTableDto: UpdateStatusTableDto, account: IAccount) {
+  async updateStatus(updateStatusTableDto: UpdateStatusTableDto, account: IAccount): Promise<TableDocument> {
     const { _id } = updateStatusTableDto
     const table = await this.tableRepository.findOne({ _id, account })
     if (!table) throw new BadRequestError('Bàn này không tồn tại')
@@ -172,7 +179,7 @@ export class TablesService {
     return await this.tableRepository.updateStatus(updateStatusTableDto, account)
   }
 
-  async updateToken(id: string, account: IAccount) {
+  async updateToken(id: string, account: IAccount): Promise<TableDocument> {
     if (!id) throw new BadRequestError('Bàn này không tồn tại')
     if (mongoose.Types.ObjectId.isValid(id) === false) throw new BadRequestError('Bàn này không tồn tại')
     const table = await this.tableRepository.findOne({ _id: id, account })
@@ -191,22 +198,31 @@ export class TablesService {
     return await this.tableRepository.updateToken(id, account)
   }
 
-  async findOneByToken({ tbl_token, tbl_restaurant_id }: { tbl_token: string; tbl_restaurant_id: string }) {
+  async findOneByToken({
+    tbl_token,
+    tbl_restaurant_id
+  }: {
+    tbl_token: string
+    tbl_restaurant_id: string
+  }): Promise<TableDocument> {
     return await this.tableRepository.findOneByToken({ tbl_token, tbl_restaurant_id })
   }
 
-  async updateStatusById({ _id, tbl_status }: { _id: string; tbl_status: string }) {
+  async updateStatusById({ _id, tbl_status }: { _id: string; tbl_status: string }): Promise<TableDocument> {
     return await this.tableRepository.updateStatusById({ _id, tbl_status })
   }
 
-  async findOneById({ _id }: { _id: string }) {
+  async findOneById({ _id }: { _id: string }): Promise<TableDocument> {
     return await this.tableRepository.findOneById({ _id })
   }
 
   async getListTableOrder(
     { currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string },
     account: IAccount
-  ) {
+  ): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: any
+  }> {
     currentPage = isNaN(currentPage) ? 1 : currentPage
     limit = isNaN(limit) ? 8 : limit
 

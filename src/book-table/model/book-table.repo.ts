@@ -10,7 +10,7 @@ import { UpdateStatusBookTableDto } from '../dto/update-status-book-table.dto'
 export class BookTableRepository {
   constructor(@InjectModel(BookTable.name) private bookTableModel: Model<BookTableDocument>) {}
 
-  async createBookTable(createBookTableDto: CreateBookTableDto) {
+  async createBookTable(createBookTableDto: CreateBookTableDto): Promise<BookTableDocument> {
     const {
       book_tb_user_id,
       book_tb_guest_id,
@@ -47,15 +47,15 @@ export class BookTableRepository {
     })
   }
 
-  async createTokenVerify({ _id, token_verify }: { _id: string; token_verify: string }) {
+  async createTokenVerify({ _id, token_verify }: { _id: string; token_verify: string }): Promise<BookTableDocument> {
     return await this.bookTableModel.findByIdAndUpdate(_id, { book_tb_token_verify: token_verify }, { new: true })
   }
 
-  async findBookTableNoVerify() {
+  async findBookTableNoVerify(): Promise<BookTableDocument[]> {
     return await this.bookTableModel.find({ book_tb_status: 'Chờ người đặt xác nhận' }).lean().select('createdAt _id')
   }
 
-  async updateCancelBookTable({ _id }) {
+  async updateCancelBookTable({ _id }): Promise<BookTableDocument> {
     return await this.bookTableModel.findByIdAndUpdate(
       _id,
       {
@@ -73,11 +73,11 @@ export class BookTableRepository {
     )
   }
 
-  async findBookTableById({ _id }: { _id: string }) {
-    return await this.bookTableModel.findOne({ _id }).lean()
+  async findBookTableById({ _id }: { _id: string }): Promise<BookTableDocument> {
+    return await this.bookTableModel.findOne({ _id })
   }
 
-  async confirmBookTable({ _id }: { _id: string }) {
+  async confirmBookTable({ _id }: { _id: string }): Promise<BookTableDocument> {
     return await this.bookTableModel.findByIdAndUpdate(
       _id,
       {
@@ -95,15 +95,15 @@ export class BookTableRepository {
     )
   }
 
-  async findBookTableWithGuest(book_tb_guest_id) {
-    return await this.bookTableModel.find({ book_tb_guest_id }).lean()
+  async findBookTableWithGuest(book_tb_guest_id: string): Promise<BookTableDocument[]> {
+    return await this.bookTableModel.find({ book_tb_guest_id })
   }
 
-  async updateBookTableGuestOfUser({ _id, book_tb_user_id }) {
+  async updateBookTableGuestOfUser({ _id, book_tb_user_id }): Promise<BookTableDocument> {
     return await this.bookTableModel.findByIdAndUpdate(_id, { book_tb_user_id }, { new: true })
   }
 
-  async totalItemsBooTableRestaurant(filter, account: IAccount) {
+  async totalItemsBooTableRestaurant(filter: any, account: IAccount): Promise<number> {
     const toDate = new Date(filter.toDate) // Chuyển đổi thành Date
     const fromDate = new Date(filter.fromDate)
     return await this.bookTableModel
@@ -117,7 +117,10 @@ export class BookTableRepository {
       .lean()
   }
 
-  async findPaginationBooTableRestaurant({ offset, defaultLimit, sort, filter }, account: IAccount) {
+  async findPaginationBooTableRestaurant(
+    { offset, defaultLimit, sort, filter },
+    account: IAccount
+  ): Promise<BookTableDocument[]> {
     const toDate = new Date(filter.toDate) // Chuyển đổi thành Date
     const fromDate = new Date(filter.fromDate)
     return await this.bookTableModel
@@ -135,24 +138,25 @@ export class BookTableRepository {
       .exec()
   }
 
-  async findOneById({ _id }: { _id: string }) {
-    return await this.bookTableModel.findOne({ _id }).lean()
+  async findOneById({ _id }: { _id: string }): Promise<BookTableDocument> {
+    return await this.bookTableModel.findOne({ _id })
   }
 
-  async updateStatusBookTable(updateStatusBookTableDto: UpdateStatusBookTableDto, account: IAccount) {
+  async updateStatusBookTable(
+    updateStatusBookTableDto: UpdateStatusBookTableDto,
+    account: IAccount
+  ): Promise<BookTableDocument> {
     const { _id, book_tb_status } = updateStatusBookTableDto
-    return await this.bookTableModel
-      .findByIdAndUpdate(
-        _id,
-        {
-          book_tb_status,
-          updatedBy: {
-            _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
-            email: account.account_email
-          }
-        },
-        { new: true }
-      )
-      .lean()
+    return await this.bookTableModel.findByIdAndUpdate(
+      _id,
+      {
+        book_tb_status,
+        updatedBy: {
+          _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
+          email: account.account_email
+        }
+      },
+      { new: true }
+    )
   }
 }

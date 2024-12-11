@@ -7,6 +7,7 @@ import { TableRepository } from 'src/tables/model/tables.repo'
 import { IAccount } from 'src/accounts/accounts.interface'
 import { OrderDishRepository } from 'src/order-dish/model/order-dish.repo'
 import { UpdateStatusOrderSummaryDto } from '../dto/update-status-summary.dto'
+import { TableDocument } from 'src/tables/model/tables.model'
 
 @Injectable()
 export class OrderDishSummaryRepository {
@@ -27,7 +28,7 @@ export class OrderDishSummaryRepository {
     od_dish_smr_restaurant_id: string
     od_dish_smr_guest_id: string
     od_dish_smr_table_id: string
-  }) {
+  }): Promise<OrderDishSummaryDocument> {
     return this.orderDishSumaryModel.create({
       od_dish_smr_restaurant_id,
       od_dish_smr_guest_id,
@@ -36,15 +37,25 @@ export class OrderDishSummaryRepository {
     })
   }
 
-  async findOneByGuestId({ od_dish_smr_guest_id }: { od_dish_smr_guest_id: string }) {
+  async findOneByGuestId({
+    od_dish_smr_guest_id
+  }: {
+    od_dish_smr_guest_id: string
+  }): Promise<OrderDishSummaryDocument> {
     return this.orderDishSumaryModel.findOne({ od_dish_smr_guest_id })
   }
 
-  async findOneById({ _id }: { _id: string }) {
-    return this.orderDishSumaryModel.findOne({ _id }).populate('od_dish_smr_guest_id').lean()
+  async findOneById({ _id }: { _id: string }): Promise<OrderDishSummaryDocument> {
+    return this.orderDishSumaryModel.findOne({ _id }).populate('od_dish_smr_guest_id')
   }
 
-  async totalItemsListOrderRestaurant(filter, account: IAccount) {
+  async totalItemsListOrderRestaurant(
+    filter: any,
+    account: IAccount
+  ): Promise<{
+    totalItems: number
+    statusCounts: { status: string; count: number }[]
+  }> {
     const toDate = new Date(filter.toDate) // Chuyển đổi thành Date
     const fromDate = new Date(filter.fromDate)
     const cloneFilter = { ...filter }
@@ -175,7 +186,7 @@ export class OrderDishSummaryRepository {
     }
   }
 
-  async findPaginationListOrderRestaurant({ offset, defaultLimit, sort, filter }, account: IAccount) {
+  async findPaginationListOrderRestaurant({ offset, defaultLimit, sort, filter }, account: IAccount): Promise<any> {
     const toDate = new Date(filter.toDate) // Chuyển đổi thành Date
     const fromDate = new Date(filter.fromDate)
     delete filter.toDate
@@ -188,7 +199,7 @@ export class OrderDishSummaryRepository {
     }
 
     if (filter.tbl_name) {
-      const table = await this.tableRepository.findByName({ tbl_name: filter.tbl_name }) // Tìm kiếm guest theo tên
+      const table: TableDocument[] = await this.tableRepository.findByName({ tbl_name: filter.tbl_name }) // Tìm kiếm guest theo tên
       const tableId = table.map((table) => table._id) // Lấy danh sách ID của các guest
       filter.od_dish_smr_table_id = { $in: tableId } // Thêm điều kiện lọc cho od_dish_guest_id
       delete filter.tbl_name // Xóa guest_name khỏi filter để không bị lỗi
@@ -235,7 +246,10 @@ export class OrderDishSummaryRepository {
     return orderSummariesWithDishes
   }
 
-  async updateStatusOrderDishSummary(updateStatusOrderSummaryDto: UpdateStatusOrderSummaryDto, account: IAccount) {
+  async updateStatusOrderDishSummary(
+    updateStatusOrderSummaryDto: UpdateStatusOrderSummaryDto,
+    account: IAccount
+  ): Promise<OrderDishSummaryDocument> {
     const { _id, od_dish_smr_status } = updateStatusOrderSummaryDto
     return this.orderDishSumaryModel.findOneAndUpdate(
       { _id, od_dish_smr_restaurant_id: account.account_restaurant_id },
@@ -256,11 +270,11 @@ export class OrderDishSummaryRepository {
   }: {
     od_dish_smr_table_id: string
     od_dish_smr_status: 'paid' | 'refuse' | 'ordering'
-  }) {
+  }): Promise<OrderDishSummaryDocument[]> {
     return this.orderDishSumaryModel.find({ od_dish_smr_table_id, od_dish_smr_status })
   }
 
-  async listOrdering(account: IAccount) {
+  async listOrdering(account: IAccount): Promise<OrderDishSummaryDocument[]> {
     return this.orderDishSumaryModel
       .find({
         od_dish_smr_restaurant_id: account.account_restaurant_id,
@@ -268,7 +282,6 @@ export class OrderDishSummaryRepository {
       })
       .populate('od_dish_smr_guest_id')
       .populate('od_dish_smr_table_id')
-      .lean()
   }
 
   async restaurantCreayeOrderDishSummary({
@@ -284,7 +297,7 @@ export class OrderDishSummaryRepository {
       _id: string
       email: string
     }
-  }) {
+  }): Promise<OrderDishSummaryDocument> {
     return this.orderDishSumaryModel.create({
       od_dish_smr_restaurant_id,
       od_dish_smr_guest_id,
@@ -294,7 +307,17 @@ export class OrderDishSummaryRepository {
     })
   }
 
-  async findOrderSummaryByTableId({ od_dish_smr_table_id }: { od_dish_smr_table_id: string }) {
+  async findOrderSummaryByTableId({
+    od_dish_smr_table_id
+  }: {
+    od_dish_smr_table_id: string
+    //viết kiểu trả về
+  }): Promise<{
+    paidCount: number
+    refuseCount: number
+    orderingCount: number
+    totalGuest: number
+  }> {
     // Tìm tất cả các OrderDishSummary có cùng od_dish_smr_table_id
     const orders = await this.orderDishSumaryModel.find({
       od_dish_smr_table_id: od_dish_smr_table_id
@@ -328,13 +351,13 @@ export class OrderDishSummaryRepository {
     }
   }
 
-  async totalItemsListOrderSummary(filter, account: IAccount) {
+  async totalItemsListOrderSummary(filter: any, account: IAccount): Promise<number> {
     return await this.orderDishSumaryModel.countDocuments({
       od_dish_smr_restaurant_id: account.account_restaurant_id,
       ...filter
     })
   }
-  async findPaginationListOrderSummary({ offset, defaultLimit, sort, filter }, account: IAccount) {
+  async findPaginationListOrderSummary({ offset, defaultLimit, sort, filter }, account: IAccount): Promise<any> {
     const result = await this.orderDishSumaryModel
       .find({
         od_dish_smr_restaurant_id: account.account_restaurant_id,

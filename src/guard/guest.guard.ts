@@ -8,7 +8,7 @@ import { UnauthorizedCodeError } from 'src/utils/errorResponse'
 export class GuestRestaurantAuthGuard implements CanActivate {
   constructor(private guestRestaurantService: GuestRestaurantService) {}
 
-  async canActivate(context: ExecutionContext): Promise<any> {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest()
     const access_token = request.headers['x-at-guest'] ? request.headers['x-at-guest'].split(' ')[1] : null
     const refresh_token = request.headers['x-rf-guest'] ? request.headers['x-rf-guest'].split(' ')[1] : null

@@ -89,7 +89,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   //   }
   // }
 
-  async handleConnection(socket: Socket) {
+  async handleConnection(socket: Socket): Promise<void | any> {
     const authHeader = socket.handshake.auth.authorization?.split(' ')[1]
     const type = socket.handshake.auth.type
 
@@ -115,7 +115,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }
   }
 
-  private async handleGuestConnection(socket: Socket, authHeader: string) {
+  private async handleGuestConnection(socket: Socket, authHeader: string): Promise<void> {
     try {
       socket.data = this.guestRestaurantService.verifyToken(authHeader, 'access_token')
       socket.join(`${KEY_SOCKET_GUEST_ORDER_DISH_SUMMARY_ID}:${socket.data.order_id}`)
@@ -125,7 +125,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }
   }
 
-  private async handleRestaurantConnection(socket: Socket, authHeader: string, refresh_token: string) {
+  private async handleRestaurantConnection(socket: Socket, authHeader: string, refresh_token: string): Promise<void> {
     const { rf_public_key_refresh_token, rf_public_key_access_token } = await this.accountsService.findRefreshToken({
       rf_refresh_token: refresh_token
     })

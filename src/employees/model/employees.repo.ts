@@ -10,7 +10,7 @@ import { Injectable } from '@nestjs/common'
 export class EmloyeeRepository {
   constructor(@InjectModel(Employee.name) private employeeModel: Model<EmployeeDocument>) {}
 
-  async create(createEmployeeDto: CreateEmployeeDto, account: IAccount) {
+  async create(createEmployeeDto: CreateEmployeeDto, account: IAccount): Promise<EmployeeDocument> {
     const { epl_email, epl_name, epl_address, epl_phone, epl_gender, epl_avatar } = createEmployeeDto
     const { account_email, account_restaurant_id } = account
     return await this.employeeModel.create({
@@ -28,11 +28,11 @@ export class EmloyeeRepository {
     })
   }
 
-  async findOneByCreate({ epl_email, epl_restaurant_id }) {
-    return await this.employeeModel.findOne({ epl_email, epl_restaurant_id }).lean()
+  async findOneByCreate({ epl_email, epl_restaurant_id }): Promise<EmployeeDocument> {
+    return await this.employeeModel.findOne({ epl_email, epl_restaurant_id })
   }
 
-  async totalItems(account: IAccount, isDeleted) {
+  async totalItems(account: IAccount, isDeleted: boolean): Promise<number> {
     return await this.employeeModel
       .countDocuments({
         isDeleted,
@@ -41,7 +41,11 @@ export class EmloyeeRepository {
       .lean()
   }
 
-  async findAllPagination({ offset, defaultLimit, sort, population }, account: IAccount, isDeleted) {
+  async findAllPagination(
+    { offset, defaultLimit, sort, population },
+    account: IAccount,
+    isDeleted: boolean
+  ): Promise<EmployeeDocument[]> {
     return this.employeeModel
       .find({
         isDeleted,
@@ -55,11 +59,11 @@ export class EmloyeeRepository {
       .exec()
   }
 
-  async findOneById({ _id, account }: { _id: string; account: IAccount }) {
-    return await this.employeeModel.findOne({ _id, epl_restaurant_id: account.account_restaurant_id }).lean()
+  async findOneById({ _id, account }: { _id: string; account: IAccount }): Promise<EmployeeDocument> {
+    return await this.employeeModel.findOne({ _id, epl_restaurant_id: account.account_restaurant_id })
   }
 
-  async update(updateEmployeeDto: UpdateEmployeeDto, account: IAccount) {
+  async update(updateEmployeeDto: UpdateEmployeeDto, account: IAccount): Promise<EmployeeDocument> {
     const { _id, epl_address, epl_avatar, epl_email, epl_gender, epl_name, epl_phone } = updateEmployeeDto
     const { account_email, account_restaurant_id } = account
     return await this.employeeModel.findOneAndUpdate(
@@ -80,7 +84,7 @@ export class EmloyeeRepository {
     )
   }
 
-  async delete({ _id, account }: { _id: string; account: IAccount }) {
+  async delete({ _id, account }: { _id: string; account: IAccount }): Promise<EmployeeDocument> {
     return await this.employeeModel.findOneAndUpdate(
       { _id, epl_restaurant_id: account.account_restaurant_id },
       {
@@ -95,7 +99,7 @@ export class EmloyeeRepository {
     )
   }
 
-  async restore({ _id, account }: { _id: string; account: IAccount }) {
+  async restore({ _id, account }: { _id: string; account: IAccount }): Promise<EmployeeDocument> {
     return await this.employeeModel.findOneAndUpdate(
       { _id, epl_restaurant_id: account.account_restaurant_id },
       {
@@ -110,7 +114,7 @@ export class EmloyeeRepository {
     )
   }
 
-  async updateStatus({ _id, epl_status }, account: IAccount) {
+  async updateStatus({ _id, epl_status }, account: IAccount): Promise<EmployeeDocument> {
     return await this.employeeModel.findOneAndUpdate(
       { _id, epl_restaurant_id: account.account_restaurant_id },
       {
@@ -124,18 +128,22 @@ export class EmloyeeRepository {
     )
   }
 
-  async findOneByEmailWithLogin({ epl_email, epl_restaurant_id }: { epl_email: string; epl_restaurant_id: string }) {
-    return await this.employeeModel
-      .findOne({
-        isDeleted: false,
-        epl_status: 'enable',
-        epl_email,
-        epl_restaurant_id
-      })
-      .lean()
+  async findOneByEmailWithLogin({
+    epl_email,
+    epl_restaurant_id
+  }: {
+    epl_email: string
+    epl_restaurant_id: string
+  }): Promise<EmployeeDocument> {
+    return await this.employeeModel.findOne({
+      isDeleted: false,
+      epl_status: 'enable',
+      epl_email,
+      epl_restaurant_id
+    })
   }
 
-  async findOneByIdOfToken({ _id }) {
+  async findOneByIdOfToken({ _id }): Promise<EmployeeDocument> {
     return await this.employeeModel.findOne({
       _id,
       isDeleted: false,
@@ -143,13 +151,12 @@ export class EmloyeeRepository {
     })
   }
 
-  async getInfor({ _id, epl_restaurant_id }) {
+  async getInfor({ _id, epl_restaurant_id }): Promise<EmployeeDocument> {
     return await this.employeeModel
       .findOne({
         _id,
         epl_restaurant_id
       })
       .select('-__v -updatedBy -updatedAt -createdAt -isDeleted -deletedBy -deletedAt -epl_status -createdBy')
-      .lean()
   }
 }

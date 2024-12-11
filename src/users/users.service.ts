@@ -19,6 +19,11 @@ import { IUser } from './users.interface'
 import mongoose from 'mongoose'
 import { UpdateStatusUser } from './dto/update-status.dto'
 import { BookTableRepository } from 'src/book-table/model/book-table.repo'
+import { UserDocument } from './model/user.model'
+import { LoginUserDto } from './dto/login-user.dto'
+import { RefreshTokenUserDocument } from './model/refresh-token.model'
+import { ChangePasswordDto } from './dto/change-password.dto'
+import { CreateUserDto } from './dto/create-user.dto'
 
 @Injectable()
 export class UsersService {
@@ -31,7 +36,13 @@ export class UsersService {
     private readonly bookTableRepository: BookTableRepository
   ) {}
 
-  signToken = (_id: string, type: string) => {
+  signToken = (
+    _id: string,
+    type: string
+  ): {
+    publicKey: crypto.KeyObject
+    token: string
+  } => {
     const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
       modulusLength: 2048
     })
@@ -53,7 +64,12 @@ export class UsersService {
     }
   }
 
-  verifyToken = (token: string, publicKey: string) => {
+  verifyToken = (
+    token: string,
+    publicKey: string
+  ): {
+    _id: string
+  } => {
     try {
       const decoded = this.jwtService.verify(token, {
         secret: publicKey
@@ -65,7 +81,7 @@ export class UsersService {
     }
   }
 
-  async register(registerUserDto: RegisterUserDto) {
+  async register(registerUserDto: RegisterUserDto): Promise<null> {
     const { us_email } = registerUserDto
 
     const userExist = await this.userRepository.findUserByEmail({ us_email })
@@ -90,7 +106,7 @@ export class UsersService {
     return null
   }
 
-  async confirmEmail(comfirmUserDto: ComfirmUserDto) {
+  async confirmEmail(comfirmUserDto: ComfirmUserDto): Promise<{ access_token: string; refresh_token: string }> {
     const { otp, us_email } = comfirmUserDto
 
     const otpHash = createHash('sha256').update(otp).digest('hex')
@@ -128,11 +144,14 @@ export class UsersService {
     }
   }
 
-  async findOneById({ _id }: { _id: string }) {
+  async findOneById({ _id }: { _id: string }): Promise<UserDocument> {
     return await this.userRepository.findOneById({ _id })
   }
 
-  async login(loginUserDto, id_user_guest_header) {
+  async login(
+    loginUserDto: LoginUserDto,
+    id_user_guest_header: string
+  ): Promise<{ access_token: string; refresh_token: string }> {
     const { us_email, us_password } = loginUserDto
 
     const user = await this.userRepository.findUserLoginByEmail({ us_email })
@@ -170,11 +189,15 @@ export class UsersService {
     }
   }
 
-  async findRefreshToken({ rf_refresh_token }: { rf_refresh_token: string }) {
+  async findRefreshToken({ rf_refresh_token }: { rf_refresh_token: string }): Promise<RefreshTokenUserDocument> {
     return await this.refreshTokenUserRepository.findOneByRefreshToken({ rf_refresh_token })
   }
 
-  async refreshToken({ refresh_token }: { refresh_token: string }) {
+  async refreshToken({
+    refresh_token
+  }: {
+    refresh_token: string
+  }): Promise<{ access_token: string; refresh_token: string }> {
     if (refresh_token) {
       const isBlackList = await getCacheIO(`${KEY_BLACK_LIST_TOKEN_USER}:${refresh_token}`)
       if (isBlackList) {
@@ -231,7 +254,7 @@ export class UsersService {
     }
   }
 
-  async forgotPassword({ us_email }) {
+  async forgotPassword({ us_email }): Promise<null> {
     const user = await this.userRepository.findUserByEmail({ us_email })
     if (!user) throw new NotFoundError('Tài khoản không tồn tại')
 
@@ -242,13 +265,13 @@ export class UsersService {
 
     Promise.all([
       await setCacheIOExpiration(`${KEY_FORGOT_PASWORD}:${emailHash}`, otpHash, 600),
-      await this.mailService.sendResetPassword(us_email, otp)
+      await this.mailService.sendResetPassword(us_email, +otp)
     ])
 
     return null
   }
 
-  async changePassword(changePasswordDto) {
+  async changePassword(changePasswordDto: ChangePasswordDto): Promise<null> {
     const { us_email, us_password, otp } = changePasswordDto
 
     const otpHash = createHash('sha256').update(otp).digest('hex')
@@ -262,7 +285,7 @@ export class UsersService {
     return null
   }
 
-  async create(createUserDto, user) {
+  async create(createUserDto: CreateUserDto, user: IUser): Promise<{ us_id: string; us_email: string }> {
     const { us_email, us_password } = createUserDto
 
     const userExist = await this.userRepository.findUserByEmail({ us_email })
@@ -272,12 +295,15 @@ export class UsersService {
     const newUser = await this.userRepository.create({ ...createUserDto, us_password: hashPassword }, user)
 
     return {
-      us_id: newUser._id,
+      us_id: newUser._id.toString(),
       us_email: newUser.us_email
     }
   }
 
-  async findAllUser({ currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string }) {
+  async findAllUser({ currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string }): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: UserDocument[]
+  }> {
     if (currentPage <= 0 || limit <= 0) {
       throw new BadRequestError('Trang hiện tại và số record phải lớn hơn 0')
     }
@@ -318,7 +344,18 @@ export class UsersService {
     }
   }
 
-  async findAllUserRecycle({ currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string }) {
+  async findAllUserRecycle({
+    currentPage = 1,
+    limit = 10,
+    qs
+  }: {
+    currentPage: number
+    limit: number
+    qs: string
+  }): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: UserDocument[]
+  }> {
     if (currentPage <= 0 || limit <= 0) {
       throw new BadRequestError('Trang hiện tại và số record phải lớn hơn 0')
     }
@@ -359,14 +396,22 @@ export class UsersService {
     }
   }
 
-  async findOneUser({ _id }: { _id: string }) {
+  async findOneUser({ _id }: { _id: string }): Promise<UserDocument> {
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Người dùng không tồn tại')
     const user = await this.userRepository.findOne({ _id })
     if (!user) throw new NotFoundError('Người dùng không tồn tại')
     return user
   }
 
-  async updateUser(updateUserDto: UpdateUserDto, user: IUser) {
+  async updateUser(
+    updateUserDto: UpdateUserDto,
+    user: IUser
+  ): Promise<{
+    _id: string
+    us_name: string
+    us_email: string
+    us_phone: string
+  }> {
     const { _id } = updateUserDto
     const restaurantExist = await this.userRepository.findOne({ _id })
 
@@ -375,14 +420,22 @@ export class UsersService {
     const updated = await this.userRepository.updateUser(updateUserDto, user)
 
     return {
-      _id: updated._id,
+      _id: updated._id.toString(),
       us_name: updated.us_name,
       us_email: updated.us_email,
       us_phone: updated.us_phone
     }
   }
 
-  async removeUser({ _id }: { _id: string }, user: IUser) {
+  async removeUser(
+    { _id }: { _id: string },
+    user: IUser
+  ): Promise<{
+    _id: string
+    us_name: string
+    us_email: string
+    us_phone: string
+  }> {
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Người dùng không tồn tại')
 
     const userExist = await this.userRepository.findOne({ _id })
@@ -390,35 +443,52 @@ export class UsersService {
 
     const removed = await this.userRepository.removeUser({ _id }, user)
     return {
-      _id: removed._id,
+      _id: removed._id.toString(),
       us_name: removed.us_name,
       us_email: removed.us_email,
       us_phone: removed.us_phone
     }
   }
 
-  async restore({ _id }, user: IUser) {
+  async restore(
+    { _id },
+    user: IUser
+  ): Promise<{
+    _id: string
+    us_name: string
+    us_email: string
+    us_phone: string
+  }> {
     if (!_id) throw new NotFoundError('Người dùng không tồn tại')
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Người dùng không tồn tại')
     const userExist = await this.userRepository.findOne({ _id })
     if (!userExist) throw new NotFoundError('Người dùng không tồn tại')
     const restore = await this.userRepository.restore({ _id }, user)
     return {
-      _id: restore._id,
+      _id: restore._id.toString(),
       us_name: restore.us_name,
       us_email: restore.us_email,
       us_phone: restore.us_phone
     }
   }
 
-  async updateStatus(updateStatusUser: UpdateStatusUser, user: IUser) {
+  async updateStatus(
+    updateStatusUser: UpdateStatusUser,
+    user: IUser
+  ): Promise<{
+    _id: string
+    us_name: string
+    us_email: string
+    us_phone: string
+    us_status: string
+  }> {
     const { _id } = updateStatusUser
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Người dùng không tồn tại')
     const userExist = await this.userRepository.findOne({ _id })
     if (!userExist) throw new NotFoundError('Người dùng không tồn tại')
     const updated = await this.userRepository.updateStatus(updateStatusUser, user)
     return {
-      _id: updated._id,
+      _id: updated._id.toString(),
       us_name: updated.us_name,
       us_email: updated.us_email,
       us_phone: updated.us_phone,

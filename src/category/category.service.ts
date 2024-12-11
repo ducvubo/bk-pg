@@ -7,23 +7,35 @@ import aqp from 'api-query-params'
 import mongoose from 'mongoose'
 import { UpdateCategoryDto } from './dto/update-category.dto'
 import { UpdateStatusCategoryDto } from './dto/update-status-category.dto'
+import { CategoryDocument } from './model/category.model'
 
 @Injectable()
 export class CategoryService {
   constructor(private readonly categoryRepository: CategoryRepository) {}
 
-  async create(createCategoryDto: CreateCategoryDto, user: IUser) {
+  async create(createCategoryDto: CreateCategoryDto, user: IUser): Promise<CategoryDocument> {
     const { category_name } = createCategoryDto
     const categoryExist = await this.categoryRepository.findOneByName({ category_name })
     if (categoryExist) throw new ConflictException(`Danh mục ${category_name} đã tồn tại`)
     return await this.categoryRepository.create(createCategoryDto, user)
   }
 
-  async findAll() {
+  async findAll(): Promise<CategoryDocument[]> {
     return await this.categoryRepository.findAll()
   }
 
-  async findAllPagination({ currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string }) {
+  async findAllPagination({
+    currentPage = 1,
+    limit = 10,
+    qs
+  }: {
+    currentPage: number
+    limit: number
+    qs: string
+  }): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: CategoryDocument[]
+  }> {
     currentPage = isNaN(currentPage) ? 1 : currentPage
     limit = isNaN(limit) ? 10 : limit
 
@@ -65,11 +77,11 @@ export class CategoryService {
     }
   }
 
-  async findOne({ _id }: { _id: string }) {
+  async findOne({ _id }: { _id: string }): Promise<CategoryDocument> {
     return await this.categoryRepository.findOneById({ _id })
   }
 
-  async updateCategory(updateCategoryDto: UpdateCategoryDto, user: IUser) {
+  async updateCategory(updateCategoryDto: UpdateCategoryDto, user: IUser): Promise<CategoryDocument> {
     const { _id } = updateCategoryDto
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Danh mục không tồn tại')
     const category = await this.categoryRepository.findOneById({ _id })
@@ -77,14 +89,25 @@ export class CategoryService {
     return await this.categoryRepository.updateCategory(updateCategoryDto, user)
   }
 
-  async remove({ _id, user }: { _id: string; user: IUser }) {
+  async remove({ _id, user }: { _id: string; user: IUser }): Promise<CategoryDocument> {
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Danh mục không tồn tại')
     const category = await this.categoryRepository.findOneById({ _id })
     if (!category) throw new NotFoundError('Danh mục không tồn tại')
     return await this.categoryRepository.remove({ _id, user })
   }
 
-  async findAllRecycle({ currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string }) {
+  async findAllRecycle({
+    currentPage = 1,
+    limit = 10,
+    qs
+  }: {
+    currentPage: number
+    limit: number
+    qs: string
+  }): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: CategoryDocument[]
+  }> {
     currentPage = isNaN(currentPage) ? 1 : currentPage
     limit = isNaN(limit) ? 10 : limit
 
@@ -126,14 +149,14 @@ export class CategoryService {
     }
   }
 
-  async restore({ _id, user }: { _id: string; user: IUser }) {
+  async restore({ _id, user }: { _id: string; user: IUser }): Promise<CategoryDocument> {
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Danh mục không tồn tại')
     const category = await this.categoryRepository.findOneById({ _id })
     if (!category) throw new NotFoundError('Danh mục không tồn tại')
     return await this.categoryRepository.restore({ _id, user })
   }
 
-  async updateStatus(updateStatusCategoryDto: UpdateStatusCategoryDto, user: IUser) {
+  async updateStatus(updateStatusCategoryDto: UpdateStatusCategoryDto, user: IUser): Promise<CategoryDocument> {
     const { _id } = updateStatusCategoryDto
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Danh mục không tồn tại')
     const category = await this.categoryRepository.findOneById({ _id })
@@ -141,7 +164,7 @@ export class CategoryService {
     return await this.categoryRepository.updateStatus(updateStatusCategoryDto, user)
   }
 
-  async findCategoryHome({ limit = 10 }: { limit: number }) {
+  async findCategoryHome({ limit = 10 }: { limit: number }): Promise<CategoryDocument[]> {
     return await this.categoryRepository.findCategoryHome({ limit })
   }
 }

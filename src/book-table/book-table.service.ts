@@ -13,6 +13,7 @@ import { IAccount } from 'src/accounts/accounts.interface'
 import aqp from 'api-query-params'
 import mongoose from 'mongoose'
 import { UpdateStatusBookTableDto } from './dto/update-status-book-table.dto'
+import { BookTableDocument } from './model/book-table.model'
 @Injectable()
 export class BookTableService {
   constructor(
@@ -39,7 +40,10 @@ export class BookTableService {
     return result
   }
 
-  async createBookTable(createBookTableDto: CreateBookTableDto, id_user_guest_header) {
+  async createBookTable(
+    createBookTableDto: CreateBookTableDto,
+    id_user_guest_header: string
+  ): Promise<BookTableDocument> {
     const {
       book_tb_restaurant_id,
       book_tb_guest_id,
@@ -99,7 +103,7 @@ export class BookTableService {
     // const token_verify = this.jwtService.sign()
   }
 
-  verifyToken(token: string) {
+  verifyToken(token: string): string {
     try {
       const { _id } = this.jwtService.verify(token)
       return _id
@@ -120,7 +124,7 @@ export class BookTableService {
     }
   }
 
-  async confirmBookTable(confirmBookTableDto: ConfirmBookTableDto) {
+  async confirmBookTable(confirmBookTableDto: ConfirmBookTableDto): Promise<BookTableDocument> {
     const { book_tb_token_verify } = confirmBookTableDto
     const _id = this.verifyToken(book_tb_token_verify)
     const bookTableExists = await this.bookTableRepository.findBookTableById({ _id })
@@ -137,7 +141,10 @@ export class BookTableService {
   async listBookTableRestaurant(
     { currentPage = 1, limit = 10, qs }: { currentPage: number; limit: number; qs: string },
     account: IAccount
-  ) {
+  ): Promise<{
+    meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
+    result: BookTableDocument[]
+  }> {
     currentPage = isNaN(currentPage) ? 1 : currentPage
     limit = isNaN(limit) ? 8 : limit
 
@@ -177,7 +184,10 @@ export class BookTableService {
     }
   }
 
-  async updateStatusBookTable(updateStatusBookTableDto: UpdateStatusBookTableDto, account: IAccount) {
+  async updateStatusBookTable(
+    updateStatusBookTableDto: UpdateStatusBookTableDto,
+    account: IAccount
+  ): Promise<BookTableDocument> {
     const { _id } = updateStatusBookTableDto
     if (!mongoose.Types.ObjectId.isValid(_id)) throw new NotFoundError('Đơn đặt bàn không tồn tại')
     const bookTable = await this.bookTableRepository.findOneById({ _id })
