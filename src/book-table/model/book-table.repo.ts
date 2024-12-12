@@ -56,43 +56,47 @@ export class BookTableRepository {
   }
 
   async updateCancelBookTable({ _id }): Promise<BookTableDocument> {
-    return await this.bookTableModel.findByIdAndUpdate(
-      _id,
-      {
-        book_tb_status: 'Hủy',
-        book_tb_token_verify: '',
-        $push: {
-          book_tb_details: {
-            book_tb_status: 'Hủy',
-            book_tb_details: 'PASSGO không liên lạc được với bạn',
-            date_of_now: new Date()
+    return (await this.bookTableModel
+      .findByIdAndUpdate(
+        _id,
+        {
+          book_tb_status: 'Hủy',
+          book_tb_token_verify: '',
+          $push: {
+            book_tb_details: {
+              book_tb_status: 'Hủy',
+              book_tb_details: 'PASSGO không liên lạc được với bạn',
+              date_of_now: new Date()
+            }
           }
-        }
-      },
-      { new: true }
-    )
+        },
+        { new: true }
+      )
+      .lean()) as BookTableDocument
   }
 
   async findBookTableById({ _id }: { _id: string }): Promise<BookTableDocument> {
-    return await this.bookTableModel.findOne({ _id })
+    return (await this.bookTableModel.findOne({ _id }).lean()) as BookTableDocument
   }
 
   async confirmBookTable({ _id }: { _id: string }): Promise<BookTableDocument> {
-    return await this.bookTableModel.findByIdAndUpdate(
-      _id,
-      {
-        book_tb_status: 'Chờ nhà hàng xác nhận',
-        book_tb_token_verify: '',
-        $push: {
-          book_tb_details: {
-            book_tb_status: 'Chờ nhà hàng xác nhận',
-            book_tb_details: 'PASSGO đã nhận đơn hàng của bạn',
-            date_of_now: new Date()
+    return (await this.bookTableModel
+      .findByIdAndUpdate(
+        _id,
+        {
+          book_tb_status: 'Chờ nhà hàng xác nhận',
+          book_tb_token_verify: '',
+          $push: {
+            book_tb_details: {
+              book_tb_status: 'Chờ nhà hàng xác nhận',
+              book_tb_details: 'PASSGO đã nhận đơn hàng của bạn',
+              date_of_now: new Date()
+            }
           }
-        }
-      },
-      { new: true }
-    )
+        },
+        { new: true }
+      )
+      .lean()) as BookTableDocument
   }
 
   async findBookTableWithGuest(book_tb_guest_id: string): Promise<BookTableDocument[]> {
@@ -100,7 +104,9 @@ export class BookTableRepository {
   }
 
   async updateBookTableGuestOfUser({ _id, book_tb_user_id }): Promise<BookTableDocument> {
-    return await this.bookTableModel.findByIdAndUpdate(_id, { book_tb_user_id }, { new: true })
+    return (await this.bookTableModel
+      .findByIdAndUpdate(_id, { book_tb_user_id }, { new: true })
+      .lean()) as BookTableDocument
   }
 
   async totalItemsBooTableRestaurant(filter: any, account: IAccount): Promise<number> {
@@ -139,7 +145,7 @@ export class BookTableRepository {
   }
 
   async findOneById({ _id }: { _id: string }): Promise<BookTableDocument> {
-    return await this.bookTableModel.findOne({ _id })
+    return (await this.bookTableModel.findOne({ _id }).lean()) as BookTableDocument
   }
 
   async updateStatusBookTable(
@@ -147,16 +153,18 @@ export class BookTableRepository {
     account: IAccount
   ): Promise<BookTableDocument> {
     const { _id, book_tb_status } = updateStatusBookTableDto
-    return await this.bookTableModel.findByIdAndUpdate(
-      _id,
-      {
-        book_tb_status,
-        updatedBy: {
-          _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
-          email: account.account_email
-        }
-      },
-      { new: true }
-    )
+    return (await this.bookTableModel
+      .findByIdAndUpdate(
+        _id,
+        {
+          book_tb_status,
+          updatedBy: {
+            _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
+            email: account.account_email
+          }
+        },
+        { new: true }
+      )
+      .lean()) as BookTableDocument
   }
 }

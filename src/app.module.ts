@@ -26,6 +26,7 @@ import { BlogModule } from './blog/blog.module'
 import { TagBlogModule } from './tag-blog/tag-blog.module'
 import { CheckSignMiddleware } from './middleware/checkSign.middleware'
 import { CommentBlogModule } from './comment-blog/comment-blog.module'
+import { CategoryRestaurantModule } from './category-restaurant/category-restaurant.module'
 
 @Module({
   imports: [
@@ -60,7 +61,8 @@ import { CommentBlogModule } from './comment-blog/comment-blog.module'
     SocketModule,
     BlogModule,
     TagBlogModule,
-    CommentBlogModule
+    CommentBlogModule,
+    CategoryRestaurantModule
   ],
   controllers: [AppController],
   providers: [AppService]

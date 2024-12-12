@@ -46,7 +46,7 @@ export class OrderDishSummaryRepository {
   }
 
   async findOneById({ _id }: { _id: string }): Promise<OrderDishSummaryDocument> {
-    return this.orderDishSumaryModel.findOne({ _id }).populate('od_dish_smr_guest_id')
+    return this.orderDishSumaryModel.findById({ _id }).populate('od_dish_smr_guest_id').lean() as any
   }
 
   async totalItemsListOrderRestaurant(
@@ -251,17 +251,19 @@ export class OrderDishSummaryRepository {
     account: IAccount
   ): Promise<OrderDishSummaryDocument> {
     const { _id, od_dish_smr_status } = updateStatusOrderSummaryDto
-    return this.orderDishSumaryModel.findOneAndUpdate(
-      { _id, od_dish_smr_restaurant_id: account.account_restaurant_id },
-      {
-        od_dish_smr_status,
-        updatedBy: {
-          _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
-          email: account.account_email
-        }
-      },
-      { new: true }
-    )
+    return this.orderDishSumaryModel
+      .findOneAndUpdate(
+        { _id, od_dish_smr_restaurant_id: account.account_restaurant_id },
+        {
+          od_dish_smr_status,
+          updatedBy: {
+            _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
+            email: account.account_email
+          }
+        },
+        { new: true }
+      )
+      .lean() as any
   }
 
   async findTableStatusOrderById({
@@ -352,10 +354,12 @@ export class OrderDishSummaryRepository {
   }
 
   async totalItemsListOrderSummary(filter: any, account: IAccount): Promise<number> {
-    return await this.orderDishSumaryModel.countDocuments({
-      od_dish_smr_restaurant_id: account.account_restaurant_id,
-      ...filter
-    })
+    return await this.orderDishSumaryModel
+      .countDocuments({
+        od_dish_smr_restaurant_id: account.account_restaurant_id,
+        ...filter
+      })
+      .lean()
   }
   async findPaginationListOrderSummary({ offset, defaultLimit, sort, filter }, account: IAccount): Promise<any> {
     const result = await this.orderDishSumaryModel

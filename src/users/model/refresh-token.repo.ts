@@ -19,7 +19,7 @@ export class RefreshTokenUserRepository {
   }
 
   async findOneByRefreshToken({ rf_refresh_token }: { rf_refresh_token: string }): Promise<RefreshTokenUserDocument> {
-    return await this.refreshTokenUser.findOne({ rf_refresh_token })
+    return (await this.refreshTokenUser.findOne({ rf_refresh_token }).lean()) as RefreshTokenUserDocument
   }
 
   async logoutAll({ rf_us_id }: { rf_us_id: string }): Promise<{ deletedCount: number }> {

@@ -29,7 +29,7 @@ export class EmloyeeRepository {
   }
 
   async findOneByCreate({ epl_email, epl_restaurant_id }): Promise<EmployeeDocument> {
-    return await this.employeeModel.findOne({ epl_email, epl_restaurant_id })
+    return (await this.employeeModel.findOne({ epl_email, epl_restaurant_id }).lean()) as EmployeeDocument
   }
 
   async totalItems(account: IAccount, isDeleted: boolean): Promise<number> {
@@ -60,72 +60,82 @@ export class EmloyeeRepository {
   }
 
   async findOneById({ _id, account }: { _id: string; account: IAccount }): Promise<EmployeeDocument> {
-    return await this.employeeModel.findOne({ _id, epl_restaurant_id: account.account_restaurant_id })
+    return (await this.employeeModel
+      .findOne({ _id, epl_restaurant_id: account.account_restaurant_id })
+      .lean()) as EmployeeDocument
   }
 
   async update(updateEmployeeDto: UpdateEmployeeDto, account: IAccount): Promise<EmployeeDocument> {
     const { _id, epl_address, epl_avatar, epl_email, epl_gender, epl_name, epl_phone } = updateEmployeeDto
     const { account_email, account_restaurant_id } = account
-    return await this.employeeModel.findOneAndUpdate(
-      { _id, epl_restaurant_id: account_restaurant_id },
-      {
-        epl_address,
-        epl_avatar,
-        epl_email,
-        epl_gender,
-        epl_name,
-        epl_phone,
-        updatedBy: {
-          email: account_email,
-          _id: account_restaurant_id
-        }
-      },
-      { new: true }
-    )
+    return (await this.employeeModel
+      .findOneAndUpdate(
+        { _id, epl_restaurant_id: account_restaurant_id },
+        {
+          epl_address,
+          epl_avatar,
+          epl_email,
+          epl_gender,
+          epl_name,
+          epl_phone,
+          updatedBy: {
+            email: account_email,
+            _id: account_restaurant_id
+          }
+        },
+        { new: true }
+      )
+      .lean()) as EmployeeDocument
   }
 
   async delete({ _id, account }: { _id: string; account: IAccount }): Promise<EmployeeDocument> {
-    return await this.employeeModel.findOneAndUpdate(
-      { _id, epl_restaurant_id: account.account_restaurant_id },
-      {
-        isDeleted: true,
-        deletedBy: {
-          email: account.account_email,
-          _id: account.account_restaurant_id
+    return (await this.employeeModel
+      .findOneAndUpdate(
+        { _id, epl_restaurant_id: account.account_restaurant_id },
+        {
+          isDeleted: true,
+          deletedBy: {
+            email: account.account_email,
+            _id: account.account_restaurant_id
+          },
+          deletedAt: new Date()
         },
-        deletedAt: new Date()
-      },
-      { new: true }
-    )
+        { new: true }
+      )
+      .lean()) as EmployeeDocument
   }
 
   async restore({ _id, account }: { _id: string; account: IAccount }): Promise<EmployeeDocument> {
-    return await this.employeeModel.findOneAndUpdate(
-      { _id, epl_restaurant_id: account.account_restaurant_id },
-      {
-        isDeleted: false,
-        updatedBy: {
-          email: account.account_email,
-          _id: account.account_restaurant_id
+    return (await this.employeeModel
+      .findOneAndUpdate(
+        { _id, epl_restaurant_id: account.account_restaurant_id },
+        {
+          isDeleted: false,
+          updatedBy: {
+            email: account.account_email,
+            _id: account.account_restaurant_id
+          },
+          deletedBy: null
         },
-        deletedBy: null
-      },
-      { new: true }
-    )
+        { new: true }
+      )
+      .lean()) as EmployeeDocument
   }
 
   async updateStatus({ _id, epl_status }, account: IAccount): Promise<EmployeeDocument> {
-    return await this.employeeModel.findOneAndUpdate(
-      { _id, epl_restaurant_id: account.account_restaurant_id },
-      {
-        epl_status,
-        updatedBy: {
-          email: account.account_email,
-          _id: account.account_restaurant_id
-        }
-      },
-      { new: true }
-    )
+    return (await this.employeeModel
+      .findOneAndUpdate(
+        { _id, epl_restaurant_id: account.account_restaurant_id },
+        {
+          epl_status,
+          updatedBy: {
+            email: account.account_email,
+            _id: account.account_restaurant_id
+          }
+        },
+        { new: true }
+      )
+      .lean()) as EmployeeDocument
   }
 
   async findOneByEmailWithLogin({
@@ -135,28 +145,33 @@ export class EmloyeeRepository {
     epl_email: string
     epl_restaurant_id: string
   }): Promise<EmployeeDocument> {
-    return await this.employeeModel.findOne({
-      isDeleted: false,
-      epl_status: 'enable',
-      epl_email,
-      epl_restaurant_id
-    })
+    return (await this.employeeModel
+      .findOne({
+        isDeleted: false,
+        epl_status: 'enable',
+        epl_email,
+        epl_restaurant_id
+      })
+      .lean()) as EmployeeDocument
   }
 
   async findOneByIdOfToken({ _id }): Promise<EmployeeDocument> {
-    return await this.employeeModel.findOne({
-      _id,
-      isDeleted: false,
-      epl_status: 'enable'
-    })
+    return (await this.employeeModel
+      .findOne({
+        _id,
+        isDeleted: false,
+        epl_status: 'enable'
+      })
+      .lean()) as EmployeeDocument
   }
 
   async getInfor({ _id, epl_restaurant_id }): Promise<EmployeeDocument> {
-    return await this.employeeModel
+    return (await this.employeeModel
       .findOne({
         _id,
         epl_restaurant_id
       })
       .select('-__v -updatedBy -updatedAt -createdAt -isDeleted -deletedBy -deletedAt -epl_status -createdBy')
+      .lean()) as EmployeeDocument
   }
 }

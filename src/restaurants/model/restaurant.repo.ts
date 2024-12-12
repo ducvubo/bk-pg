@@ -58,11 +58,11 @@ export class RestaurantRepository {
   }
 
   async findRestaurantByEmail({ restaurant_email }: { restaurant_email: string }): Promise<RestaurantDocument> {
-    return await this.restaurantModel.findOne({ restaurant_email })
+    return (await this.restaurantModel.findOne({ restaurant_email }).lean()) as RestaurantDocument
   }
 
   async findRestaurantByPhone({ restaurant_phone }: { restaurant_phone: string }): Promise<RestaurantDocument> {
-    return await this.restaurantModel.findOne({ restaurant_phone })
+    return (await this.restaurantModel.findOne({ restaurant_phone }).lean()) as RestaurantDocument
   }
 
   async totalItems(): Promise<number> {
@@ -87,10 +87,11 @@ export class RestaurantRepository {
   }
 
   async findOne({ _id }: { _id: string }): Promise<RestaurantDocument> {
-    return await this.restaurantModel
+    return (await this.restaurantModel
       .findById(_id)
       .populate('restaurant_amenity') // Populate amenities
       .populate('restaurant_type') // Populate restaurant types
+      .lean()) as RestaurantDocument
   }
 
   async update(updateRestaurantDto: UpdateRestaurantDto, user: IUser): Promise<RestaurantDocument> {
@@ -110,83 +111,93 @@ export class RestaurantRepository {
       restaurant_description
     } = updateRestaurantDto
 
-    return await this.restaurantModel.findByIdAndUpdate(
-      _id,
-      {
-        restaurant_phone,
-        restaurant_category,
-        restaurant_name,
-        restaurant_banner,
-        restaurant_address,
-        restaurant_type,
-        restaurant_price,
-        restaurant_hours,
-        restaurant_overview,
-        // restaurant_price_menu,
-        restaurant_amenity,
-        restaurant_image,
-        restaurant_description,
-        updatedBy: {
-          email: user.us_email,
-          _id: user._id
-        }
-      },
-      { new: true }
-    )
+    return (await this.restaurantModel
+      .findByIdAndUpdate(
+        _id,
+        {
+          restaurant_phone,
+          restaurant_category,
+          restaurant_name,
+          restaurant_banner,
+          restaurant_address,
+          restaurant_type,
+          restaurant_price,
+          restaurant_hours,
+          restaurant_overview,
+          // restaurant_price_menu,
+          restaurant_amenity,
+          restaurant_image,
+          restaurant_description,
+          updatedBy: {
+            email: user.us_email,
+            _id: user._id
+          }
+        },
+        { new: true }
+      )
+      .lean()) as RestaurantDocument
   }
 
   async remove({ _id }, user: IUser): Promise<RestaurantDocument> {
-    return await this.restaurantModel.findByIdAndUpdate(
-      _id,
-      {
-        isDeleted: true,
-        deletedBy: {
-          email: user.us_email,
-          _id: user._id
+    return (await this.restaurantModel
+      .findByIdAndUpdate(
+        _id,
+        {
+          isDeleted: true,
+          deletedBy: {
+            email: user.us_email,
+            _id: user._id
+          },
+          deletedAt: new Date()
         },
-        deletedAt: new Date()
-      },
-      { new: true }
-    )
+        { new: true }
+      )
+      .lean()) as RestaurantDocument
   }
 
   async updateVerify(updatevVerify: UpdateVerify, user: IUser): Promise<RestaurantDocument> {
     const { _id, status } = updatevVerify
-    return await this.restaurantModel.findByIdAndUpdate(
-      _id,
-      {
-        restaurant_verify: status,
-        updatedBy: {
-          email: user.us_email,
-          _id: user._id
+    return (await this.restaurantModel
+      .findByIdAndUpdate(
+        _id,
+        {
+          restaurant_verify: status,
+          updatedBy: {
+            email: user.us_email,
+            _id: user._id
+          }
+        },
+        {
+          new: true
         }
-      },
-      {
-        new: true
-      }
-    )
+      )
+      .lean()) as RestaurantDocument
   }
 
   async updateState(updateState: UpdateState, user: IUser): Promise<RestaurantDocument> {
     const { _id, status } = updateState
-    return await this.restaurantModel.findByIdAndUpdate(
-      _id,
-      { restaurant_state: status, updatedBy: { email: user.us_email, _id: user._id } },
-      {
-        new: true
-      }
-    )
+    return (await this.restaurantModel
+      .findByIdAndUpdate(
+        _id,
+        { restaurant_state: status, updatedBy: { email: user.us_email, _id: user._id } },
+        {
+          new: true
+        }
+      )
+      .lean()) as RestaurantDocument
   }
 
   async updateStatus(updateStatus: UpdateStatus, user: IUser): Promise<RestaurantDocument> {
     const { _id, status } = updateStatus
-    return await this.restaurantModel.findByIdAndUpdate(
-      _id,
-      { restaurant_status: status, updatedBy: { email: user.us_email, _id: user._id } },
-      {
-        new: true
-      }
-    )
+    return (await this.restaurantModel
+      .findByIdAndUpdate(
+        _id,
+        { restaurant_status: status, updatedBy: { email: user.us_email, _id: user._id } },
+        {
+          new: true
+        }
+      )
+      .lean()) as RestaurantDocument
   }
 
   async totalItemsRecycle(): Promise<number> {
@@ -211,17 +222,19 @@ export class RestaurantRepository {
   }
 
   async restore({ _id }, user: IUser): Promise<RestaurantDocument> {
-    return await this.restaurantModel.findByIdAndUpdate(
-      _id,
-      {
-        isDeleted: false,
-        updatedBy: {
-          email: user.us_email,
-          _id: user._id
-        }
-      },
-      { new: true }
-    )
+    return (await this.restaurantModel
+      .findByIdAndUpdate(
+        _id,
+        {
+          isDeleted: false,
+          updatedBy: {
+            email: user.us_email,
+            _id: user._id
+          }
+        },
+        { new: true }
+      )
+      .lean()) as RestaurantDocument
   }
 
   async findRestaurantsHome(): Promise<RestaurantDocument[]> {
@@ -260,28 +273,33 @@ export class RestaurantRepository {
   }
 
   async findOneByIdOfBook({ id }: { id: string }): Promise<RestaurantDocument> {
-    return await this.restaurantModel.findOne({
-      _id: id,
-      isDeleted: false,
-      restaurant_status: 'inactive',
-      restaurant_state: true
-    })
+    return (await this.restaurantModel
+      .findOne({
+        _id: id,
+        isDeleted: false,
+        restaurant_status: 'inactive',
+        restaurant_state: true
+      })
+      .lean()) as RestaurantDocument
   }
 
   async findOneByIdOfToken({ _id }: { _id: string }): Promise<RestaurantDocument> {
-    return await this.restaurantModel
+    return (await this.restaurantModel
       .findOne({
         _id,
         isDeleted: false,
         restaurant_status: 'inactive'
       })
       .select(' -restaurant_status -__v -updatedBy -updatedAt -createdAt -isDeleted -deletedBy -deletedAt')
+      .lean()) as RestaurantDocument
   }
 
   async findOneByEmailWithLogin({ restaurant_email }): Promise<RestaurantDocument> {
-    return await this.restaurantModel.findOne({
-      restaurant_email
-    })
+    return (await this.restaurantModel
+      .findOne({
+        restaurant_email
+      })
+      .lean()) as RestaurantDocument
   }
 
   async search({ q }): Promise<RestaurantDocument[]> {
@@ -297,12 +315,14 @@ export class RestaurantRepository {
   }
 
   async findOneById({ _id }): Promise<RestaurantDocument> {
-    return await this.restaurantModel.findOne({
-      _id,
-      restaurant_verify: true,
-      restaurant_status: 'inactive',
-      restaurant_state: true,
-      isDeleted: false
-    })
+    return (await this.restaurantModel
+      .findOne({
+        _id,
+        restaurant_verify: true,
+        restaurant_status: 'inactive',
+        restaurant_state: true,
+        isDeleted: false
+      })
+      .lean()) as RestaurantDocument
   }
 }

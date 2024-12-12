@@ -24,14 +24,26 @@ export class GuestRestaurantRepository {
     })
   }
 
+  // async findOneByRefreshToken({
+  //   guest_refresh_token
+  // }: {
+  //   guest_refresh_token: string
+  // }): Promise<GuestRestaurantDocument | null> {
+  //   return await this.guestRestaurantModel
+  //     .findOne({ guest_refresh_token })
+  //     .select('guest_name guest_restaurant_id guest_table_id _id guest_type guest_owner')
+  //     .lean()
+  // }
+
   async findOneByRefreshToken({
     guest_refresh_token
   }: {
     guest_refresh_token: string
   }): Promise<GuestRestaurantDocument> {
-    return await this.guestRestaurantModel
+    return (await this.guestRestaurantModel
       .findOne({ guest_refresh_token })
       .select('guest_name guest_restaurant_id guest_table_id _id guest_type guest_owner')
+      .lean()) as GuestRestaurantDocument
   }
 
   async updateRefreshToken({

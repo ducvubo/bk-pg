@@ -60,7 +60,7 @@ export class BlogRepository {
   }
 
   async getBlogById(_id: string, account: IAccount): Promise<BlogDocument> {
-    return await this.blogModel
+    return (await this.blogModel
       .findOne({
         _id,
         blg_restaurant_id: account.account_restaurant_id
@@ -70,7 +70,7 @@ export class BlogRepository {
         path: 'blg_tag',
         select: '-updatedAt -createdAt -__v -createdBy -updatedBy -isDeleted -deletedAt -deletedBy'
       })
-      .exec()
+      .lean()) as BlogDocument
   }
 
   async updateBlog(updateBlogDto: UpdateBlogDto, account: IAccount): Promise<BlogDocument> {
@@ -96,52 +96,58 @@ export class BlogRepository {
 
   async updateStatusBlog(updateStatusBlogDto: UpdateStatusBlogDto, account: IAccount): Promise<BlogDocument> {
     const { _id, blg_status } = updateStatusBlogDto
-    return await this.blogModel.findOneAndUpdate(
-      {
-        _id,
-        blg_restaurant_id: account.account_restaurant_id
-      },
-      {
-        blg_status,
-        updatedBy: {
-          _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
-          email: account.account_email
-        }
-      },
-      { new: true }
-    )
+    return (await this.blogModel
+      .findOneAndUpdate(
+        {
+          _id,
+          blg_restaurant_id: account.account_restaurant_id
+        },
+        {
+          blg_status,
+          updatedBy: {
+            _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
+            email: account.account_email
+          }
+        },
+        { new: true }
+      )
+      .lean()) as BlogDocument
   }
 
   async deleteBlog(_id: string, account: IAccount): Promise<BlogDocument> {
-    return await this.blogModel.findOneAndUpdate(
-      {
-        _id,
-        blg_restaurant_id: account.account_restaurant_id
-      },
-      {
-        isDeleted: true,
-        deletedBy: {
-          _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
-          email: account.account_email
+    return (await this.blogModel
+      .findOneAndUpdate(
+        {
+          _id,
+          blg_restaurant_id: account.account_restaurant_id
         },
-        deletedAt: new Date()
-      },
-      { new: true }
-    )
+        {
+          isDeleted: true,
+          deletedBy: {
+            _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
+            email: account.account_email
+          },
+          deletedAt: new Date()
+        },
+        { new: true }
+      )
+      .lean()) as BlogDocument
   }
 
   async restoreBlog(_id: string, account: IAccount): Promise<BlogDocument> {
-    return await this.blogModel.findOneAndUpdate(
-      {
-        _id,
-        blg_restaurant_id: account.account_restaurant_id
-      },
-      {
-        isDeleted: false,
-        deletedBy: null,
-        deletedAt: null
-      },
-      { new: true }
-    )
+    return (await this.blogModel
+      .findOneAndUpdate(
+        {
+          _id,
+          blg_restaurant_id: account.account_restaurant_id
+        },
+        {
+          isDeleted: false,
+          deletedBy: null,
+          deletedAt: null
+        },
+        { new: true }
+      )
+      .lean()) as BlogDocument
   }
 }

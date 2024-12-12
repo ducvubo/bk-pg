@@ -33,14 +33,18 @@ export class AccountRepository {
   }: {
     account_restaurant_id: string
   }): Promise<AccountsDocument> {
-    return await this.accountModel.findOne({ account_restaurant_id, account_type: 'restaurant', isDeleted: false })
+    return (await this.accountModel
+      .findOne({ account_restaurant_id, account_type: 'restaurant', isDeleted: false })
+      .lean()) as AccountsDocument
   }
 
   async findAccoutById({ _id }: { _id: string }): Promise<AccountsDocument> {
-    return await this.accountModel.findOne({ _id, isDeleted: false })
+    return (await this.accountModel.findOne({ _id, isDeleted: false }).lean()) as AccountsDocument
   }
 
   async findAccountByIdEmployee({ account_employee_id, account_restaurant_id }): Promise<AccountsDocument> {
-    return await this.accountModel.findOne({ account_employee_id, account_restaurant_id, isDeleted: false })
+    return (await this.accountModel
+      .findOne({ account_employee_id, account_restaurant_id, isDeleted: false })
+      .lean()) as AccountsDocument
   }
 }

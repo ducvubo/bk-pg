@@ -40,7 +40,7 @@ export class CategoryRepository {
   }
 
   async findOneByName({ category_name }: { category_name: string }): Promise<CategoryDocument> {
-    return await this.categoryModel.findOne({ category_name })
+    return (await this.categoryModel.findOne({ category_name }).lean()) as CategoryDocument
   }
 
   async totalItems(isDeleted: boolean): Promise<number> {
@@ -66,91 +66,100 @@ export class CategoryRepository {
   }
 
   async findOneById({ _id }: { _id: string }): Promise<CategoryDocument> {
-    return await this.categoryModel
+    return (await this.categoryModel
       .findOne({
         _id
       })
       .populate('category_parent_id')
+      .lean()) as CategoryDocument
   }
 
   async updateCategory(updateCategoryDto: UpdateCategoryDto, user: IUser): Promise<CategoryDocument> {
     const { _id, category_description, category_image, category_name, category_parent_id } = updateCategoryDto
-    return await this.categoryModel.findOneAndUpdate(
-      {
-        _id
-      },
-      {
-        category_description,
-        category_image,
-        category_name,
-        category_parent_id,
-        updatedBy: {
-          email: user.us_email,
-          _id: user._id
+    return (await this.categoryModel
+      .findOneAndUpdate(
+        {
+          _id
+        },
+        {
+          category_description,
+          category_image,
+          category_name,
+          category_parent_id,
+          updatedBy: {
+            email: user.us_email,
+            _id: user._id
+          }
+        },
+        {
+          new: true
         }
-      },
-      {
-        new: true
-      }
-    )
+      )
+      .lean()) as CategoryDocument
   }
 
   async remove({ _id, user }: { _id: string; user: IUser }): Promise<CategoryDocument> {
-    return await this.categoryModel.findOneAndUpdate(
-      {
-        _id
-      },
-      {
-        isDeleted: true,
-        deletedAt: new Date(),
-        deletedBy: {
-          email: user.us_email,
-          _id: user._id
+    return (await this.categoryModel
+      .findOneAndUpdate(
+        {
+          _id
+        },
+        {
+          isDeleted: true,
+          deletedAt: new Date(),
+          deletedBy: {
+            email: user.us_email,
+            _id: user._id
+          }
+        },
+        {
+          new: true
         }
-      },
-      {
-        new: true
-      }
-    )
+      )
+      .lean()) as CategoryDocument
   }
 
   async restore({ _id, user }: { _id: string; user: IUser }): Promise<CategoryDocument> {
-    return await this.categoryModel.findOneAndUpdate(
-      {
-        _id
-      },
-      {
-        isDeleted: false,
-        deletedAt: null,
-        deletedBy: null,
-        updatedBy: {
-          email: user.us_email,
-          _id: user._id
+    return (await this.categoryModel
+      .findOneAndUpdate(
+        {
+          _id
+        },
+        {
+          isDeleted: false,
+          deletedAt: null,
+          deletedBy: null,
+          updatedBy: {
+            email: user.us_email,
+            _id: user._id
+          }
+        },
+        {
+          new: true
         }
-      },
-      {
-        new: true
-      }
-    )
+      )
+      .lean()) as CategoryDocument
   }
 
   async updateStatus(updateStatusCategoryDto: UpdateStatusCategoryDto, user: IUser): Promise<CategoryDocument> {
     const { _id, category_status } = updateStatusCategoryDto
-    return await this.categoryModel.findOneAndUpdate(
-      {
-        _id
-      },
-      {
-        category_status,
-        updatedBy: {
-          email: user.us_email,
-          _id: user._id
+    return (await this.categoryModel
+      .findOneAndUpdate(
+        {
+          _id
+        },
+        {
+          category_status,
+          updatedBy: {
+            email: user.us_email,
+            _id: user._id
+          }
+        },
+        {
+          new: true
         }
-      },
-      {
-        new: true
-      }
-    )
+      )
+      .lean()) as CategoryDocument
   }
 
   async findCategoryHome({ limit }) {

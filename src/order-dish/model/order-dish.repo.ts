@@ -74,11 +74,11 @@ export class OrderDishRepository {
   }
 
   async findOneDishDuplicateById({ _id }: { _id: string }): Promise<DishDuplicateDocument> {
-    return this.dishDuplicateModel.findOne({ _id })
+    return this.dishDuplicateModel.findOne({ _id }).lean() as any
   }
 
   async findByIdDishDuplicate({ _id }: { _id: string }): Promise<DishDuplicateDocument> {
-    return this.dishDuplicateModel.findById(_id)
+    return this.dishDuplicateModel.findById(_id).lean() as any
   }
 
   async findByIdOrderSummary({ od_dish_summary_id }: { od_dish_summary_id: string }): Promise<OrderDishDocument[]> {

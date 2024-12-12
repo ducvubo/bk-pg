@@ -22,6 +22,9 @@ export class GuestRestaurantAuthGuard implements CanActivate {
         this.guestRestaurantService.verifyToken(refresh_token, 'refresh_token')
       ])
 
+      //  dataToken[0] = ._doc
+      // console.log('first dataToken', dataToken[0]._doc._id)
+
       const cacheExist = await getCacheIO(`${KEY_ACCESS_TOKEN_GUEST_RESTAURANT}:${dataToken[0]._id}`)
 
       if (!cacheExist) throw new UnauthorizedCodeError('Token không hợp lệ3', -10)
@@ -29,7 +32,12 @@ export class GuestRestaurantAuthGuard implements CanActivate {
       // const
 
       if (!dataToken[0] || !dataToken[1]) throw new UnauthorizedCodeError('Token không hợp lệ2', -10)
+
+      console.log('dataToken[0]', dataToken[0])
+
+      // request.guest = { ...dataToken[0], order_id: dataToken[0].order_id }
       request.guest = dataToken[0]
+
       return true
     } catch (error) {
       console.log(error)

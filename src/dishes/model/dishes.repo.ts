@@ -9,7 +9,7 @@ export class DishRepository {
   constructor(@InjectModel(Dish.name) private DishModel: Model<DishDocument>) {}
 
   async findOneByName({ dish_name, dish_restaurant_id }): Promise<DishDocument> {
-    return await this.DishModel.findOne({ dish_name, dish_restaurant_id })
+    return (await this.DishModel.findOne({ dish_name, dish_restaurant_id }).lean()) as DishDocument
   }
 
   async findAllByNames({ dish_name, dish_restaurant_id, _id }): Promise<DishDocument[]> {
@@ -72,7 +72,10 @@ export class DishRepository {
   }
 
   async findOneById({ _id, account }: { _id: string; account: IAccount }): Promise<DishDocument> {
-    return await this.DishModel.findOne({ _id, dish_restaurant_id: account.account_restaurant_id })
+    return (await this.DishModel.findOne({
+      _id,
+      dish_restaurant_id: account.account_restaurant_id
+    }).lean()) as DishDocument
   }
 
   async update(updateDishDto: UpdateDishDto, account: IAccount): Promise<DishDocument> {
@@ -89,7 +92,7 @@ export class DishRepository {
     } = updateDishDto
     const { account_restaurant_id, account_employee_id, account_email } = account
 
-    return await this.DishModel.findOneAndUpdate(
+    return (await this.DishModel.findOneAndUpdate(
       { _id, dish_restaurant_id: account_restaurant_id },
       {
         dish_name,
@@ -106,11 +109,11 @@ export class DishRepository {
         }
       },
       { new: true }
-    )
+    ).lean()) as DishDocument
   }
 
   async remove(id: string, account: IAccount): Promise<DishDocument> {
-    return await this.DishModel.findOneAndUpdate(
+    return (await this.DishModel.findOneAndUpdate(
       { _id: id, dish_restaurant_id: account.account_restaurant_id },
       {
         isDeleted: true,
@@ -121,11 +124,11 @@ export class DishRepository {
         deletedAt: new Date()
       },
       { new: true }
-    )
+    ).lean()) as DishDocument
   }
 
   async restore(id: string, account: IAccount): Promise<DishDocument> {
-    return await this.DishModel.findOneAndUpdate(
+    return (await this.DishModel.findOneAndUpdate(
       { _id: id, dish_restaurant_id: account.account_restaurant_id },
       {
         isDeleted: false,
@@ -133,11 +136,11 @@ export class DishRepository {
         deletedAt: null
       },
       { new: true }
-    )
+    ).lean()) as DishDocument
   }
 
   async updateStatus({ _id, dish_status }, account: IAccount): Promise<DishDocument> {
-    return await this.DishModel.findOneAndUpdate(
+    return (await this.DishModel.findOneAndUpdate(
       { _id, dish_restaurant_id: account.account_restaurant_id },
       {
         dish_status,
@@ -147,7 +150,7 @@ export class DishRepository {
         }
       },
       { new: true }
-    )
+    ).lean()) as DishDocument
   }
 
   async findAllDishOrder({ dish_restaurant_id }: { dish_restaurant_id: string }): Promise<DishDocument[]> {
@@ -161,6 +164,6 @@ export class DishRepository {
   // }
 
   async findOne({ _id }: { _id: string }): Promise<DishDocument> {
-    return await this.DishModel.findOne({ _id, dish_status: 'enable' })
+    return (await this.DishModel.findOne({ _id, dish_status: 'enable' }).lean()) as DishDocument
   }
 }

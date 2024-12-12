@@ -68,122 +68,62 @@ export class OrderDishService {
     }))
   }
 
-  // async createOrderDish(createOrderDishDto: CreateOrderDishDto[], guest: IGuest) {
-  //   const session = await this.connection.startSession() // Start session for transaction
-  //   session.startTransaction()
-
-  //   try {
-  //     const orderSummary = await this.orderDishSummaryRepository.findOneById({ _id: guest.order_id })
-  //     if (!orderSummary) throw new BadRequestError('Đơn hàng không tồn tại, vui lòng thử lại sau ít phút')
-  //     if (orderSummary.od_dish_smr_status === 'paid')
-  //       throw new BadRequestError(
-  //         'Đơn hàng đã thanh toán không thể order thêm, vui lòng liên hệ nhân viên để được hỗ trợ'
-  //       )
-  //     if (orderSummary.od_dish_smr_status === 'refuse')
-  //       throw new BadRequestError(
-  //         'Đơn hàng đã bị từ chối không thể order thêm, vui lòng liên hệ nhân viên để được hỗ trợ'
-  //       )
-
-  //     const listDish = await Promise.all(
-  //       createOrderDishDto.map(async (item: CreateOrderDishDto) => {
-  //         const dish = await this.dishRepository.findOne({ _id: item.od_dish_id }, session) // Use session
-  //         if (!dish) {
-  //           throw new BadRequestError('Món ăn không tồn tại, vui lòng thử lại sau ít phút')
-  //         }
-  //         return dish
-  //       })
-  //     )
-
-  //     const listDishDuplicate = this.transformToDishDuplicate(listDish)
-
-  //     const newListDishDuplicate = await this.orderDishRepository.bulkCreateDishDuplicate(listDishDuplicate, {
-  //       session
-  //     }) // Use session
-
-  //     const newListOrderDish = createOrderDishDto.map((item1) => {
-  //       const duplicateDish = newListDishDuplicate.find(
-  //         (item2) => item2.dish_duplicate_dish_id.toString() === item1.od_dish_id
-  //       )
-  //       if (!duplicateDish) {
-  //         throw new BadRequestError('Món ăn không tồn tại, vui lòng thử lại sau ít phút')
-  //       }
-  //       return {
-  //         od_dish_summary_id: orderSummary._id,
-  //         od_dish_guest_id: guest._id,
-  //         od_dish_duplicate_id: duplicateDish._id,
-  //         od_dish_quantity: item1.od_dish_quantity,
-  //         od_dish_status: 'pending'
-  //       }
-  //     })
-
-  //     await this.orderDishRepository.bulkCreateOrderDish(newListOrderDish, { session }) // Use session
-
-  //     await session.commitTransaction() // Commit the transaction
-  //     this.socketGateway.handleEmitSocket({
-  //       event: 'order_dish_new',
-  //       data: null,
-  //       to: `${KEY_SOCKET_RESTAURANT_ID}:${String(orderSummary.od_dish_smr_restaurant_id)}`
-  //     })
-  //     return null
-  //   } catch (error) {
-  //     await session.abortTransaction() // Abort the transaction in case of error
-  //     console.error('Error occurred during transaction:', error.message)
-  //     throw new ServerError('Có lỗi xảy ra, vui lòng thử lại sau ít phút')
-  //   } finally {
-  //     await session.endSession() // End the session
-  //   }
-  // }
-
   async createOrderDish(createOrderDishDto: CreateOrderDishDto[], guest: IGuest): Promise<null> {
-    const orderSummary = await this.orderDishSummaryRepository.findOneById({ _id: guest.order_id })
-    if (!orderSummary) throw new BadRequestError('Đơn hàng không tồn tại, vui lòng thử lại sau ít phút')
-    if (orderSummary.od_dish_smr_status === 'paid')
-      throw new BadRequestError(
-        'Đơn hàng đã thanh toán không thể order thêm, vui lòng liên hệ nhân viên để được hỗ trợ'
-      )
-    if (orderSummary.od_dish_smr_status === 'refuse')
-      throw new BadRequestError(
-        'Đơn hàng đã bị từ chối không thể order thêm, vui lòng liên hệ nhân viên để được hỗ trợ'
+    console.log('first::::::::::::::::', guest)
+    try {
+      const orderSummary = await this.orderDishSummaryRepository.findOneById({ _id: guest.order_id })
+      if (!orderSummary) throw new BadRequestError('Đơn hàng không tồn tại, vui lòng thử lại sau ít phút')
+      if (orderSummary.od_dish_smr_status === 'paid')
+        throw new BadRequestError(
+          'Đơn hàng đã thanh toán không thể order thêm, vui lòng liên hệ nhân viên để được hỗ trợ'
+        )
+      if (orderSummary.od_dish_smr_status === 'refuse')
+        throw new BadRequestError(
+          'Đơn hàng đã bị từ chối không thể order thêm, vui lòng liên hệ nhân viên để được hỗ trợ'
+        )
+
+      const listDish = await Promise.all(
+        createOrderDishDto.map(async (item: CreateOrderDishDto) => {
+          const dish = await this.dishRepository.findOne({ _id: item.od_dish_id })
+          if (!dish) {
+            throw new BadRequestError('Món ăn không tồn tại, vui lòng thử lại sau ít phút')
+          }
+          return dish
+        })
       )
 
-    const listDish = await Promise.all(
-      createOrderDishDto.map(async (item: CreateOrderDishDto) => {
-        const dish = await this.dishRepository.findOne({ _id: item.od_dish_id })
-        if (!dish) {
+      const listDishDuplicate = this.transformToDishDuplicate(listDish)
+
+      const newListDishDuplicate = await this.orderDishRepository.bulkCreateDishDuplicate(listDishDuplicate)
+
+      const newListOrderDish = createOrderDishDto.map((item1) => {
+        const duplicateDish = newListDishDuplicate.find(
+          (item2) => item2.dish_duplicate_dish_id.toString() === item1.od_dish_id
+        )
+        if (!duplicateDish) {
           throw new BadRequestError('Món ăn không tồn tại, vui lòng thử lại sau ít phút')
         }
-        return dish
+        return {
+          od_dish_summary_id: orderSummary._id,
+          od_dish_guest_id: guest._id,
+          od_dish_duplicate_id: duplicateDish._id,
+          od_dish_quantity: item1.od_dish_quantity,
+          od_dish_status: 'pending'
+        }
       })
-    )
 
-    const listDishDuplicate = this.transformToDishDuplicate(listDish)
+      await this.orderDishRepository.bulkCreateOrderDish(newListOrderDish)
 
-    const newListDishDuplicate = await this.orderDishRepository.bulkCreateDishDuplicate(listDishDuplicate)
-
-    const newListOrderDish = createOrderDishDto.map((item1) => {
-      const duplicateDish = newListDishDuplicate.find(
-        (item2) => item2.dish_duplicate_dish_id.toString() === item1.od_dish_id
-      )
-      if (!duplicateDish) {
-        throw new BadRequestError('Món ăn không tồn tại, vui lòng thử lại sau ít phút')
-      }
-      return {
-        od_dish_summary_id: orderSummary._id,
-        od_dish_guest_id: guest._id,
-        od_dish_duplicate_id: duplicateDish._id,
-        od_dish_quantity: item1.od_dish_quantity,
-        od_dish_status: 'pending'
-      }
-    })
-
-    await this.orderDishRepository.bulkCreateOrderDish(newListOrderDish)
-
-    this.socketGateway.handleEmitSocket({
-      event: 'order_dish_new',
-      data: null,
-      to: `${KEY_SOCKET_RESTAURANT_ID}:${String(orderSummary.od_dish_smr_restaurant_id)}`
-    })
-    return null
+      this.socketGateway.handleEmitSocket({
+        event: 'order_dish_new',
+        data: null,
+        to: `${KEY_SOCKET_RESTAURANT_ID}:${String(orderSummary.od_dish_smr_restaurant_id)}`
+      })
+      return null
+    } catch (error: any) {
+      console.error('Error occurred during transaction:', error)
+      throw new BadRequestError('Có lỗi xảy ra, vui lòng thử lại sau ít phút')
+    }
   }
 
   async listOrderGuest(guest: IGuest): Promise<{
@@ -211,6 +151,7 @@ export class OrderDishService {
     updateStatusOrderDishDto: UpdateStatusOrderDishDto,
     account: IAccount
   ): Promise<OrderDishDocument> {
+    console.log('first2222222222222222222222222222222222')
     const { _id, od_dish_summary_id } = updateStatusOrderDishDto
     const orderSummary = await this.orderDishSummaryRepository.findOneById({ _id: od_dish_summary_id })
     if (!orderSummary) throw new BadRequestError('Đơn hàng không tồn tại, vui lòng thử lại sau ít phút')
@@ -252,6 +193,7 @@ export class OrderDishService {
     od_dish_smr_status: string
     or_dish: any
   } | null> {
+    console.log('first11111111111111111111111111111111111')
     const orderSummary: any = await this.orderDishSummaryRepository.findOneById({
       _id: restaurantCreateOrderDishDto.od_dish_summary_id
     })

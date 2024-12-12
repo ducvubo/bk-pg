@@ -36,7 +36,7 @@ export class TableRepository {
     tbl_name: string
     tbl_restaurant_id: string
   }): Promise<TableDocument> {
-    return await this.tableModel.findOne({ tbl_name, tbl_restaurant_id })
+    return (await this.tableModel.findOne({ tbl_name, tbl_restaurant_id }).lean()) as TableDocument
   }
 
   async findAllByNames({
@@ -89,84 +89,96 @@ export class TableRepository {
   }
 
   async findOne({ _id, account }: { _id: string; account: IAccount }): Promise<TableDocument> {
-    return await this.tableModel.findOne({ _id, tbl_restaurant_id: account.account_restaurant_id })
+    return (await this.tableModel
+      .findOne({ _id, tbl_restaurant_id: account.account_restaurant_id })
+      .lean()) as TableDocument
   }
 
   async update(updateTableDto: UpdateTableDto, account: IAccount): Promise<TableDocument> {
     const { _id, tbl_capacity, tbl_description, tbl_name } = updateTableDto
     const { account_restaurant_id, account_email } = account
 
-    return await this.tableModel.findOneAndUpdate(
-      { _id, tbl_restaurant_id: account_restaurant_id },
-      {
-        tbl_capacity,
-        tbl_description,
-        tbl_name,
-        updatedBy: {
-          _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
-          email: account_email
-        }
-      },
-      { new: true }
-    )
+    return (await this.tableModel
+      .findOneAndUpdate(
+        { _id, tbl_restaurant_id: account_restaurant_id },
+        {
+          tbl_capacity,
+          tbl_description,
+          tbl_name,
+          updatedBy: {
+            _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
+            email: account_email
+          }
+        },
+        { new: true }
+      )
+      .lean()) as TableDocument
   }
 
   async remove(id: string, account: IAccount): Promise<TableDocument> {
-    return await this.tableModel.findOneAndUpdate(
-      { _id: id, tbl_restaurant_id: account.account_restaurant_id },
-      {
-        isDeleted: true,
-        deletedBy: {
-          _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
-          email: account.account_email
+    return (await this.tableModel
+      .findOneAndUpdate(
+        { _id: id, tbl_restaurant_id: account.account_restaurant_id },
+        {
+          isDeleted: true,
+          deletedBy: {
+            _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
+            email: account.account_email
+          },
+          deletedAt: new Date()
         },
-        deletedAt: new Date()
-      },
-      { new: true }
-    )
+        { new: true }
+      )
+      .lean()) as TableDocument
   }
 
   async restore(id: string, account: IAccount): Promise<TableDocument> {
-    return await this.tableModel.findOneAndUpdate(
-      { _id: id, tbl_restaurant_id: account.account_restaurant_id },
-      {
-        isDeleted: false,
-        deletedBy: null,
-        deletedAt: null
-      },
-      { new: true }
-    )
+    return (await this.tableModel
+      .findOneAndUpdate(
+        { _id: id, tbl_restaurant_id: account.account_restaurant_id },
+        {
+          isDeleted: false,
+          deletedBy: null,
+          deletedAt: null
+        },
+        { new: true }
+      )
+      .lean()) as TableDocument
   }
 
   async updateStatus(
     { _id, tbl_status }: { _id: string; tbl_status: string },
     account: IAccount
   ): Promise<TableDocument> {
-    return await this.tableModel.findOneAndUpdate(
-      { _id, tbl_restaurant_id: account.account_restaurant_id },
-      {
-        tbl_status,
-        updatedBy: {
-          _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
-          email: account.account_email
-        }
-      },
-      { new: true }
-    )
+    return (await this.tableModel
+      .findOneAndUpdate(
+        { _id, tbl_restaurant_id: account.account_restaurant_id },
+        {
+          tbl_status,
+          updatedBy: {
+            _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
+            email: account.account_email
+          }
+        },
+        { new: true }
+      )
+      .lean()) as TableDocument
   }
 
   async updateToken(id: string, account: IAccount): Promise<TableDocument> {
-    return await this.tableModel.findOneAndUpdate(
-      { _id: id, tbl_restaurant_id: account.account_restaurant_id },
-      {
-        tbl_token: uuidv4(),
-        updatedBy: {
-          _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
-          email: account.account_email
-        }
-      },
-      { new: true }
-    )
+    return (await this.tableModel
+      .findOneAndUpdate(
+        { _id: id, tbl_restaurant_id: account.account_restaurant_id },
+        {
+          tbl_token: uuidv4(),
+          updatedBy: {
+            _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
+            email: account.account_email
+          }
+        },
+        { new: true }
+      )
+      .lean()) as TableDocument
   }
 
   async findOneByToken({
@@ -176,11 +188,11 @@ export class TableRepository {
     tbl_token: string
     tbl_restaurant_id: string
   }): Promise<TableDocument> {
-    return await this.tableModel.findOne({ tbl_token, tbl_restaurant_id })
+    return (await this.tableModel.findOne({ tbl_token, tbl_restaurant_id }).lean()) as TableDocument
   }
 
   async updateStatusById({ _id, tbl_status }: { _id: string; tbl_status: string }): Promise<TableDocument> {
-    return await this.tableModel.findOneAndUpdate({ _id }, { tbl_status }, { new: true })
+    return (await this.tableModel.findOneAndUpdate({ _id }, { tbl_status }, { new: true }).lean()) as TableDocument
   }
 
   async findByName({ tbl_name }: { tbl_name: string }): Promise<TableDocument[]> {
@@ -188,7 +200,7 @@ export class TableRepository {
   }
 
   async findOneById({ _id }: { _id: string }): Promise<TableDocument> {
-    return await this.tableModel.findById({ _id })
+    return (await this.tableModel.findById({ _id }).lean()) as TableDocument
   }
 
   async totalItemsTableListOrder(filter: any, account: IAccount): Promise<number> {

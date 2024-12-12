@@ -11,7 +11,9 @@ import { IdUserGuestInterceptor } from './interceptor/guestId.interceptor'
 export const redisConfig = {
   host: String(process.env.REDIS_HOST),
   port: Number(process.env.REDIS_PORT),
-  password: String(process.env.REDIS_PASSWORD)
+  password: String(process.env.REDIS_PASSWORD),
+  db: 0,
+  username: String(process.env.REDIS_USERNAME)
 }
 
 async function bootstrap() {
