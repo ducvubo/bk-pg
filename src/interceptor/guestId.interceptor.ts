@@ -34,7 +34,11 @@ export class IdUserGuestInterceptor implements NestInterceptor {
         loggerService.sendLog({
           message: message,
           params: request.query,
-          bodyRequest: JSON.stringify(request.body).length > 6000 ? 'Data too long' : request.body,
+          bodyRequest: request.body
+            ? JSON.stringify(request.body).length > 6000
+              ? 'Data too long'
+              : request.body
+            : 'No data',
           headerResponse: {
             id_user_guest: id_user_guest ? id_user_guest : id_user_guest_new
           },
@@ -47,7 +51,11 @@ export class IdUserGuestInterceptor implements NestInterceptor {
         loggerService.sendLog({
           message: message,
           params: request.query,
-          bodyRequest: request.body,
+          bodyRequest: request.body
+            ? JSON.stringify(request.body).length > 6000
+              ? 'Data too long'
+              : request.body
+            : 'No data',
           bodyResponse: {
             message: error?.response?.message || error.message || 'Unknown error'
           }

@@ -56,6 +56,13 @@ export class TablesController {
     return await this.tablesService.getListTableOrder({ currentPage: +currentPage, limit: +limit, qs }, account)
   }
 
+  @Get('/list-table-order')
+  @ResponseMessage('Lấy danh sách bàn thành công')
+  @UseGuards(AccountAuthGuard)
+  async listTableOrder(@Acccount() account: IAccount): Promise<TableDocument[]> {
+    return await this.tablesService.listTableOrder(account)
+  }
+
   @Get('/recycle')
   @ResponseMessage('Lấy danh sách bàn đã xóa thành công')
   @UseGuards(AccountAuthGuard)

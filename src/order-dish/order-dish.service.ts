@@ -69,7 +69,6 @@ export class OrderDishService {
   }
 
   async createOrderDish(createOrderDishDto: CreateOrderDishDto[], guest: IGuest): Promise<null> {
-    console.log('first::::::::::::::::', guest)
     try {
       const orderSummary = await this.orderDishSummaryRepository.findOneById({ _id: guest.order_id })
       if (!orderSummary) throw new BadRequestError('Đơn hàng không tồn tại, vui lòng thử lại sau ít phút')
@@ -193,7 +192,6 @@ export class OrderDishService {
     od_dish_smr_status: string
     or_dish: any
   } | null> {
-    console.log('first11111111111111111111111111111111111')
     const orderSummary: any = await this.orderDishSummaryRepository.findOneById({
       _id: restaurantCreateOrderDishDto.od_dish_summary_id
     })
@@ -258,6 +256,11 @@ export class OrderDishService {
       event: 'order_dish_new_restaurant',
       data: null,
       to: `${KEY_SOCKET_GUEST_ORDER_DISH_SUMMARY_ID}:${String(orderSummary._id)}`
+    })
+    this.socketGateway.handleEmitSocket({
+      event: 'order_dish_new_with_restaurant',
+      data: null,
+      to: `${KEY_SOCKET_RESTAURANT_ID}:${String(account.account_restaurant_id)}`
     })
     return null
   }

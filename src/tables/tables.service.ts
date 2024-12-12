@@ -223,6 +223,8 @@ export class TablesService {
     meta: { current: number; pageSize: number; totalPage: number; totalItem: number }
     result: any
   }> {
+    console.log('first::::::::::::::')
+
     currentPage = isNaN(currentPage) ? 1 : currentPage
     limit = isNaN(limit) ? 8 : limit
 
@@ -289,5 +291,9 @@ export class TablesService {
       },
       result
     }
+  }
+
+  async listTableOrder(account: IAccount): Promise<TableDocument[]> {
+    return await this.tableRepository.listTableOrder(account)
   }
 }

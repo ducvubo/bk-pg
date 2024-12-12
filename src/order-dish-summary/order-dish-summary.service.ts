@@ -12,6 +12,7 @@ import { KEY_ACCESS_TOKEN_GUEST_RESTAURANT } from 'src/constants/key.redis'
 import { SocketGateway } from 'src/socket/socket.gateway'
 import mongoose from 'mongoose'
 import { OrderDishSummaryDocument } from './model/order-dish-summary.model'
+import { KEY_SOCKET_RESTAURANT_ID } from 'src/constants/key.socket'
 
 @Injectable()
 export class OrderDishSummaryService {
@@ -110,6 +111,14 @@ export class OrderDishSummaryService {
       await deleteCacheIO(`${KEY_ACCESS_TOKEN_GUEST_RESTAURANT}:${_id}`)
     })
     await this.tableRepository.updateStatus({ _id: String(order.od_dish_smr_table_id), tbl_status: 'enable' }, account)
+
+    //bắn socket
+    this.socketGateway.handleEmitSocket({
+      event: 'order_dish_sumary_update_status',
+      data: null,
+      to: `${KEY_SOCKET_RESTAURANT_ID}:${String(account.account_restaurant_id)}`
+    })
+
     return update
   }
 
@@ -144,6 +153,13 @@ export class OrderDishSummaryService {
         _id: account.account_type === 'employee' ? account.account_employee_id : account.account_restaurant_id,
         email: account.account_email
       }
+    })
+
+    //bắn socket
+    this.socketGateway.handleEmitSocket({
+      event: 'order_dish_sumary_new_restaurant',
+      data: null,
+      to: `${KEY_SOCKET_RESTAURANT_ID}:${String(account.account_restaurant_id)}`
     })
 
     await this.tableRepository.updateStatus({ _id: od_dish_smr_table_id, tbl_status: 'reserve' }, account)

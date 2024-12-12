@@ -2,7 +2,6 @@
 
 import { getRedis } from '../config/redis.config'
 
-
 const redisCache = getRedis().instanceConnect
 
 // import Redis from 'ioredis'

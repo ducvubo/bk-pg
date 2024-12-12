@@ -240,4 +240,8 @@ export class TableRepository {
 
     return listTable
   }
+
+  async listTableOrder(account: IAccount): Promise<TableDocument[]> {
+    return await this.tableModel.find({ tbl_restaurant_id: account.account_restaurant_id }).select('_id, tbl_name')
+  }
 }
