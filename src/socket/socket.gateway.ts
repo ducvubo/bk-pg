@@ -153,6 +153,6 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   async handleDisconnect(@ConnectedSocket() socket: Socket) {
-    console.log('disconnect', socket.id)
+    // console.log('disconnect', socket.id)
   }
 }

@@ -11,6 +11,7 @@ import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { UpdateStatusUser } from './dto/update-status.dto'
 import { UserDocument } from './model/user.model'
+import { GrpcMethod } from '@nestjs/microservices'
 // import { generateStrongPassword } from 'src/utils'
 
 @Controller('users')
@@ -24,6 +25,16 @@ export class UsersController {
   //     password: generateStrongPassword(16)
   //   }
   // }
+  @GrpcMethod('UserService', 'getUser')
+  getUser(data: { id: string }): { name: string; email: string } {
+    const { id } = data
+
+    return {
+      name: `User ${id}`,
+      email: `user${id}@example.com`
+    }
+  }
+
   @Post()
   @ResponseMessage('Tạo người dùng mới thành công')
   @UseGuards(UserAuthGuard)

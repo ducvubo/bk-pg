@@ -7,6 +7,8 @@ import { TransformIntercaptor } from './interceptor/transform.interceptor'
 import { join } from 'path'
 import { initRedis } from './config/redis.config'
 import { IdUserGuestInterceptor } from './interceptor/guestId.interceptor'
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
+declare const module: any
 
 export const redisConfig = {
   host: String(process.env.REDIS_HOST),
@@ -37,10 +39,24 @@ async function bootstrap() {
   app.setGlobalPrefix('api')
   app.enableVersioning({
     type: VersioningType.URI,
-    defaultVersion: ['1', '2']
+    defaultVersion: ['1']
   })
+
+  const config = new DocumentBuilder()
+    .setTitle('Cats example')
+    .setDescription('The cats API description')
+    .setVersion('1.0')
+    .addTag('cats')
+    .build()
+  const documentFactory = () => SwaggerModule.createDocument(app, config)
+  SwaggerModule.setup('swagger', app, documentFactory)
 
   // app.useGlobalFilters(new AllExceptionsFilter())
   await app.listen(configService.get<string>('PORT'))
+
+  if (module.hot) {
+    module.hot.accept()
+    module.hot.dispose(() => app.close())
+  }
 }
 bootstrap()

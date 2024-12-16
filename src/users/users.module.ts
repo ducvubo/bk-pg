@@ -8,8 +8,6 @@ import { MailModule } from 'src/mail/mail.module'
 import { JwtModule } from '@nestjs/jwt'
 import { RefreshTokenUserRepository } from './model/refresh-token.repo'
 import { RefreshTokenUser, RefreshTokenUserSchema } from './model/refresh-token.model'
-import { UnauthorizedExceptionFilter } from 'src/filter'
-import { APP_FILTER } from '@nestjs/core'
 import { BookTableModule } from 'src/book-table/book-table.module'
 
 @Module({
@@ -23,15 +21,7 @@ import { BookTableModule } from 'src/book-table/book-table.module'
     forwardRef(() => BookTableModule)
   ],
   controllers: [UsersController],
-  providers: [
-    UsersService,
-    UserRepository,
-    RefreshTokenUserRepository,
-    {
-      provide: APP_FILTER,
-      useClass: UnauthorizedExceptionFilter
-    }
-  ],
+  providers: [UsersService, UserRepository, RefreshTokenUserRepository],
   exports: [UsersService]
 })
 export class UsersModule {}

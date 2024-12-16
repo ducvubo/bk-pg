@@ -77,6 +77,13 @@ export class RestaurantsController {
     return this.restaurantsService.getInforRestaurant(account)
   }
 
+  @Post('/authen')
+  @UseGuards(AccountAuthGuard)
+  @ResponseMessage('Lấy thông tin nhà hàng thành công')
+  async authen(@Acccount() account: IAccount): Promise<IAccount> {
+    return account
+  }
+
   @Post('/refresh-token')
   @ResponseMessage('Làm mới token thành công')
   async refreshToken(@Req() req: Request): Promise<{ access_token_rtr: string; refresh_token_rtr: string }> {
